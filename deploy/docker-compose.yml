@@ -1,0 +1,38 @@
+# Lexora AI — shared platform deployment
+# Joins infra_shared + ai-models_default; binds localhost only (Caddy terminates TLS).
+# Project name 'lexora' avoids colliding with other apps' deploy/ compose stacks.
+
+name: lexora
+
+services:
+  web:
+    build:
+      context: ../apps/web
+      dockerfile: ../../deploy/Dockerfile
+    image: lexora-web:latest
+    container_name: lexora-web
+    env_file:
+      - ../.env
+    environment:
+      - APP_URL=https://lexora.apztdg.com
+    ports:
+      - "127.0.0.1:8100:3000"
+    networks:
+      - lexora
+      - infra_shared
+      - ai-models
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+networks:
+  lexora:
+    name: lexora_internal
+  infra_shared:
+    external: true
+    name: infra_shared
+  ai-models:
+    external: true
+    name: ai-models_default

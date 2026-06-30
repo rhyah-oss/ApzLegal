@@ -1,0 +1,12 @@
+# Lexora AI — HTTPS via shared Caddy
+# Install: sudo bash scripts/install-caddy.sh
+# Or append this block to /etc/caddy/Caddyfile and: sudo systemctl reload caddy
+
+lexora.apztdg.com {
+	reverse_proxy 127.0.0.1:8100 {
+		header_up Host {host}
+		header_up X-Real-IP {remote_host}
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+	}
+}
