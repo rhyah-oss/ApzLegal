@@ -3,21 +3,17 @@ name: CI
 on:
   push:
     branches:
-      - main
       - master
   pull_request:
     branches:
-      - main
       - master
 
+env:
+  NODE_VERSION: 22.x
+
 jobs:
-  build-and-validate:
+  validate:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [20.x]
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -25,9 +21,9 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependencies-path: apps/web/package-lock.json
+          cache-dependency-path: apps/web/package-lock.json
 
       - name: Install dependencies
         working-directory: apps/web
@@ -45,11 +41,13 @@ jobs:
         working-directory: apps/web
         run: npm run build
 
-  # Deployment stages can be added below
-  # deploy:
-  #   needs: build-and-validate
-  #   runs-on: ubuntu-latest
-  #   if: github.ref == 'refs/heads/main'
-  #   steps:
-  #     - name: Deploy
-  #       run: echo "Add deployment steps here"
+# Deployment stages can be added below as separate jobs
+# that depend on validate and run on push to master branch
+# Example:
+# deploy:
+#   needs: validate
+#   if: github.ref == 'refs/heads/master'
+#   runs-on: ubuntu-latest
+#   steps:
+#     - uses: actions/checkout@v4
+#     - run: echo "Add deployment steps here"
