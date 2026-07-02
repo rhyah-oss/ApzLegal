@@ -70,6 +70,7 @@ export function CommandPalette() {
     return () => window.removeEventListener("keydown", onKey);
   }, [commandPaletteOpen, filtered, selected, navigate, setCommandPaletteOpen]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setSelected(0), [query]);
 
   if (!commandPaletteOpen) return null;

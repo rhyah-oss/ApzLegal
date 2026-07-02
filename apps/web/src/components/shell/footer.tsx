@@ -2,7 +2,6 @@
 
 import { useLayoutStore } from "@/stores/layout-store";
 import { getMatter } from "@/data/mock";
-import { cn } from "@/lib/utils";
 
 export function Footer() {
   const { activeMatterId } = useLayoutStore();
