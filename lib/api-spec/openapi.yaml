@@ -1,0 +1,5331 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: APZ Legal Practice Management System API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: Authentication
+  - name: clients
+    description: Client management
+  - name: matters
+    description: Matter lifecycle
+  - name: documents
+    description: Document management
+  - name: fica
+    description: FICA compliance
+  - name: conflicts
+    description: Conflict checking
+  - name: tasks
+    description: Matter tasks
+  - name: time
+    description: Time tracking
+  - name: billing
+    description: Billing and invoices
+  - name: knowledge
+    description: Knowledge base
+  - name: templates
+    description: Governed legal templates
+  - name: ai
+    description: AI legal assistant
+  - name: audit
+    description: Audit logs
+  - name: dashboard
+    description: Dashboard analytics
+  - name: productivity
+    description: Firm productivity analytics
+  - name: email
+    description: Matter-centric email correspondence
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  # ─── AUTH ───────────────────────────────────────────────────────────────────
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Log out current session
+      responses:
+        "200":
+          description: Logged out
+
+  /auth/me:
+    get:
+      operationId: getCurrentUser
+      tags: [auth]
+      summary: Get current authenticated user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  # ─── CLIENTS ─────────────────────────────────────────────────────────────────
+  /clients:
+    get:
+      operationId: listClients
+      tags: [clients]
+      summary: List all clients
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [individual, corporate, trust, government]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, inactive, pending]
+        - name: ficaStatus
+          in: query
+          schema:
+            type: string
+            enum: [compliant, pending, expired, blocked]
+      responses:
+        "200":
+          description: List of clients
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Client"
+
+    post:
+      operationId: createClient
+      tags: [clients]
+      summary: Create a new client
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClientInput"
+      responses:
+        "201":
+          description: Client created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+
+  /clients/{id}:
+    get:
+      operationId: getClient
+      tags: [clients]
+      summary: Get client by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Client details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+
+    patch:
+      operationId: updateClient
+      tags: [clients]
+      summary: Update a client
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClientUpdate"
+      responses:
+        "200":
+          description: Client updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+
+    delete:
+      operationId: deleteClient
+      tags: [clients]
+      summary: Archive a client
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Archived
+
+  /clients/{id}/fica:
+    get:
+      operationId: getClientFica
+      tags: [clients, fica]
+      summary: Get FICA compliance status for a client
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: FICA status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FicaStatus"
+
+  /clients/{id}/risk-score:
+    get:
+      operationId: getClientRiskScore
+      tags: [clients]
+      summary: Get risk score for a client
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Risk score
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RiskScore"
+
+  # ─── MATTERS ─────────────────────────────────────────────────────────────────
+  /matters:
+    get:
+      operationId: listMatters
+      tags: [matters]
+      summary: List all matters
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [lead, conflict_check, approved, active, review, completed, closed, archived]
+        - name: clientId
+          in: query
+          schema:
+            type: integer
+        - name: assignedTo
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of matters
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Matter"
+
+    post:
+      operationId: createMatter
+      tags: [matters]
+      summary: Create a new matter
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MatterInput"
+      responses:
+        "201":
+          description: Matter created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Matter"
+
+  /matters/{id}:
+    get:
+      operationId: getMatter
+      tags: [matters]
+      summary: Get matter by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Matter details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Matter"
+
+    patch:
+      operationId: updateMatter
+      tags: [matters]
+      summary: Update a matter
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MatterUpdate"
+      responses:
+        "200":
+          description: Updated matter
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Matter"
+
+  /matters/{id}/export:
+    get:
+      operationId: exportMatter
+      tags: [matters]
+      summary: Export a matter dossier
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Matter dossier metadata export
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MatterExport"
+
+  /matters/{id}/assignees:
+    get:
+      operationId: listMatterAssignees
+      tags: [matters]
+      summary: List active staff who can be assigned to a matter
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Eligible matter assignees
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MatterAssignee"
+
+  /matters/{id}/status:
+    patch:
+      operationId: updateMatterStatus
+      tags: [matters]
+      summary: Transition matter status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MatterStatusUpdate"
+      responses:
+        "200":
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Matter"
+
+  /matters/{id}/summary:
+    get:
+      operationId: getMatterSummary
+      tags: [matters]
+      summary: Get AI-generated matter summary timeline
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Matter summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MatterSummary"
+
+  /matters/{id}/timeline:
+    get:
+      operationId: getMatterTimeline
+      tags: [matters]
+      summary: Consolidated timeline of every event linked to a matter
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Chronological matter timeline (newest first)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MatterTimelineEvent"
+
+  # ─── DOCUMENTS ───────────────────────────────────────────────────────────────
+  /matters/{matterId}/documents:
+    get:
+      operationId: listMatterDocuments
+      tags: [documents]
+      summary: List documents in a matter
+      parameters:
+        - name: matterId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Documents list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Document"
+
+    post:
+      operationId: addMatterDocument
+      tags: [documents]
+      summary: Create a document in a matter
+      parameters:
+        - name: matterId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentInput"
+      responses:
+        "201":
+          description: Document created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+
+  /matters/{matterId}/documents/{id}:
+    get:
+      operationId: getMatterDocument
+      tags: [documents]
+      summary: Get a document
+      parameters:
+        - name: matterId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Document
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+
+    patch:
+      operationId: updateMatterDocument
+      tags: [documents]
+      summary: Update a document
+      parameters:
+        - name: matterId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentUpdate"
+      responses:
+        "200":
+          description: Document updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+
+  /documents:
+    get:
+      operationId: listAllDocuments
+      tags: [documents]
+      summary: List all documents across matters
+      responses:
+        "200":
+          description: Documents list with matter context
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Document"
+
+  /matters/{matterId}/documents/{id}/versions:
+    get:
+      operationId: listDocumentVersions
+      tags: [documents]
+      summary: Immutable version history for a document
+      parameters:
+        - name: matterId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Versions, newest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DocumentVersion"
+
+  /matters/{matterId}/documents/{id}/status:
+    post:
+      operationId: changeDocumentStatus
+      tags: [documents]
+      summary: Draft-phase lifecycle move (draft / ai_assist / review only)
+      parameters:
+        - name: matterId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentStatusChange"
+      responses:
+        "200":
+          description: Status changed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+
+  /matters/{matterId}/documents/{id}/ai-assist:
+    post:
+      operationId: applyDocumentAiAssist
+      tags: [documents]
+      summary: Record AI-generated or AI-assisted content with provenance
+      parameters:
+        - name: matterId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentAiAssist"
+      responses:
+        "200":
+          description: AI assistance recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+
+  /matters/{matterId}/documents/{id}/verify-citations:
+    post:
+      operationId: verifyDocumentCitations
+      tags: [documents]
+      summary: Record an attorney's verification of citations in a document
+      parameters:
+        - name: matterId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Citations verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+
+  /matters/{matterId}/documents/{id}/submit:
+    post:
+      operationId: submitDocumentForApproval
+      tags: [documents]
+      summary: Submit a document for partner approval
+      parameters:
+        - name: matterId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Submitted; partners notified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+
+  /matters/{matterId}/documents/{id}/decision:
+    post:
+      operationId: decideDocumentApproval
+      tags: [documents]
+      summary: Partner decision on a submitted document
+      parameters:
+        - name: matterId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentDecision"
+      responses:
+        "200":
+          description: Decision recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+
+  /matters/{matterId}/documents/{id}/send-signature:
+    post:
+      operationId: sendDocumentForSignature
+      tags: [documents]
+      summary: Send an approved document to the client for signature
+      parameters:
+        - name: matterId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentSignatureRequest"
+      responses:
+        "200":
+          description: Sent for signature
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+
+  /matters/{matterId}/documents/{id}/sign:
+    post:
+      operationId: markDocumentSigned
+      tags: [documents]
+      summary: Record a verified client signature and sealed evidence
+      parameters:
+        - name: matterId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentSignatureInput"
+      responses:
+        "200":
+          description: Signed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+
+  /matters/{matterId}/documents/{id}/archive:
+    post:
+      operationId: archiveDocument
+      tags: [documents]
+      summary: Archive a signed document
+      parameters:
+        - name: matterId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Archived
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+
+  /matters/{matterId}/documents/{id}/approve:
+    post:
+      operationId: approveMatterDocument
+      tags: [documents]
+      summary: "[Deprecated] Use the submit + decision workflow"
+      deprecated: true
+      parameters:
+        - name: matterId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentApproval"
+      responses:
+        "200":
+          description: Document approval recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags: [notifications]
+      summary: Notifications for the current user (direct or role-targeted)
+      responses:
+        "200":
+          description: Notifications, newest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notification"
+
+  /notifications/{id}/read:
+    post:
+      operationId: markNotificationRead
+      tags: [notifications]
+      summary: Mark a notification as read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Marked read
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Notification"
+
+  # ─── TASKS ───────────────────────────────────────────────────────────────────
+  /matters/{matterId}/tasks:
+    get:
+      operationId: listMatterTasks
+      tags: [tasks]
+      summary: List tasks for a matter
+      parameters:
+        - name: matterId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Tasks list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Task"
+
+    post:
+      operationId: addMatterTask
+      tags: [tasks]
+      summary: Create a task
+      parameters:
+        - name: matterId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskInput"
+      responses:
+        "201":
+          description: Task created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+
+  /matters/{matterId}/tasks/{id}:
+    patch:
+      operationId: updateMatterTask
+      tags: [tasks]
+      summary: Update a task
+      parameters:
+        - name: matterId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskUpdate"
+      responses:
+        "200":
+          description: Task updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+
+    delete:
+      operationId: deleteMatterTask
+      tags: [tasks]
+      summary: Delete a task
+      parameters:
+        - name: matterId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /tasks:
+    get:
+      operationId: listTasks
+      tags: [tasks]
+      summary: List the authenticated staff user's global task queue
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: priority
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Global task queue
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Task"
+    post:
+      operationId: createTask
+      tags: [tasks]
+      summary: Create a task from the global queue
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GlobalTaskInput"
+      responses:
+        "201":
+          description: Task created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+
+  /tasks/{id}:
+    patch:
+      operationId: updateTask
+      tags: [tasks]
+      summary: Update a task from the global queue
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskUpdate"
+      responses:
+        "200":
+          description: Task updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+
+  # ─── CONFLICT CHECK ──────────────────────────────────────────────────────────
+  /conflicts/check:
+    post:
+      operationId: runConflictCheck
+      tags: [conflicts]
+      summary: Run a conflict check
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConflictCheckInput"
+      responses:
+        "200":
+          description: Conflict check results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConflictCheckResult"
+
+  /conflicts/{id}/review:
+    post:
+      operationId: reviewConflict
+      tags: [conflicts]
+      summary: Partner review of a conflict check
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConflictReviewInput"
+      responses:
+        "200":
+          description: Review recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConflictReviewResult"
+
+  /conflicts:
+    get:
+      operationId: listConflicts
+      tags: [conflicts]
+      summary: List conflict check records
+      parameters:
+        - name: matterId
+          in: query
+          schema:
+            type: integer
+        - name: severity
+          in: query
+          schema:
+            type: string
+            enum: [low, medium, high]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, cleared, approved, rejected, further_review]
+      responses:
+        "200":
+          description: Conflicts list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ConflictRecord"
+
+  # ─── TIME TRACKING ───────────────────────────────────────────────────────────
+  /time-entries:
+    get:
+      operationId: listTimeEntries
+      tags: [time]
+      summary: List time entries
+      parameters:
+        - name: matterId
+          in: query
+          schema:
+            type: integer
+        - name: userId
+          in: query
+          schema:
+            type: integer
+        - name: billed
+          in: query
+          schema:
+            type: boolean
+        - name: startDate
+          in: query
+          schema:
+            type: string
+        - name: endDate
+          in: query
+          schema:
+            type: string
+        - name: clientId
+          in: query
+          schema:
+            type: integer
+        - name: practiceArea
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Time entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TimeEntry"
+
+    post:
+      operationId: createTimeEntry
+      tags: [time]
+      summary: Log a time entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TimeEntryInput"
+      responses:
+        "201":
+          description: Time entry created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TimeEntry"
+
+  /time-entries/{id}:
+    patch:
+      operationId: updateTimeEntry
+      tags: [time]
+      summary: Update a time entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TimeEntryUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TimeEntry"
+
+    delete:
+      operationId: deleteTimeEntry
+      tags: [time]
+      summary: Delete a time entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── PRODUCTIVITY ────────────────────────────────────────────────────────────
+  /productivity/summary:
+    get:
+      operationId: getProductivitySummary
+      tags: [productivity]
+      summary: Get firm productivity analytics from time entries
+      parameters:
+        - name: startDate
+          in: query
+          schema:
+            type: string
+        - name: endDate
+          in: query
+          schema:
+            type: string
+        - name: userId
+          in: query
+          schema:
+            type: integer
+        - name: matterId
+          in: query
+          schema:
+            type: integer
+        - name: clientId
+          in: query
+          schema:
+            type: integer
+        - name: practiceArea
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Productivity analytics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductivitySummary"
+        "401":
+          description: Authentication required
+
+  # ─── BILLING ─────────────────────────────────────────────────────────────────
+  /invoices:
+    get:
+      operationId: listInvoices
+      tags: [billing]
+      summary: List invoices
+      parameters:
+        - name: clientId
+          in: query
+          schema:
+            type: integer
+        - name: matterId
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, pending_review, approved, sent, paid, overdue]
+      responses:
+        "200":
+          description: Invoices
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Invoice"
+
+    post:
+      operationId: createInvoice
+      tags: [billing]
+      summary: Create an invoice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InvoiceInput"
+      responses:
+        "201":
+          description: Invoice created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+
+  /invoices/{id}:
+    get:
+      operationId: getInvoice
+      tags: [billing]
+      summary: Get invoice by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Invoice
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+
+    patch:
+      operationId: updateInvoice
+      tags: [billing]
+      summary: Update invoice status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InvoiceUpdate"
+      responses:
+        "200":
+          description: Invoice updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+
+  /invoices/generate:
+    post:
+      operationId: generateInvoice
+      tags: [billing]
+      summary: Generate a draft invoice from a matter's unbilled time entries
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerateInvoiceInput"
+      responses:
+        "201":
+          description: Invoice generated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+
+  /invoices/{id}/submit:
+    post:
+      operationId: submitInvoiceForReview
+      tags: [billing]
+      summary: Submit a draft invoice for billing review
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Invoice submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+
+  /invoices/{id}/decision:
+    post:
+      operationId: decideInvoice
+      tags: [billing]
+      summary: Partner billing-review decision on an invoice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InvoiceDecisionInput"
+      responses:
+        "200":
+          description: Decision recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+
+  /invoices/{id}/send:
+    post:
+      operationId: sendInvoice
+      tags: [billing]
+      summary: Send a review-approved invoice to the client
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Invoice sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+
+  /invoices/{id}/mark-paid:
+    post:
+      operationId: markInvoicePaid
+      tags: [billing]
+      summary: Mark a sent or overdue invoice as paid
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Invoice paid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+
+  # ─── WORKFLOW ENGINE ─────────────────────────────────────────────────────────
+  /workflows:
+    get:
+      operationId: getWorkflows
+      tags: [workflows]
+      summary: Workflow definitions and live instances
+      responses:
+        "200":
+          description: Workflow engine state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkflowsResponse"
+
+  /actions:
+    get:
+      operationId: getPendingActions
+      tags: [workflows]
+      summary: Central pending-action queue for the current user
+      responses:
+        "200":
+          description: Pending actions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActionsResponse"
+
+  # ─── GOVERNED TEMPLATES ─────────────────────────────────────────────────────
+  /templates:
+    get:
+      operationId: listTemplates
+      tags: [templates]
+      summary: List governed legal templates
+      parameters:
+        - name: search
+          in: query
+          schema: { type: string }
+        - name: category
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [uploaded, pending_approval, approved, rejected, archived]
+        - name: practiceArea
+          in: query
+          schema: { type: string }
+        - name: documentType
+          in: query
+          schema: { type: string }
+        - name: aiIndexStatus
+          in: query
+          schema:
+            type: string
+            enum: [none, indexing, indexed]
+        - name: ownerId
+          in: query
+          schema: { type: integer }
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [updated, oldest, title, version]
+      responses:
+        "200":
+          description: Governed templates and summary counts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TemplateList"
+
+  /templates/{id}/instantiate:
+    post:
+      operationId: instantiateTemplate
+      tags: [templates, documents]
+      summary: Create a governed matter document from an approved template
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TemplateInstantiateInput"
+      responses:
+        "201":
+          description: Draft matter document created from the template
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+
+  /storage/uploads/request-url:
+    post:
+      operationId: requestStorageUploadUrl
+      tags: [storage]
+      summary: Request a private object-storage upload URL
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StorageUploadRequest"
+      responses:
+        "200":
+          description: Signed upload URL and normalized private object path
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StorageUploadResponse"
+
+  # ─── KNOWLEDGE BASE ──────────────────────────────────────────────────────────
+  /knowledge:
+    get:
+      operationId: listKnowledgeItems
+      tags: [knowledge]
+      summary: List knowledge base items
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [template, opinion, guidance, precedent]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [uploaded, pending_approval, approved, rejected, archived]
+        - name: practiceArea
+          in: query
+          schema: { type: string }
+        - name: documentType
+          in: query
+          schema: { type: string }
+        - name: aiIndexStatus
+          in: query
+          schema:
+            type: string
+            enum: [none, indexing, indexed]
+        - name: ownerId
+          in: query
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Knowledge items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/KnowledgeItem"
+
+    post:
+      operationId: createKnowledgeItem
+      tags: [knowledge]
+      summary: Add a knowledge base item
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KnowledgeItemInput"
+      responses:
+        "201":
+          description: Knowledge item created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KnowledgeItem"
+
+  /knowledge/{id}:
+    get:
+      operationId: getKnowledgeItem
+      tags: [knowledge]
+      summary: Get a knowledge item
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Knowledge item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KnowledgeItem"
+
+    patch:
+      operationId: updateKnowledgeItem
+      tags: [knowledge]
+      summary: Update a knowledge item
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KnowledgeItemUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KnowledgeItem"
+
+  /knowledge/{id}/submit-for-review:
+    post:
+      operationId: submitKnowledgeForReview
+      tags: [knowledge]
+      summary: Submit a knowledge item for partner review
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Item submitted for review
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KnowledgeItem"
+
+  /knowledge/{id}/decision:
+    post:
+      operationId: decideKnowledgeItem
+      tags: [knowledge]
+      summary: Approve or reject a knowledge item (partners only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KnowledgeDecisionInput"
+      responses:
+        "200":
+          description: Decision recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KnowledgeItem"
+
+  /knowledge/{id}/archive:
+    post:
+      operationId: archiveKnowledgeItem
+      tags: [knowledge]
+      summary: Archive a knowledge item (removed from AI retrieval)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Item archived
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KnowledgeItem"
+
+  /knowledge/{id}/versions:
+    get:
+      operationId: listKnowledgeItemVersions
+      tags: [knowledge]
+      summary: List preserved previous versions of a knowledge item
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Version history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/KnowledgeItemVersion"
+
+  # ─── AI ASSISTANT (governed workflows) ──────────────────────────────────────
+  /ai/generate:
+    post:
+      operationId: generateAiOutput
+      tags: [ai]
+      summary: Run a governed AI workflow in the context of a matter
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AiGenerateInput"
+      responses:
+        "201":
+          description: Generated AI output
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiOutput"
+
+  /ai/transcribe:
+    post:
+      operationId: transcribeAiAudio
+      tags: [ai]
+      summary: Transcribe a bounded voice prompt for the governed AI composer
+      requestBody:
+        required: true
+        content:
+          audio/webm:
+            schema:
+              type: string
+              format: binary
+          audio/mp4:
+            schema:
+              type: string
+              format: binary
+          audio/ogg:
+            schema:
+              type: string
+              format: binary
+          audio/wav:
+            schema:
+              type: string
+              format: binary
+      responses:
+        "200":
+          description: Transcribed prompt text
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiTranscriptionResponse"
+        "400":
+          description: Empty or invalid audio
+        "401":
+          description: Authentication required
+        "413":
+          description: Audio exceeds the maximum request size
+        "415":
+          description: Unsupported audio media type
+        "502":
+          description: Speech provider failure
+        "503":
+          description: Speech provider is not configured
+        "504":
+          description: Speech provider timed out
+
+  /ai/conversations:
+    get:
+      operationId: listAiConversations
+      tags: [ai]
+      summary: List AI outputs, optionally filtered by matter
+      parameters:
+        - name: matterId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: AI outputs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AiOutput"
+
+  /ai/outputs/{id}:
+    get:
+      operationId: getAiOutput
+      tags: [ai]
+      summary: Get a single AI output
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: AI output
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiOutput"
+
+  /ai/outputs/{id}/review:
+    post:
+      operationId: reviewAiOutput
+      tags: [ai]
+      summary: Record human review or override of an AI output
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AiReviewInput"
+      responses:
+        "200":
+          description: Reviewed AI output
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiOutput"
+
+  /ai/outputs/{id}/verify-citations:
+    post:
+      operationId: verifyAiCitations
+      tags: [ai]
+      summary: Mark an AI output's citations as verified
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: AI output with verified citations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiOutput"
+
+  /ai/outputs/{id}/save-to-matter:
+    post:
+      operationId: saveAiOutputToMatter
+      tags: [ai]
+      summary: Save an AI output to its matter as a governed draft document
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AiSaveInput"
+      responses:
+        "201":
+          description: Output saved as a governed document
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [documentId, output]
+                properties:
+                  documentId:
+                    type: integer
+                  output:
+                    $ref: "#/components/schemas/AiOutput"
+
+  # ─── PROVIDER OPERATIONS ─────────────────────────────────────────────────────
+  /provider-operations:
+    get:
+      operationId: listProviderOperations
+      tags: [provider-operations]
+      summary: List authenticated provider handoffs
+      parameters:
+        - name: kind
+          in: query
+          schema:
+            type: string
+            enum: [email, signature]
+        - name: matterId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Provider operations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProviderOperation"
+
+  /provider-operations/email:
+    post:
+      operationId: queueProviderEmail
+      tags: [provider-operations]
+      summary: Queue a reviewed outbound email for provider handoff
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProviderEmailInput"
+      responses:
+        "201":
+          description: Queued provider operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderOperation"
+
+  /provider-operations/{id}/status:
+    post:
+      operationId: updateProviderOperationStatus
+      tags: [provider-operations]
+      summary: Apply an authenticated provider status callback
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProviderStatusUpdateInput"
+      responses:
+        "200":
+          description: Updated provider operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderOperation"
+
+  /provider-operations/{id}/retry:
+    post:
+      operationId: retryProviderOperation
+      tags: [provider-operations]
+      summary: Create a new attempt for a failed provider operation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "201":
+          description: Requeued provider operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderOperation"
+
+  # ─── MATTER-CENTRIC EMAIL ─────────────────────────────────────────────────────
+  /email/readiness:
+    get:
+      operationId: getEmailReadiness
+      tags: [email]
+      summary: Check email provider readiness
+      responses:
+        "200":
+          description: Provider readiness
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmailReadiness"
+
+  /emails/search:
+    get:
+      operationId: searchEmails
+      tags: [email]
+      summary: Search authorised Matter email
+      parameters:
+        - name: search
+          in: query
+          required: true
+          schema: { type: string, minLength: 2 }
+        - name: matterId
+          in: query
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Matching email records
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Email" }
+
+  /emails/unlinked:
+    get:
+      operationId: listUnlinkedEmails
+      tags: [email]
+      summary: List email awaiting partner Matter-link review
+      responses:
+        "200":
+          description: Unlinked email and explainable candidates
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/UnlinkedEmail" }
+
+  /emails/{emailId}/link:
+    post:
+      operationId: triageUnlinkedEmail
+      tags: [email]
+      summary: Link an unlinked email or deliberately leave it unlinked
+      parameters:
+        - name: emailId
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UnlinkedEmailDecisionInput" }
+      responses:
+        "200":
+          description: Triage decision recorded
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Email" }
+
+  /emails/ingest:
+    post:
+      operationId: ingestNormalizedEmail
+      tags: [email]
+      summary: Ingest a provider-normalized email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NormalizedEmailInput"
+      responses:
+        "201":
+          description: Email ingested
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EmailIngestionResult" }
+        "200":
+          description: Existing provider message returned idempotently
+        "409":
+          description: No provider is connected
+
+  /matters/{matterId}/emails:
+    get:
+      operationId: listMatterEmailsForMatter
+      tags: [email]
+      summary: List correspondence for an authorised Matter
+      parameters:
+        - name: matterId
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: search
+          in: query
+          schema: { type: string }
+        - name: unread
+          in: query
+          schema: { type: boolean }
+        - name: linkStatus
+          in: query
+          schema: { type: string, enum: [unlinked, suggested, linked, reviewed_unlinked] }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 200 }
+      responses:
+        "200":
+          description: Matter email records
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Email" }
+
+  /matters/{matterId}/emails/{emailId}:
+    get:
+      operationId: getMatterEmail
+      tags: [email]
+      summary: Get an authorised Matter email
+      parameters:
+        - name: matterId
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: emailId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Email detail
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EmailDetail" }
+
+  /matters/{matterId}/emails/{emailId}/read:
+    patch:
+      operationId: markMatterEmailReadForMatter
+      tags: [email]
+      summary: Mark an authorised Matter email read or unread
+      parameters:
+        - name: matterId
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: emailId
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [isRead]
+              properties:
+                isRead: { type: boolean }
+      responses:
+        "200":
+          description: Updated email
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Email" }
+
+  /matters/{matterId}/emails/{emailId}/thread:
+    get:
+      operationId: getMatterEmailThread
+      tags: [email]
+      summary: Get the authorised Matter email thread
+      parameters:
+        - name: matterId
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: emailId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Thread messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Email" }
+
+  /matters/{matterId}/emails/{emailId}/link:
+    post:
+      operationId: linkMatterEmail
+      tags: [email]
+      summary: Link, move, or deliberately leave an email unlinked
+      parameters:
+        - name: matterId
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: emailId
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmailLinkInput"
+      responses:
+        "200":
+          description: Updated email link
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Email" }
+
+  /email-attachments/{attachmentId}:
+    get:
+      operationId: getEmailAttachment
+      tags: [email]
+      summary: Securely retrieve an authorised email attachment
+      parameters:
+        - name: attachmentId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Attachment bytes
+        "403":
+          description: Matter access denied
+
+  /matters/{matterId}/emails/{emailId}/attachments/{attachmentId}/document:
+    post:
+      operationId: promoteEmailAttachmentToDocument
+      tags: [email]
+      summary: Create a governed Matter document from a stored email attachment
+      parameters:
+        - name: matterId
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: emailId
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: attachmentId
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string }
+      responses:
+        "201":
+          description: Governed document and traceability link
+        "200":
+          description: Existing governed document returned idempotently
+
+  # ─── MICROSOFT 365 / OAUTH ────────────────────────────────────────────────────
+  /microsoft/oauth/authorize:
+    get:
+      operationId: getMicrosoftOAuthAuthorize
+      tags: [microsoft]
+      summary: Get Microsoft 365 OAuth authorization URL
+      responses:
+        "200":
+          description: Authorization URL and state
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [url, state]
+                properties:
+                  url: { type: string }
+                  state: { type: string }
+
+  /microsoft/oauth/callback:
+    get:
+      operationId: getMicrosoftOAuthCallback
+      tags: [microsoft]
+      summary: Microsoft OAuth callback
+      parameters:
+        - name: code
+          in: query
+          schema: { type: string }
+        - name: state
+          in: query
+          schema: { type: string }
+        - name: error
+          in: query
+          schema: { type: string }
+      responses:
+        "302":
+          description: Redirect back to app with success or error
+
+  /microsoft/connection:
+    get:
+      operationId: getMicrosoftConnectionStatus
+      tags: [microsoft]
+      summary: Get current user Microsoft 365 connection status
+      responses:
+        "200":
+          description: Connection status
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status: { type: string }
+                  mailboxEmail: { type: ["string", "null"] }
+                  displayName: { type: ["string", "null"] }
+                  connectedAt: { type: ["string", "null"] }
+                  lastSuccessfulCheckAt: { type: ["string", "null"] }
+                  lastProviderError: { type: ["string", "null"] }
+                  isExpired: { type: boolean }
+
+  /microsoft/disconnect:
+    post:
+      operationId: disconnectMicrosoft
+      tags: [microsoft]
+      summary: Disconnect Microsoft 365
+      responses:
+        "200":
+          description: Disconnection confirmed
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status: { type: string }
+
+  /microsoft/sync:
+    post:
+      operationId: triggerMicrosoftSync
+      tags: [microsoft]
+      summary: Trigger controlled Microsoft 365 email sync
+      responses:
+        "200":
+          description: Sync queued
+        "409":
+          description: Provider not connected or authentication expired
+
+  # ─── LEGAL RESEARCH ──────────────────────────────────────────────────────────
+  /research/sources:
+    get:
+      operationId: listResearchSources
+      tags: [research]
+      summary: List available research sources and their availability
+      responses:
+        "200":
+          description: Research sources
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ResearchSource"
+
+  /research/query:
+    post:
+      operationId: performResearch
+      tags: [research]
+      summary: Perform matter-bound legal research across selected sources
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResearchInput"
+      responses:
+        "201":
+          description: Research record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResearchRecord"
+
+  /research:
+    get:
+      operationId: listResearch
+      tags: [research]
+      summary: List research records, optionally filtered by matter
+      parameters:
+        - name: matterId
+          in: query
+          schema:
+            type: integer
+        - name: savedOnly
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Research records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ResearchRecord"
+
+  /research/{id}:
+    get:
+      operationId: getResearch
+      tags: [research]
+      summary: Get a single research record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Research record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResearchRecord"
+
+  /research/{id}/save-to-matter:
+    post:
+      operationId: saveResearchToMatter
+      tags: [research]
+      summary: Save a research record to its matter as part of the formal record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Saved research record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResearchRecord"
+
+  # ─── AUDIT LOGS ──────────────────────────────────────────────────────────────
+  /audit-logs/export:
+    get:
+      operationId: exportAuditLogs
+      tags: [audit]
+      summary: Export filtered audit log entries as CSV
+      parameters:
+        - name: entityType
+          in: query
+          schema:
+            type: string
+        - name: entityId
+          in: query
+          schema:
+            type: integer
+        - name: userId
+          in: query
+          schema:
+            type: integer
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        "200":
+          description: CSV audit export
+          content:
+            text/csv:
+              schema:
+                type: string
+
+  /audit-logs:
+    get:
+      operationId: listAuditLogs
+      tags: [audit]
+      summary: List audit log entries
+      parameters:
+        - name: matterId
+          in: query
+          description: Return all audit entries for a matter, including its documents and AI outputs
+          schema:
+            type: integer
+        - name: entityType
+          in: query
+          schema:
+            type: string
+        - name: entityId
+          in: query
+          schema:
+            type: integer
+        - name: userId
+          in: query
+          schema:
+            type: integer
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        "200":
+          description: Audit log entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AuditLog"
+
+  # ─── DASHBOARD ───────────────────────────────────────────────────────────────
+  /fica/expiring:
+    get:
+      operationId: listExpiringFicaDocuments
+      tags: [fica]
+      summary: List active FICA documents expiring within a selected period
+      parameters:
+        - name: days
+          in: query
+          schema:
+            type: integer
+            default: 30
+            minimum: 1
+            maximum: 365
+      responses:
+        "200":
+          description: Expiring FICA documents
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [days, documents]
+                properties:
+                  days:
+                    type: integer
+                  documents:
+                    type: array
+                    items:
+                      type: object
+                      required: [id, clientId, clientName, type, expiryDate, status, daysRemaining]
+                      properties:
+                        id: { type: integer }
+                        clientId: { type: integer }
+                        clientName: { type: string }
+                        type: { type: string }
+                        expiryDate: { type: string, format: date }
+                        status: { type: string }
+                        daysRemaining: { type: integer }
+
+  /matters/{matterId}/documents/{id}/signature-certificate:
+    get:
+      operationId: downloadDocumentSignatureCertificate
+      tags: [documents]
+      summary: Download signature evidence for a signed document
+      parameters:
+        - name: matterId
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Downloadable JSON signature certificate
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [certificateId, generatedAt, document, signature, approval, auditTrail, verification]
+                properties:
+                  certificateId: { type: string }
+                  generatedAt: { type: string, format: date-time }
+                  document:
+                    type: object
+                    required: [id, title, version, matterId]
+                    properties:
+                      id: { type: integer }
+                      title: { type: string }
+                      version: { type: integer }
+                      matterId: { type: integer }
+                  signature:
+                    type: object
+                    required: [status, signedAt, verifiedBy, verificationRecordedAt]
+                    properties:
+                      status: { type: string }
+                      signedAt: { type: [string, "null"], format: date-time }
+                      verifiedBy: { type: [string, "null"] }
+                      verificationRecordedAt: { type: [string, "null"], format: date-time }
+                      evidence:
+                        type: object
+                        required: [signerName, signerEmail, signerMethod, signedVersion, documentSha256, recordedById, recordedByName, recordedAt, evidenceSeal, sealAlgorithm]
+                        properties:
+                          signerName: { type: string }
+                          signerEmail: { type: string, pattern: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$' }
+                          signerMethod: { type: string }
+                          signedVersion: { type: integer }
+                          documentSha256: { type: string }
+                          recordedById: { type: integer }
+                          recordedByName: { type: string }
+                          recordedAt: { type: string, format: date-time }
+                          evidenceSeal: { type: string }
+                          sealAlgorithm: { type: string }
+                  approval:
+                    type: object
+                    required: [status, approvedAt, approvedBy]
+                    properties:
+                      status: { type: string }
+                      approvedAt: { type: [string, "null"], format: date-time }
+                      approvedBy: { type: [string, "null"] }
+                  auditTrail:
+                    type: array
+                    items:
+                      type: object
+                      required: [timestamp, action, actor, details, ipAddress]
+                      properties:
+                        timestamp: { type: string, format: date-time }
+                        action: { type: string }
+                        actor: { type: string }
+                        details: { type: [string, "null"] }
+                        ipAddress: { type: [string, "null"] }
+                  verification: { type: string }
+        "409":
+          description: Document has not been signed
+
+  /dashboard/stats:
+    get:
+      operationId: getDashboardStats
+      tags: [dashboard]
+      summary: Get dashboard statistics
+      responses:
+        "200":
+          description: Dashboard statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /admin/users:
+    get:
+      operationId: listAdminUsers
+      tags: [admin]
+      summary: List staff users for administrators
+      responses:
+        "200":
+          description: Staff users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+
+  /dashboard/recent-activity:
+    get:
+      operationId: getRecentActivity
+      tags: [dashboard]
+      summary: Get recent activity feed
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Recent activity
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
+  /dashboard/matter-pipeline:
+    get:
+      operationId: getMatterPipeline
+      tags: [dashboard]
+      summary: Get matter counts by status stage
+      responses:
+        "200":
+          description: Pipeline breakdown
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PipelineStage"
+
+  /dashboard/fica-overview:
+    get:
+      operationId: getFicaOverview
+      tags: [dashboard]
+      summary: Get FICA compliance overview
+      responses:
+        "200":
+          description: FICA compliance summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FicaOverview"
+
+  /dashboard/billing-summary:
+    get:
+      operationId: getBillingSummary
+      tags: [dashboard]
+      summary: Get billing and revenue summary
+      responses:
+        "200":
+          description: Billing summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BillingSummary"
+
+  /dashboard/workload:
+    get:
+      operationId: getTeamWorkload
+      tags: [dashboard]
+      summary: Get team workload distribution
+      responses:
+        "200":
+          description: Team workload
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkloadItem"
+
+  /dashboard/personal-work:
+    get:
+      operationId: getPersonalWork
+      tags: [dashboard]
+      summary: Get the current user's assigned matters and open tasks
+      responses:
+        "200":
+          description: Personal work summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PersonalWork"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required: [status]
+
+    # ─── AUTH ─────────────────────────────────────────────────────────────────
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+
+    AuthResponse:
+      type: object
+      required: [user]
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+
+    User:
+      type: object
+      required: [id, name, email, role]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [super_admin, managing_partner, partner, associate_attorney, candidate_attorney, paralegal, secretary, billing_officer, compliance_officer, client_portal_user]
+        avatarUrl:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    # ─── CLIENT ───────────────────────────────────────────────────────────────
+    Client:
+      type: object
+      required: [id, name, type, status, ficaStatus, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        type:
+          type: string
+          enum: [individual, corporate, trust, government]
+        status:
+          type: string
+          enum: [active, inactive, pending]
+        email:
+          type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
+        idNumber:
+          type: ["string", "null"]
+        address:
+          type: ["string", "null"]
+        riskScore:
+          type: ["integer", "null"]
+        ficaStatus:
+          type: string
+          enum: [compliant, pending, expired, blocked]
+        companyRegistration:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        matterCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ClientInput:
+      type: object
+      required: [name, type]
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          enum: [individual, corporate, trust, government]
+        email:
+          type: string
+        phone:
+          type: string
+        idNumber:
+          type: string
+        address:
+          type: string
+        companyRegistration:
+          type: string
+
+    ClientUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        address:
+          type: string
+        status:
+          type: string
+          enum: [active, inactive, pending]
+
+    FicaStatus:
+      type: object
+      required: [clientId, overallStatus, documents]
+      properties:
+        clientId:
+          type: integer
+        overallStatus:
+          type: string
+          enum: [compliant, pending, expired, blocked]
+        riskScore:
+          type: integer
+        documents:
+          type: array
+          items:
+            $ref: "#/components/schemas/FicaDocument"
+        nextReviewDate:
+          type: ["string", "null"]
+
+    FicaDocument:
+      type: object
+      required: [id, type, status]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [id_document, passport, proof_of_address, company_registration, beneficial_ownership]
+        status:
+          type: string
+          enum: [verified, pending, expired, missing]
+        expiryDate:
+          type: ["string", "null"]
+        uploadedAt:
+          type: ["string", "null"]
+
+    RiskScore:
+      type: object
+      required: [clientId, score, level, factors]
+      properties:
+        clientId:
+          type: integer
+        score:
+          type: integer
+        level:
+          type: string
+          enum: [low, medium, high]
+        factors:
+          type: array
+          items:
+            type: string
+
+    # ─── MATTER ───────────────────────────────────────────────────────────────
+    Matter:
+      type: object
+      required: [id, reference, title, status, clientId, clientName, createdAt]
+      properties:
+        id:
+          type: integer
+        reference:
+          type: string
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [lead, conflict_check, approved, active, review, completed, closed, archived]
+        riskFlag:
+          type: boolean
+        riskLevel:
+          type: string
+          enum: [no_risk, review_required, high_risk, compliance_blocked]
+        conflictStatus:
+          type: ["string", "null"]
+          description: Status of the latest conflict record for this matter (null when no scan has run)
+        nextAction:
+          type: ["string", "null"]
+          description: The next required action to move this matter forward
+        clientId:
+          type: integer
+        clientName:
+          type: string
+        assignedToId:
+          type: ["integer", "null"]
+        assignedToName:
+          type: ["string", "null"]
+        practiceArea:
+          type: ["string", "null"]
+        value:
+          type: ["number", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    MatterInput:
+      type: object
+      required: [title, clientId]
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        clientId:
+          type: integer
+        assignedToId:
+          type: integer
+        practiceArea:
+          type: string
+        value:
+          type: ["number", "null"]
+
+    MatterUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        assignedToId:
+          type: ["integer", "null"]
+        practiceArea:
+          type: string
+        value:
+          type: ["number", "null"]
+        riskFlag:
+          type: boolean
+        riskLevel:
+          type: string
+          enum: [no_risk, review_required, high_risk, compliance_blocked]
+
+    MatterAssignee:
+      type: object
+      required: [id, name, email, role]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+        accountStatus:
+          type: string
+
+    MatterExportClient:
+      type: object
+      required: [id, name, type, status, ficaStatus]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        type:
+          type: string
+        status:
+          type: string
+        ficaStatus:
+          type: string
+
+    MatterExportDocument:
+      type: object
+      required: [id, title, documentType, status, version, approvalStatus, signatureStatus, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        documentType:
+          type: string
+        status:
+          type: string
+        version:
+          type: integer
+        approvalStatus:
+          type: string
+        signatureStatus:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    MatterExportTask:
+      type: object
+      required: [id, title, status, priority, createdAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        status:
+          type: string
+        priority:
+          type: string
+        dueDate:
+          type: ["string", "null"]
+        assignedToId:
+          type: ["integer", "null"]
+        assignedToName:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    MatterExportResearch:
+      type: object
+      required: [id, query, sourcesRequested, aiStatus, savedToMatter, createdAt]
+      properties:
+        id:
+          type: integer
+        query:
+          type: string
+        sourcesRequested:
+          type: array
+          items:
+            type: string
+        aiStatus:
+          type: string
+        savedToMatter:
+          type: boolean
+        citationCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    MatterExportAiOutput:
+      type: object
+      required: [id, workflowLabel, riskLevel, reviewStatus, createdAt]
+      properties:
+        id:
+          type: integer
+        workflowLabel:
+          type: string
+        title:
+          type: ["string", "null"]
+        riskLevel:
+          type: string
+        reviewStatus:
+          type: string
+        documentId:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    MatterExportConflict:
+      type: object
+      required: [id, clientName, severity, status, checkedAt]
+      properties:
+        id:
+          type: integer
+        clientName:
+          type: string
+        opposingParty:
+          type: ["string", "null"]
+        severity:
+          type: string
+        status:
+          type: string
+        reviewDecision:
+          type: ["string", "null"]
+        reviewReason:
+          type: ["string", "null"]
+        reviewedAt:
+          type: ["string", "null"]
+          format: date-time
+        checkedAt:
+          type: string
+          format: date-time
+
+    MatterExportAuditLog:
+      type: object
+      required: [id, action, entityType, entityId, createdAt]
+      properties:
+        id:
+          type: integer
+        action:
+          type: string
+        entityType:
+          type: string
+        entityId:
+          type: integer
+        entityTitle:
+          type: ["string", "null"]
+        userId:
+          type: ["integer", "null"]
+        userName:
+          type: ["string", "null"]
+        details:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    MatterExport:
+      type: object
+      required: [generatedAt, matter, client, timeline, documents, tasks, research, aiOutputs, conflicts, auditLogs]
+      properties:
+        generatedAt:
+          type: string
+          format: date-time
+        matter:
+          $ref: "#/components/schemas/Matter"
+        client:
+          $ref: "#/components/schemas/MatterExportClient"
+        timeline:
+          type: array
+          items:
+            $ref: "#/components/schemas/MatterTimelineEvent"
+        documents:
+          type: array
+          items:
+            $ref: "#/components/schemas/MatterExportDocument"
+        tasks:
+          type: array
+          items:
+            $ref: "#/components/schemas/MatterExportTask"
+        research:
+          type: array
+          items:
+            $ref: "#/components/schemas/MatterExportResearch"
+        aiOutputs:
+          type: array
+          items:
+            $ref: "#/components/schemas/MatterExportAiOutput"
+        conflicts:
+          type: array
+          items:
+            $ref: "#/components/schemas/MatterExportConflict"
+        auditLogs:
+          type: array
+          items:
+            $ref: "#/components/schemas/MatterExportAuditLog"
+
+    MatterStatusUpdate:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [lead, conflict_check, approved, active, review, completed, closed, archived]
+        note:
+          type: string
+
+    MatterTimelineEvent:
+      type: object
+      required: [id, category, title, occurredAt]
+      properties:
+        id:
+          type: string
+          description: Stable synthetic id (category + record id)
+        category:
+          type: string
+          enum: [matter, conflict, document, task, email, research, ai, billing, signature, audit, status]
+        title:
+          type: string
+        detail:
+          type: ["string", "null"]
+        actorName:
+          type: ["string", "null"]
+        occurredAt:
+          type: string
+          format: date-time
+
+    MatterSummary:
+      type: object
+      required: [matterId, summary, timeline]
+      properties:
+        matterId:
+          type: integer
+        summary:
+          type: string
+        timeline:
+          type: array
+          items:
+            $ref: "#/components/schemas/TimelineEvent"
+
+    TimelineEvent:
+      type: object
+      required: [id, type, description, occurredAt]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+        description:
+          type: string
+        occurredAt:
+          type: string
+          format: date-time
+        userId:
+          type: ["integer", "null"]
+        userName:
+          type: ["string", "null"]
+
+    # ─── DOCUMENT ─────────────────────────────────────────────────────────────
+    Document:
+      type: object
+      required: [id, matterId, title, status, version, createdAt]
+      properties:
+        id:
+          type: integer
+        matterId:
+          type: integer
+        title:
+          type: string
+        documentType:
+          type: string
+          enum: [contract, pleading, opinion, correspondence, affidavit, general]
+        content:
+          type: ["string", "null"]
+        fileObjectPath:
+          type: ["string", "null"]
+        originalFilename:
+          type: ["string", "null"]
+        mimeType:
+          type: ["string", "null"]
+        fileSize:
+          type: ["integer", "null"]
+        fileChecksum:
+          type: ["string", "null"]
+        sourceTemplateId:
+          type: ["integer", "null"]
+        sourceTemplateVersion:
+          type: ["integer", "null"]
+        status:
+          type: string
+          enum: [draft, ai_assist, review, partner_approval, client_signing, archived]
+        version:
+          type: integer
+        contentOrigin:
+          type: string
+          enum: [human, ai_assisted, ai_generated]
+        sections:
+          type: array
+          items:
+            $ref: "#/components/schemas/DocumentSection"
+        aiGenerated:
+          type: boolean
+        aiRiskLevel:
+          type: ["string", "null"]
+        confidenceScore:
+          type: ["number", "null"]
+        citations:
+          type: array
+          items:
+            type: string
+        citationStatus:
+          type: string
+          enum: [none, unverified, verified]
+        approvalStatus:
+          type: string
+          enum: [not_submitted, pending, approved, rejected, changes_requested]
+        approvalReason:
+          type: ["string", "null"]
+        approvedAt:
+          type: ["string", "null"]
+          format: date-time
+        submittedByName:
+          type: ["string", "null"]
+        submittedAt:
+          type: ["string", "null"]
+          format: date-time
+        signatureStatus:
+          type: string
+          enum: [not_sent, sent, signed]
+        signedAt:
+          type: ["string", "null"]
+          format: date-time
+        createdByName:
+          type: ["string", "null"]
+        approvedByName:
+          type: ["string", "null"]
+        matterTitle:
+          type: ["string", "null"]
+        matterReference:
+          type: ["string", "null"]
+        providerOperation:
+          type: ["object", "null"]
+          properties:
+            id:
+              type: integer
+            kind:
+              type: string
+            status:
+              type: string
+              enum: [queued, provider_confirmed, failed]
+            providerName:
+              type: string
+            providerRequestId:
+              type: ["string", "null"]
+            providerEventId:
+              type: ["string", "null"]
+            matterId:
+              type: ["integer", "null"]
+            documentId:
+              type: ["integer", "null"]
+            payload:
+              type: object
+              additionalProperties: true
+            errorMessage:
+              type: ["string", "null"]
+            attempt:
+              type: integer
+            retryOfId:
+              type: ["integer", "null"]
+            reviewedById:
+              type: ["integer", "null"]
+            reviewedAt:
+              type: ["string", "null"]
+              format: date-time
+            createdById:
+              type: ["integer", "null"]
+            createdAt:
+              type: string
+              format: date-time
+            updatedAt:
+              type: string
+              format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    DocumentSection:
+      type: object
+      required: [heading, origin]
+      properties:
+        heading:
+          type: string
+        origin:
+          type: string
+          enum: [human, ai_assisted, ai_generated]
+        summary:
+          type: string
+
+    DocumentInput:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+        documentType:
+          type: string
+          enum: [contract, pleading, opinion, correspondence, affidavit, general]
+        content:
+          type: string
+        fileObjectPath:
+          type: string
+        originalFilename:
+          type: string
+        mimeType:
+          type: string
+        fileSize:
+          type: integer
+        fileChecksum:
+          type: string
+        contentOrigin:
+          type: string
+          enum: [human, ai_assisted, ai_generated]
+        sections:
+          type: array
+          items:
+            $ref: "#/components/schemas/DocumentSection"
+        aiGenerated:
+          type: boolean
+
+    DocumentSignatureInput:
+      type: object
+      required: [signerName, signerEmail, signerMethod]
+      properties:
+        signerName: { type: string, minLength: 2 }
+        signerEmail: { type: string, pattern: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$' }
+        signerMethod:
+          type: string
+          description: How the legal staff member verified the signer
+
+    DocumentSignatureRequest:
+      type: object
+      required: [signerName, signerEmail]
+      properties:
+        signerName: { type: string, minLength: 2 }
+        signerEmail: { type: string, pattern: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$' }
+
+    DocumentUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        documentType:
+          type: string
+          enum: [contract, pleading, opinion, correspondence, affidavit, general]
+        content:
+          type: string
+        sections:
+          type: array
+          items:
+            $ref: "#/components/schemas/DocumentSection"
+        citationStatus:
+          type: string
+          enum: [none, unverified, verified]
+        changeSummary:
+          type: string
+    DocumentStatusChange:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [draft, ai_assist, review]
+
+    DocumentAiAssist:
+      type: object
+      properties:
+        origin:
+          type: string
+          enum: [ai_assisted, ai_generated]
+        content:
+          type: string
+        sections:
+          type: array
+          items:
+            $ref: "#/components/schemas/DocumentSection"
+        aiRiskLevel:
+          type: string
+          enum: [low, medium, high]
+        confidenceScore:
+          type: number
+        citations:
+          type: array
+          items:
+            type: string
+
+    DocumentDecision:
+      type: object
+      required: [decision]
+      properties:
+        decision:
+          type: string
+          enum: [approve, reject, request_changes]
+        reason:
+          type: string
+
+    DocumentVersion:
+      type: object
+      required: [id, documentId, version, title, createdAt]
+      properties:
+        id:
+          type: integer
+        documentId:
+          type: integer
+        version:
+          type: integer
+        title:
+          type: string
+        content:
+          type: ["string", "null"]
+        fileObjectPath:
+          type: ["string", "null"]
+        originalFilename:
+          type: ["string", "null"]
+        mimeType:
+          type: ["string", "null"]
+        fileSize:
+          type: ["integer", "null"]
+        fileChecksum:
+          type: ["string", "null"]
+        contentOrigin:
+          type: string
+        authorName:
+          type: ["string", "null"]
+        changeSummary:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+    Notification:
+      type: object
+      required: [id, type, title, createdAt]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+        title:
+          type: string
+        message:
+          type: ["string", "null"]
+        link:
+          type: ["string", "null"]
+        readAt:
+          type: ["string", "null"]
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    DocumentApproval:
+      type: object
+      required: [decision]
+      properties:
+        decision:
+          type: string
+          enum: [approved, rejected, changes_requested]
+        comment:
+          type: string
+
+    # ─── TASK ─────────────────────────────────────────────────────────────────
+    Task:
+      type: object
+      required: [id, matterId, title, status, priority, createdAt]
+      properties:
+        id:
+          type: integer
+        matterId:
+          type: integer
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [pending, in_progress, completed, cancelled]
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+        dueDate:
+          type: ["string", "null"]
+        assignedToName:
+          type: ["string", "null"]
+        matterReference:
+          type: ["string", "null"]
+        matterTitle:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    TaskInput:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+        dueDate:
+          type: string
+        assignedToId:
+          type: integer
+
+    GlobalTaskInput:
+      allOf:
+        - $ref: "#/components/schemas/TaskInput"
+        - type: object
+          required: [matterId]
+          properties:
+            matterId:
+              type: integer
+
+    TaskUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [pending, in_progress, completed, cancelled]
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+        dueDate:
+          type: string
+
+    # ─── CONFLICT ─────────────────────────────────────────────────────────────
+    ConflictCheckInput:
+      type: object
+      required: [clientName]
+      properties:
+        clientName:
+          type: string
+        opposingParty:
+          type: string
+        matterId:
+          type: integer
+
+    ConflictCheckResult:
+      type: object
+      required: [id, hasConflicts, severity, status, conflicts]
+      properties:
+        id:
+          type: integer
+        hasConflicts:
+          type: boolean
+        severity:
+          type: string
+          enum: [none, low, medium, high]
+        status:
+          type: string
+          enum: [pending, cleared, approved, rejected, further_review]
+        conflicts:
+          type: array
+          items:
+            $ref: "#/components/schemas/ConflictItem"
+        aiReasoning:
+          type: ["string", "null"]
+
+    ConflictItem:
+      type: object
+      required: [type, description, severity]
+      properties:
+        type:
+          type: string
+        description:
+          type: string
+        severity:
+          type: string
+          enum: [low, medium, high]
+        relatedMatterId:
+          type: ["integer", "null"]
+        existingClient:
+          type: ["string", "null"]
+        existingMatterRef:
+          type: ["string", "null"]
+        relatedParty:
+          type: ["string", "null"]
+        reason:
+          type: ["string", "null"]
+
+    ConflictReviewInput:
+      type: object
+      required: [decision, reason]
+      properties:
+        decision:
+          type: string
+          enum: [approve, reject, request_further_review]
+        reason:
+          type: string
+          minLength: 3
+
+    ConflictReviewResult:
+      type: object
+      required: [id, status]
+      properties:
+        id:
+          type: integer
+        status:
+          type: string
+          enum: [pending, cleared, approved, rejected, further_review]
+        reviewDecision:
+          type: ["string", "null"]
+        reviewReason:
+          type: ["string", "null"]
+        reviewedByName:
+          type: ["string", "null"]
+        reviewedAt:
+          type: ["string", "null"]
+          format: date-time
+
+    ConflictRecord:
+      type: object
+      required: [id, matterId, clientName, severity, status, checkedAt]
+      properties:
+        id:
+          type: integer
+        matterId:
+          type: ["integer", "null"]
+        clientName:
+          type: string
+        opposingParty:
+          type: ["string", "null"]
+        severity:
+          type: string
+          enum: [low, medium, high, none]
+        status:
+          type: string
+          enum: [pending, cleared, approved, rejected, further_review]
+        conflicts:
+          type: array
+          items:
+            $ref: "#/components/schemas/ConflictItem"
+        aiReasoning:
+          type: ["string", "null"]
+        reviewedByName:
+          type: ["string", "null"]
+        reviewDecision:
+          type: ["string", "null"]
+        reviewReason:
+          type: ["string", "null"]
+        reviewedAt:
+          type: ["string", "null"]
+          format: date-time
+        checkedAt:
+          type: string
+          format: date-time
+
+    # ─── TIME ─────────────────────────────────────────────────────────────────
+    TimeEntry:
+      type: object
+      required: [id, matterId, description, hours, rate, total, billed, createdAt]
+      properties:
+        id:
+          type: integer
+        matterId:
+          type: integer
+        matterTitle:
+          type: ["string", "null"]
+        description:
+          type: string
+        hours:
+          type: number
+        rate:
+          type: number
+        total:
+          type: number
+        billed:
+          type: boolean
+        userName:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    ProductivitySummary:
+      type: object
+      required: [period, filters, permissions, supportedDimensions, kpis, practiceAreas, matters, users, trend, workPatterns, workload, insights, health, filterOptions]
+      properties:
+        period:
+          $ref: "#/components/schemas/ProductivityPeriod"
+        filters:
+          $ref: "#/components/schemas/ProductivityFilters"
+        permissions:
+          type: object
+          required: [scope]
+          properties:
+            scope:
+              type: string
+              enum: [self, firm]
+        supportedDimensions:
+          type: object
+          required: [activityType, team, department, taskMetrics]
+          properties:
+            activityType:
+              type: boolean
+            team:
+              type: boolean
+            department:
+              type: boolean
+            taskMetrics:
+              type: boolean
+        kpis:
+          $ref: "#/components/schemas/ProductivityKpis"
+        practiceAreas:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductivityPracticeArea"
+        matters:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductivityMatter"
+        users:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductivityUser"
+        trend:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductivityTrendPoint"
+        workPatterns:
+          $ref: "#/components/schemas/ProductivityWorkPatterns"
+        workload:
+          $ref: "#/components/schemas/ProductivityWorkload"
+        insights:
+          type: array
+          items:
+            type: string
+        health:
+          $ref: "#/components/schemas/ProductivityHealth"
+        filterOptions:
+          $ref: "#/components/schemas/ProductivityFilterOptions"
+
+    ProductivityPeriod:
+      type: object
+      required: [startDate, endDate, label, granularity]
+      properties:
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        label:
+          type: string
+        granularity:
+          type: string
+          enum: [day, week, month]
+
+    ProductivityFilters:
+      type: object
+      required: [userId, matterId, clientId, practiceArea]
+      properties:
+        userId:
+          type: ["integer", "null"]
+        matterId:
+          type: ["integer", "null"]
+        clientId:
+          type: ["integer", "null"]
+        practiceArea:
+          type: ["string", "null"]
+
+    ProductivityKpis:
+      type: object
+      required: [totalHours, activitiesLogged, activeUsers, activeMatters, averageHoursPerUser, averageHoursPerDay, tasksWorkedOn, tasksCompleted]
+      properties:
+        totalHours:
+          type: number
+        activitiesLogged:
+          type: integer
+        activeUsers:
+          type: integer
+        activeMatters:
+          type: integer
+        averageHoursPerUser:
+          type: number
+        averageHoursPerDay:
+          type: number
+        tasksWorkedOn:
+          type: ["integer", "null"]
+        tasksCompleted:
+          type: ["integer", "null"]
+
+    ProductivityPracticeArea:
+      type: object
+      required: [practiceArea, totalHours, activities, percentage]
+      properties:
+        practiceArea:
+          type: string
+        totalHours:
+          type: number
+        activities:
+          type: integer
+        percentage:
+          type: number
+
+    ProductivityMatter:
+      type: object
+      required: [matterId, reference, title, clientId, clientName, practiceArea, totalHours, activities, activeUsers, lastActivity, tasksWorkedOn]
+      properties:
+        matterId:
+          type: integer
+        reference:
+          type: string
+        title:
+          type: string
+        clientId:
+          type: integer
+        clientName:
+          type: string
+        practiceArea:
+          type: ["string", "null"]
+        totalHours:
+          type: number
+        activities:
+          type: integer
+        activeUsers:
+          type: integer
+        lastActivity:
+          type: string
+          format: date-time
+        tasksWorkedOn:
+          type: ["integer", "null"]
+
+    ProductivityUser:
+      type: object
+      required: [userId, userName, totalHours, activities, mattersWorkedOn, tasksWorkedOn, averageHoursPerDay]
+      properties:
+        userId:
+          type: integer
+        userName:
+          type: string
+        totalHours:
+          type: number
+        activities:
+          type: integer
+        mattersWorkedOn:
+          type: integer
+        tasksWorkedOn:
+          type: ["integer", "null"]
+        averageHoursPerDay:
+          type: number
+
+    ProductivityTrendPoint:
+      type: object
+      required: [period, label, totalHours, activities, activeUsers, activeMatters, tasksWorkedOn, tasksCompleted]
+      properties:
+        period:
+          type: string
+        label:
+          type: string
+        totalHours:
+          type: number
+        activities:
+          type: integer
+        activeUsers:
+          type: integer
+        activeMatters:
+          type: integer
+        tasksWorkedOn:
+          type: ["integer", "null"]
+        tasksCompleted:
+          type: ["integer", "null"]
+
+    ProductivityWorkPatterns:
+      type: object
+      required: [byWeekday, byHour, morningHours, afternoonHours, afterHours]
+      properties:
+        byWeekday:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductivityPatternPoint"
+        byHour:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductivityHourPoint"
+        morningHours:
+          type: number
+        afternoonHours:
+          type: number
+        afterHours:
+          type: number
+
+    ProductivityPatternPoint:
+      type: object
+      required: [day, totalHours, activities]
+      properties:
+        day:
+          type: string
+        totalHours:
+          type: number
+        activities:
+          type: integer
+
+    ProductivityHourPoint:
+      type: object
+      required: [hour, totalHours, activities]
+      properties:
+        hour:
+          type: integer
+        totalHours:
+          type: number
+        activities:
+          type: integer
+
+    ProductivityWorkload:
+      type: object
+      required: [highActivityMatters, lowActivityMatters, inactiveMatters, concentratedMatters]
+      properties:
+        highActivityMatters:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductivityWorkloadMatter"
+        lowActivityMatters:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductivityWorkloadMatter"
+        inactiveMatters:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductivityWorkloadMatter"
+        concentratedMatters:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductivityConcentratedMatter"
+
+    ProductivityWorkloadMatter:
+      type: object
+      required: [matterId, reference, title, totalHours]
+      properties:
+        matterId:
+          type: integer
+        reference:
+          type: string
+        title:
+          type: string
+        totalHours:
+          type: number
+
+    ProductivityConcentratedMatter:
+      type: object
+      required: [matterId, reference, title, totalHours, activeUsers]
+      properties:
+        matterId:
+          type: integer
+        reference:
+          type: string
+        title:
+          type: string
+        totalHours:
+          type: number
+        activeUsers:
+          type: integer
+
+    ProductivityHealth:
+      type: object
+      required: [totalEntries, incompleteEntries, missingMatter, missingDate, missingDescription, incompleteDuration, uncategorizedEntries, lateManualEntries]
+      properties:
+        totalEntries:
+          type: integer
+        incompleteEntries:
+          type: integer
+        missingMatter:
+          type: integer
+        missingDate:
+          type: integer
+        missingDescription:
+          type: integer
+        incompleteDuration:
+          type: integer
+        uncategorizedEntries:
+          type: ["integer", "null"]
+        lateManualEntries:
+          type: ["integer", "null"]
+
+    ProductivityFilterOptions:
+      type: object
+      required: [users, practiceAreas]
+      properties:
+        users:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductivityFilterUser"
+        practiceAreas:
+          type: array
+          items:
+            type: string
+
+    ProductivityFilterUser:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+
+    TimeEntryInput:
+      type: object
+      required: [matterId, description, hours, rate]
+      properties:
+        matterId:
+          type: integer
+        description:
+          type: string
+        hours:
+          type: number
+        rate:
+          type: number
+        date:
+          type: string
+          format: date
+
+    TimeEntryUpdate:
+      type: object
+      properties:
+        description:
+          type: string
+        hours:
+          type: number
+        rate:
+          type: number
+        billed:
+          type: boolean
+
+    # ─── BILLING ──────────────────────────────────────────────────────────────
+    Invoice:
+      type: object
+      required: [id, invoiceNumber, clientId, clientName, total, status, createdAt]
+      properties:
+        id:
+          type: integer
+        invoiceNumber:
+          type: string
+        clientId:
+          type: integer
+        clientName:
+          type: string
+        matterId:
+          type: ["integer", "null"]
+        matterTitle:
+          type: ["string", "null"]
+        subtotal:
+          type: number
+        tax:
+          type: number
+        total:
+          type: number
+        status:
+          type: string
+          enum: [draft, pending_review, approved, sent, paid, overdue]
+        dueDate:
+          type: ["string", "null"]
+        createdById:
+          type: ["integer", "null"]
+        createdByName:
+          type: ["string", "null"]
+        reviewedById:
+          type: ["integer", "null"]
+        reviewedByName:
+          type: ["string", "null"]
+        reviewNote:
+          type: ["string", "null"]
+        sentAt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    InvoiceInput:
+      type: object
+      required: [clientId, total]
+      properties:
+        clientId:
+          type: integer
+        matterId:
+          type: integer
+        subtotal:
+          type: number
+        tax:
+          type: number
+        total:
+          type: number
+        dueDate:
+          type: string
+
+    InvoiceUpdate:
+      type: object
+      properties:
+        subtotal:
+          type: number
+        tax:
+          type: number
+        total:
+          type: number
+        dueDate:
+          type: string
+
+    GenerateInvoiceInput:
+      type: object
+      required: [matterId]
+      properties:
+        matterId:
+          type: integer
+
+    InvoiceDecisionInput:
+      type: object
+      required: [decision]
+      properties:
+        decision:
+          type: string
+          enum: [approve, reject]
+        note:
+          type: string
+
+    # ─── WORKFLOW ENGINE ─────────────────────────────────────────────────────
+    WorkflowStepDef:
+      type: object
+      required: [key, label, responsibleRoles, requiresApproval, blockingCondition]
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        responsibleRoles:
+          type: array
+          items:
+            type: string
+        requiresApproval:
+          type: boolean
+        blockingCondition:
+          type: string
+
+    WorkflowDef:
+      type: object
+      required: [key, name, entityType, description, steps]
+      properties:
+        key:
+          type: string
+        name:
+          type: string
+        entityType:
+          type: string
+        description:
+          type: string
+        steps:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkflowStepDef"
+
+    WorkflowInstance:
+      type: object
+      required: [workflowKey, entityType, entityId, title, currentStep, currentStepLabel, stepIndex, totalSteps, responsibleRoles, requiresApproval, status, link]
+      properties:
+        workflowKey:
+          type: string
+        entityType:
+          type: string
+        entityId:
+          type: integer
+        title:
+          type: string
+        subtitle:
+          type: ["string", "null"]
+        currentStep:
+          type: string
+        currentStepLabel:
+          type: string
+        previousStep:
+          type: ["string", "null"]
+        nextStep:
+          type: ["string", "null"]
+        stepIndex:
+          type: integer
+        totalSteps:
+          type: integer
+        responsibleRoles:
+          type: array
+          items:
+            type: string
+        requiresApproval:
+          type: boolean
+        status:
+          type: string
+        blockedBy:
+          type: ["string", "null"]
+        dueDate:
+          type: ["string", "null"]
+        link:
+          type: string
+
+    WorkflowsResponse:
+      type: object
+      required: [definitions, instances]
+      properties:
+        definitions:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkflowDef"
+        instances:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkflowInstance"
+
+    PendingAction:
+      type: object
+      required: [id, type, title, entityType, entityId, link, severity]
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        entityType:
+          type: string
+        entityId:
+          type: integer
+        link:
+          type: string
+        severity:
+          type: string
+          enum: [normal, high]
+        dueDate:
+          type: ["string", "null"]
+        createdAt:
+          type: ["string", "null"]
+
+    ActionsResponse:
+      type: object
+      required: [actions, counts]
+      properties:
+        actions:
+          type: array
+          items:
+            $ref: "#/components/schemas/PendingAction"
+        counts:
+          type: object
+          required: [total, high]
+          properties:
+            total:
+              type: integer
+            high:
+              type: integer
+
+    TemplateCounts:
+      type: object
+      required: [total, uploaded, pending_approval, approved, rejected, archived, aiReady]
+      properties:
+        total: { type: integer }
+        uploaded: { type: integer }
+        pending_approval: { type: integer }
+        approved: { type: integer }
+        rejected: { type: integer }
+        archived: { type: integer }
+        aiReady: { type: integer }
+
+    TemplateList:
+      type: object
+      required: [items, counts]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/KnowledgeItem"
+        counts:
+          $ref: "#/components/schemas/TemplateCounts"
+
+    TemplateInstantiateInput:
+      type: object
+      required: [matterId]
+      properties:
+        matterId: { type: integer }
+        title:
+          type: string
+          description: Optional title override for the new matter document
+        documentType:
+          type: string
+          enum: [contract, pleading, opinion, correspondence, affidavit, general]
+
+    StorageUploadRequest:
+      type: object
+      required: [name, size, contentType]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 255 }
+        size: { type: integer, minimum: 1, maximum: 26214400 }
+        contentType:
+          type: string
+          enum: [application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/rtf, text/plain, application/vnd.oasis.opendocument.text, image/jpeg, image/png, image/webp]
+
+    StorageUploadResponse:
+      type: object
+      required: [uploadURL, objectPath, metadata]
+      properties:
+        uploadURL: { type: string }
+        objectPath: { type: string }
+        metadata:
+          type: object
+          required: [name, size, contentType]
+          properties:
+            name: { type: string }
+            size: { type: integer }
+            contentType: { type: string }
+
+    # ─── KNOWLEDGE ────────────────────────────────────────────────────────────
+    KnowledgeItem:
+      type: object
+      required: [id, title, type, category, status, createdAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        content:
+          type: ["string", "null"]
+        type:
+          type: string
+          enum: [template, opinion, guidance, precedent]
+        category:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        documentType:
+          type: ["string", "null"]
+        practiceArea:
+          type: ["string", "null"]
+        jurisdiction:
+          type: ["string", "null"]
+        effectiveDate:
+          type: ["string", "null"]
+          format: date-time
+        reviewDate:
+          type: ["string", "null"]
+          format: date-time
+        fileObjectPath:
+          type: ["string", "null"]
+        originalFilename:
+          type: ["string", "null"]
+        mimeType:
+          type: ["string", "null"]
+        fileSize:
+          type: ["integer", "null"]
+        fileChecksum:
+          type: ["string", "null"]
+        sourceTemplateId:
+          type: ["integer", "null"]
+        sourceTemplateVersion:
+          type: ["integer", "null"]
+        status:
+          type: string
+          enum: [uploaded, pending_approval, approved, rejected, archived]
+        aiIndexStatus:
+          type: string
+          enum: [none, indexing, indexed]
+        aiIndexedAt:
+          type: ["string", "null"]
+          format: date-time
+        availableToAi:
+          type: boolean
+        version:
+          type: integer
+        authorName:
+          type: ["string", "null"]
+        reviewedByName:
+          type: ["string", "null"]
+        approvedByName:
+          type: ["string", "null"]
+        approvedAt:
+          type: ["string", "null"]
+          format: date-time
+        reviewNote:
+          type: ["string", "null"]
+        archivedAt:
+          type: ["string", "null"]
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    KnowledgeItemInput:
+      type: object
+      required: [title, type, category]
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+        type:
+          type: string
+          enum: [template, opinion, guidance, precedent]
+        category:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        fileObjectPath:
+          type: string
+        originalFilename:
+          type: string
+        mimeType:
+          type: string
+        fileSize:
+          type: integer
+        fileChecksum:
+          type: string
+        documentType:
+          type: string
+        practiceArea:
+          type: string
+        jurisdiction:
+          type: string
+        effectiveDate:
+          type: string
+          format: date-time
+        reviewDate:
+          type: string
+          format: date-time
+
+    KnowledgeItemUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+        type:
+          type: string
+          enum: [template, opinion, guidance, precedent]
+        category:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        changeSummary:
+          type: string
+        documentType:
+          type: string
+        practiceArea:
+          type: string
+        jurisdiction:
+          type: string
+        effectiveDate:
+          type: string
+          format: date-time
+        reviewDate:
+          type: string
+          format: date-time
+        fileObjectPath:
+          type: string
+        originalFilename:
+          type: string
+        mimeType:
+          type: string
+        fileSize:
+          type: integer
+        fileChecksum:
+          type: string
+
+    KnowledgeDecisionInput:
+      type: object
+      required: [decision]
+      properties:
+        decision:
+          type: string
+          enum: [approve, reject]
+        note:
+          type: string
+
+    KnowledgeItemVersion:
+      type: object
+      required: [id, knowledgeItemId, version, title, type, category, status, createdAt]
+      properties:
+        id:
+          type: integer
+        knowledgeItemId:
+          type: integer
+        version:
+          type: integer
+        title:
+          type: string
+        content:
+          type: ["string", "null"]
+        type:
+          type: string
+        category:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        documentType:
+          type: ["string", "null"]
+        practiceArea:
+          type: ["string", "null"]
+        jurisdiction:
+          type: ["string", "null"]
+        effectiveDate:
+          type: ["string", "null"]
+          format: date-time
+        reviewDate:
+          type: ["string", "null"]
+          format: date-time
+        fileObjectPath:
+          type: ["string", "null"]
+        originalFilename:
+          type: ["string", "null"]
+        mimeType:
+          type: ["string", "null"]
+        fileSize:
+          type: ["integer", "null"]
+        fileChecksum:
+          type: ["string", "null"]
+        status:
+          type: string
+        wasApproved:
+          type: boolean
+        editedByName:
+          type: ["string", "null"]
+        changeSummary:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    # ─── AI ───────────────────────────────────────────────────────────────────
+    AiGenerateInput:
+      type: object
+      required: [workflow, matterId]
+      properties:
+        workflow:
+          type: string
+          enum: [draft_contract, summarise_matter, draft_email, analyse_clause, legal_research, matter_summary]
+        matterId:
+          type: integer
+        instructions:
+          type: string
+        params:
+          type: object
+          additionalProperties: true
+          description: "Workflow inputs, e.g. contractType, jurisdiction, clauses[], recipient, clauseText"
+
+    AiTranscriptionResponse:
+      type: object
+      required: [text]
+      properties:
+        text:
+          type: string
+          description: Transcribed text; raw audio is never returned or persisted
+
+    AiSaveInput:
+      type: object
+      properties:
+        content:
+          type: string
+          description: Attorney-edited content; when provided and different, the document is marked ai_assisted
+
+    AiReviewInput:
+      type: object
+      required: [decision]
+      properties:
+        decision:
+          type: string
+          enum: [reviewed, overridden]
+        note:
+          type: string
+          description: Required when decision is overridden
+
+    AiOutput:
+      type: object
+      required: [id, matterId, workflow, workflowLabel, query, response, riskLevel, citationStatus, reviewStatus, humanOverride, requiresReview, createdAt]
+      properties:
+        id:
+          type: integer
+        matterId:
+          type: ["integer", "null"]
+        workflow:
+          type: string
+        workflowLabel:
+          type: string
+        title:
+          type: ["string", "null"]
+        params:
+          type: ["object", "null"]
+          additionalProperties: true
+        query:
+          type: string
+        response:
+          type: string
+        model:
+          type: ["string", "null"]
+        explanation:
+          type: ["string", "null"]
+        riskLevel:
+          type: string
+          enum: [low, medium, high]
+        confidenceScore:
+          type: ["number", "null"]
+        citations:
+          type: array
+          items:
+            type: string
+        citationStatus:
+          type: string
+          enum: [none, unverified, verified]
+        reviewStatus:
+          type: string
+          enum: [pending, reviewed, overridden]
+        reviewNote:
+          type: ["string", "null"]
+        humanOverride:
+          type: boolean
+        reviewedBy:
+          type: ["string", "null"]
+        reviewedAt:
+          type: ["string", "null"]
+          format: date-time
+        requestedBy:
+          type: ["string", "null"]
+        documentId:
+          type: ["integer", "null"]
+        requiresReview:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    # ─── LEGAL RESEARCH ───────────────────────────────────────────────────────
+    ResearchSource:
+      type: object
+      required: [source, label, kind, live, availability]
+      properties:
+        source:
+          type: string
+          enum: [firm_precedents, knowledge_base, case_law, legislation]
+        label:
+          type: string
+        kind:
+          type: string
+          enum: [internal, external]
+        live:
+          type: boolean
+        availability:
+          type: string
+
+    ResearchInput:
+      type: object
+      required: [matterId, query]
+      properties:
+        matterId:
+          type: integer
+        query:
+          type: string
+        sources:
+          type: array
+          items:
+            type: string
+            enum: [firm_precedents, knowledge_base, case_law, legislation]
+          description: Defaults to all sources when omitted
+
+    ResearchInternalResult:
+      type: object
+      required: [id, title, type, category, status, source]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        type:
+          type: string
+        category:
+          type: string
+        status:
+          type: string
+        source:
+          type: string
+        snippet:
+          type: ["string", "null"]
+
+    ResearchRecord:
+      type: object
+      required: [id, matterId, query, sourcesRequested, sources, internalResults, aiStatus, caseReferences, legislation, citations, citationStatus, savedToMatter, createdAt]
+      properties:
+        id:
+          type: integer
+        matterId:
+          type: integer
+        query:
+          type: string
+        sourcesRequested:
+          type: array
+          items:
+            type: string
+        sources:
+          type: array
+          items:
+            $ref: "#/components/schemas/ResearchSource"
+        internalResults:
+          type: array
+          items:
+            $ref: "#/components/schemas/ResearchInternalResult"
+        aiStatus:
+          type: string
+          enum: [ok, unavailable, failed]
+        aiError:
+          type: ["string", "null"]
+        aiSummary:
+          type: ["string", "null"]
+        caseReferences:
+          type: array
+          items:
+            type: string
+        legislation:
+          type: array
+          items:
+            type: string
+        citations:
+          type: array
+          items:
+            type: string
+        citationStatus:
+          type: string
+          enum: [none, unverified, verified]
+        confidenceScore:
+          type: ["number", "null"]
+        explanation:
+          type: ["string", "null"]
+        model:
+          type: ["string", "null"]
+        savedToMatter:
+          type: boolean
+        savedAt:
+          type: ["string", "null"]
+          format: date-time
+        savedBy:
+          type: ["string", "null"]
+        performedBy:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    # ─── AUDIT ────────────────────────────────────────────────────────────────
+    AuditLog:
+      type: object
+      required: [id, action, entityType, entityId, createdAt]
+      properties:
+        id:
+          type: integer
+        action:
+          type: string
+        entityType:
+          type: string
+        entityId:
+          type: integer
+        entityTitle:
+          type: ["string", "null"]
+        userId:
+          type: ["integer", "null"]
+        userName:
+          type: ["string", "null"]
+        details:
+          type: ["string", "null"]
+        ipAddress:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    # ─── DASHBOARD ────────────────────────────────────────────────────────────
+    DashboardStats:
+      type: object
+      required: [totalClients, activeMatters, pendingDocuments, openInvoices, totalBilled, ficaCompliantRate, conflictsPending]
+      properties:
+        totalClients:
+          type: integer
+        activeMatters:
+          type: integer
+        pendingDocuments:
+          type: integer
+        openInvoices:
+          type: integer
+        totalBilled:
+          type: number
+        ficaCompliantRate:
+          type: number
+        conflictsPending:
+          type: integer
+        mattersAwaitingApproval:
+          type: integer
+        mattersAtRisk:
+          type: integer
+        aiHighRiskDocs:
+          type: integer
+        ficaIssues:
+          type: integer
+        overdueTaskCount:
+          type: integer
+        unbilledHours:
+          type: number
+
+    PersonalWork:
+      type: object
+      required: [assignedMatters, openTasks, actionsLink]
+      properties:
+        assignedMatters:
+          type: integer
+        openTasks:
+          type: integer
+        actionsLink:
+          type: string
+
+    ActivityItem:
+      type: object
+      required: [id, type, description, occurredAt]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+        description:
+          type: string
+        entityType:
+          type: string
+        entityId:
+          type: ["integer", "null"]
+        userName:
+          type: ["string", "null"]
+        occurredAt:
+          type: string
+          format: date-time
+
+    PipelineStage:
+      type: object
+      required: [status, count, label]
+      properties:
+        status:
+          type: string
+        label:
+          type: string
+        count:
+          type: integer
+        value:
+          type: ["number", "null"]
+
+    FicaOverview:
+      type: object
+      required: [compliant, pending, expired, blocked, total]
+      properties:
+        compliant:
+          type: integer
+        pending:
+          type: integer
+        expired:
+          type: integer
+        blocked:
+          type: integer
+        total:
+          type: integer
+
+    BillingSummary:
+      type: object
+      required: [totalRevenue, outstanding, overdue, paid]
+      properties:
+        totalRevenue:
+          type: number
+        outstanding:
+          type: number
+        overdue:
+          type: number
+        paid:
+          type: number
+        monthlyTrend:
+          type: array
+          items:
+            $ref: "#/components/schemas/MonthlyRevenue"
+
+    MonthlyRevenue:
+      type: object
+      required: [month, revenue]
+      properties:
+        month:
+          type: string
+        revenue:
+          type: number
+
+    WorkloadItem:
+      type: object
+      required: [userId, userName, matterCount, taskCount]
+      properties:
+        userId:
+          type: integer
+        userName:
+          type: string
+        role:
+          type: string
+        matterCount:
+          type: integer
+        taskCount:
+          type: integer
+        hoursThisMonth:
+          type: number
+
+    EmailReadiness:
+      type: object
+      required: [status, ingestionEnabled, message]
+      properties:
+        provider:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [connected, not_connected]
+        ingestionEnabled:
+          type: boolean
+        message:
+          type: string
+
+    Email:
+      type: object
+      required: [id, provider, externalMessageId, threadId, direction, senderEmail, receivedAt, linkStatus, isRead]
+      properties:
+        id: { type: integer }
+        provider: { type: string }
+        externalMessageId: { type: string }
+        threadId: { type: integer }
+        direction: { type: string, enum: [inbound, outbound] }
+        senderEmail: { type: string }
+        senderName: { type: ["string", "null"] }
+        toRecipients:
+          type: array
+          items: { type: string }
+        ccRecipients:
+          type: array
+          items: { type: string }
+        bccRecipients:
+          type: array
+          items: { type: string }
+        subject: { type: ["string", "null"] }
+        bodyText: { type: string }
+        bodyHtml: { type: ["string", "null"] }
+        sentAt: { type: ["string", "null"], format: date-time }
+        receivedAt: { type: string, format: date-time }
+        matterId: { type: ["integer", "null"] }
+        clientId: { type: ["integer", "null"] }
+        linkStatus: { type: string, enum: [unlinked, suggested, linked, reviewed_unlinked] }
+        matchReason: { type: ["string", "null"] }
+        matchConfidence: { type: ["integer", "null"] }
+        isRead: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    EmailAttachment:
+      type: object
+      required: [id, emailId, filename, mimeType, fileSize, fileChecksum]
+      properties:
+        id: { type: integer }
+        emailId: { type: integer }
+        filename: { type: string }
+        mimeType: { type: string }
+        fileSize: { type: integer }
+        fileChecksum: { type: string }
+        documentId: { type: ["integer", "null"] }
+        fileObjectPath: { type: ["string", "null"] }
+
+    EmailLinkCandidate:
+      type: object
+      required: [id, emailId, matterId, score, reason, source, decision]
+      properties:
+        id: { type: integer }
+        emailId: { type: integer }
+        matterId: { type: integer }
+        score: { type: integer }
+        reason: { type: string }
+        source: { type: string }
+        decision: { type: string, enum: [pending, accepted, rejected] }
+
+    EmailDetail:
+      allOf:
+        - $ref: "#/components/schemas/Email"
+        - type: object
+          required: [attachments, candidates]
+          properties:
+            attachments:
+              type: array
+              items: { $ref: "#/components/schemas/EmailAttachment" }
+            candidates:
+              type: array
+              items: { $ref: "#/components/schemas/EmailLinkCandidate" }
+
+    UnlinkedEmail:
+      allOf:
+        - $ref: "#/components/schemas/Email"
+        - type: object
+          required: [candidates]
+          properties:
+            candidates:
+              type: array
+              items: { $ref: "#/components/schemas/EmailLinkCandidate" }
+
+    UnlinkedEmailDecisionInput:
+      type: object
+      required: [action]
+      properties:
+        action: { type: string, enum: [link, leave_unlinked] }
+        targetMatterId: { type: integer }
+
+    EmailLinkInput:
+      type: object
+      required: [action]
+      properties:
+        action:
+          type: string
+          enum: [link, change, remove, leave_unlinked]
+        targetMatterId:
+          type: integer
+
+    NormalizedEmailInput:
+      type: object
+      required: [provider, externalMessageId, externalThreadId, senderEmail, receivedAt]
+      properties:
+        provider: { type: string }
+        externalMessageId: { type: string }
+        externalThreadId: { type: string }
+        direction: { type: string, enum: [inbound, outbound] }
+        senderEmail: { type: string }
+        senderName: { type: string }
+        toRecipients: { type: array, items: { type: string } }
+        ccRecipients: { type: array, items: { type: string } }
+        bccRecipients: { type: array, items: { type: string } }
+        subject: { type: string }
+        bodyText: { type: string }
+        bodyHtml: { type: string }
+        headers: { type: object, additionalProperties: { type: string } }
+        sentAt: { type: string, format: date-time }
+        receivedAt: { type: string, format: date-time }
+        attachments:
+          type: array
+          items:
+            type: object
+            required: [filename, mimeType, fileSize, fileChecksum]
+            properties:
+              externalAttachmentId: { type: string }
+              filename: { type: string }
+              mimeType: { type: string }
+              fileSize: { type: integer }
+              fileChecksum: { type: string }
+
+    EmailIngestionResult:
+      type: object
+      required: [email, duplicate]
+      properties:
+        email: { $ref: "#/components/schemas/Email" }
+        duplicate: { type: boolean }
+
+    ProviderOperation:
+      type: object
+      required: [id, kind, status, idempotencyKey, providerName, payload, attempt, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        kind:
+          type: string
+          enum: [email, signature]
+        status:
+          type: string
+          enum: [queued, provider_confirmed, failed]
+        idempotencyKey:
+          type: string
+        providerName:
+          type: string
+        providerRequestId:
+          type: ["string", "null"]
+        providerEventId:
+          type: ["string", "null"]
+        matterId:
+          type: ["integer", "null"]
+        documentId:
+          type: ["integer", "null"]
+        payload:
+          type: object
+          additionalProperties: true
+        errorMessage:
+          type: ["string", "null"]
+        attempt:
+          type: integer
+        retryOfId:
+          type: ["integer", "null"]
+        reviewedById:
+          type: ["integer", "null"]
+        reviewedAt:
+          type: ["string", "null"]
+          format: date-time
+        createdById:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ProviderEmailInput:
+      type: object
+      required: [to, subject, body, matterId, reviewed]
+      properties:
+        to:
+          type: string
+        cc:
+          type: string
+        subject:
+          type: string
+        body:
+          type: string
+        matterId:
+          type: integer
+        documentId:
+          type: integer
+        reviewed:
+          type: boolean
+          enum: [true]
+        reviewNote:
+          type: string
+        idempotencyKey:
+          type: string
+
+    ProviderStatusUpdateInput:
+      type: object
+      required: [status, providerName, providerEventId]
+      properties:
+        status:
+          type: string
+          enum: [provider_confirmed, failed]
+        providerName:
+          type: string
+        providerRequestId:
+          type: string
+        providerEventId:
+          type: string
+        errorMessage:
+          type: string

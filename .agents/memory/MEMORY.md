@@ -1,0 +1,13 @@
+- [Lexora AI backend setup](apz-legal-backend.md) — auth SHA256+salt, session cookies, default dev creds, QueryClient retry:false on 4xx, setQueryData on login.
+- [APZ Legal UserRole import fix](apz-legal-userrole.md) — UserRole is in @workspace/api-zod, not @workspace/api-client-react; use `type UserRole = string` locally in format.ts.
+- [APZ Legal blank page fix](apz-legal-blank-page.md) — React Query retries 401s 3×; configure QueryClient with retry: false on 4xx to prevent blank loading state before /login redirect.
+- [APZ Legal design history](lexora-ai-rebuild.md) — current theme is charcoal/slate with restrained brass and APZ blue/cyan accents; 13 modules, PNG logo in sidebar/login.
+- [Document governance workflow](document-workflow.md) — approval only via decision endpoint (approve|reject|request_changes); all mutating doc routes need auth; version snapshot in same transaction as update.
+- [AI governance workflow](ai-governance.md) — server-fixed risk, matter-bound runs, honest metadata (null → "Unavailable", confidence 0-100), high-risk review gate, race-safe save-to-matter, auth on all /ai routes.
+- [Knowledge base governance](knowledge-governance.md) — status + aiIndexStatus split, availableToAi derived, atomic status-guarded UPDATEs, any governed-field edit on approved items snapshots a version, partner-only decisions/archive.
+- [Conflict checking workflow](conflict-workflow.md) — all matter status writes go through the shared lifecycle validator (never direct); gating on latest conflict record; scans bound to a matter must use the matter's canonical client name; stale reviews must not override newer scans.
+- [OpenAPI Zod generator compatibility](openapi-zod-compatibility.md) — use named body components and explicit schemas; this workspace’s Zod 3 cannot generate newer helpers for email or loose objects.
+- [Private governed-file access](private-governed-files.md) — private object serving must resolve paths across every governed record type, not only matter documents, before allowing download.
+- [Post-merge dependency consistency](post-merge-dependencies.md) — keep pnpm's workspace catalog and lockfile synchronized so frozen post-merge installs remain deterministic.
+- [Provider operation governance](provider-operation-governance.md) — queued handoff, provider acceptance, failure, and client signature are distinct durable states.
+- [Phase 1 validation environment](phase1-validation-environment.md) — standalone Vite validation must supply the workflow’s PORT and BASE_PATH values.

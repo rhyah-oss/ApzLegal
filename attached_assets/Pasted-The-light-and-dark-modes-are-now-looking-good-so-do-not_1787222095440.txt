@@ -1,0 +1,40 @@
+The light and dark modes are now looking good, so **do not change the themes or overall theme colours**.
+
+The remaining issue is the use of colours throughout the application, particularly the **yellow, red, green and other bright accent colours** used on the Dashboard and other screens.
+
+There are currently too many competing colours, which makes APZ Legal feel slightly juvenile and less like a polished professional legal/enterprise application.
+
+Please refine the colour usage across the application to make it feel **sleeker, more restrained, sophisticated and professional**.
+
+### Direction
+
+* Reduce the overall number of colours used throughout the UI.
+* Rely more heavily on the existing neutral/theme palette.
+* Use the primary accent colour selectively for important actions, selected states and key highlights.
+* Tone down bright yellows, reds, greens and other highly saturated colours.
+* Avoid using multiple bright colours next to each other in dashboard cards.
+* Use colour primarily for **meaningful semantic states**, not decoration.
+* Keep warnings, errors, success and critical states distinguishable, but make them more muted and refined.
+* Replace unnecessary coloured backgrounds with subtle tinted surfaces, borders or typography where appropriate.
+* Dashboard metrics should feel clean and restrained rather than colourful.
+* Status badges, tags, cards, charts and indicators should follow the same restrained colour system.
+* Avoid gradients and overly colourful visual treatments unless they are genuinely necessary.
+* Keep the interface feeling premium, modern and appropriate for a **professional legal technology platform**.
+
+### Important
+
+Do **not** change:
+
+* Light mode
+* Dark mode
+* Overall layout
+* Navigation
+* Functionality
+* Existing product structure
+* Dev Mode
+
+This is specifically a **colour-system refinement**, not a redesign.
+
+The goal is for APZ Legal to feel closer to a sophisticated enterprise/legal application: **minimal, restrained, confident and polished**, with colour used intentionally rather than frequently.
+
+Please review the Dashboard first, then apply the same principles consistently across Matters, Documents, Legal AI, Research, Tasks, Calendar, Billing, Admin, Settings and other areas where excessive colour is currently being used.

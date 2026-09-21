@@ -1,0 +1,845 @@
+# APZ LEGAL — BUILD FIRM PRODUCTIVITY DASHBOARD FROM EXISTING TIME TRACKER
+
+## OBJECTIVE
+
+Build a new **Firm Productivity** dashboard within APZ Legal.
+
+The Firm Productivity dashboard must use the **EXISTING TIME TRACKER as its single source of truth**.
+
+DO NOT create a second time-tracking system.
+
+DO NOT create duplicate time-entry functionality.
+
+DO NOT introduce billing, invoicing, revenue, fees, billable hours, or financial reporting.
+
+This is purely a **productivity, activity, workload and time-analysis dashboard**.
+
+The purpose is to transform the raw time entries already captured by the Time Tracker into a clear management dashboard showing:
+
+* Where the firm's time is being spent
+* What activities are consuming the most time
+* Which matters are consuming the most time
+* How work is distributed across employees/teams
+* How activity changes over time
+* Workload patterns
+* Productivity trends
+* Time-tracking quality
+* Data-driven productivity insights
+
+---
+
+# 1. FIRST — INSPECT THE EXISTING TIME TRACKER
+
+Before making changes, inspect the existing Time Tracker implementation completely.
+
+Identify:
+
+* Database tables/models
+* Time-entry schema
+* API endpoints
+* Frontend components
+* Time-entry creation
+* Start/stop timer functionality
+* Manual time entry
+* Matter association
+* User association
+* Activity types
+* Descriptions
+* Start/end timestamps
+* Duration calculations
+* Statuses
+* Categories
+* Tags
+* Existing reports
+* Existing filters
+* Existing permissions
+
+DO NOT replace the existing Time Tracker.
+
+DO NOT alter its core functionality unless necessary.
+
+The Firm Productivity dashboard must consume the existing Time Tracker data.
+
+---
+
+# 2. DEFINE THE DATA FLOW
+
+The architecture should be:
+
+TIME TRACKER
+↓
+TIME ENTRIES
+↓
+PRODUCTIVITY ANALYTICS
+↓
+FIRM PRODUCTIVITY DASHBOARD
+
+The dashboard must aggregate existing time entries.
+
+For example:
+
+If the Time Tracker contains:
+
+User A
+Matter ABC
+Legal Research
+09:00–10:30
+1.5 hours
+
+The dashboard should automatically calculate:
+
+* +1.5 total hours
+* +1 research activity
+* +1 matter worked on
+* +1 activity for User A
+* +1.5 hours for the relevant practice area/team
+
+There must be NO second data-entry process.
+
+---
+
+# 3. CREATE THE NEW MODULE
+
+Create a dedicated module/page called:
+
+## Firm Productivity
+
+Subtitle:
+
+"Firm-wide time, activity and workload overview"
+
+This should be a management/analytics interface built from Time Tracker data.
+
+If the application already has a Productivity, Reports, Analytics or similar module, inspect it first and integrate into the existing architecture rather than creating unnecessary duplicate navigation.
+
+---
+
+# 4. DATE RANGE CONTROL
+
+At the top of the dashboard provide:
+
+* Today
+* This Week
+* This Month
+* This Quarter
+* This Year
+* Custom Range
+
+The selected date range must control ALL dashboard calculations.
+
+Display the currently selected date range clearly.
+
+---
+
+# 5. GLOBAL FILTERS
+
+Provide filters for:
+
+* Date range
+* Employee/User
+* Department
+* Team
+* Practice Area
+* Matter
+* Client
+* Activity Type
+* Status, where applicable
+
+Buttons:
+
+**Apply Filters**
+
+**Reset Filters**
+
+All charts, KPIs, tables and insights must update based on the selected filters.
+
+Do not create filters that have no corresponding data in the existing system.
+
+---
+
+# 6. EXECUTIVE KPI SUMMARY
+
+At the top of the page create clean KPI cards.
+
+Include:
+
+### Total Time
+
+Total hours recorded during the selected period.
+
+### Activities Logged
+
+Total number of time/activity entries.
+
+### Active Users
+
+Number of users who recorded time during the selected period.
+
+### Active Matters
+
+Number of unique matters with recorded activity.
+
+### Average Hours / User
+
+Total recorded hours divided by active users.
+
+### Average Hours / Day
+
+Average recorded hours across the selected working days.
+
+### Tasks Worked On
+
+Where time entries are linked to tasks, show the number of tasks worked on.
+
+### Tasks Completed
+
+Where task completion data exists, show completed tasks during the period.
+
+IMPORTANT:
+
+These figures must be calculated from REAL application data.
+
+DO NOT use hardcoded numbers.
+
+DO NOT use mock data.
+
+---
+
+# 7. TIME BY ACTIVITY
+
+Create a major dashboard section:
+
+## Where Is the Firm Spending Its Time?
+
+Aggregate Time Tracker entries by activity type.
+
+Use the ACTUAL activity categories already present in the Time Tracker.
+
+Examples may include:
+
+* Legal Research
+* Drafting
+* Document Review
+* Client Meeting
+* Internal Meeting
+* Email
+* Telephone Call
+* Court / Hearing
+* Matter Administration
+* General Administration
+* Task Work
+* Knowledge Base
+* AI-Assisted Work
+* Other
+
+DO NOT invent categories if the existing Time Tracker uses different terminology.
+
+Display:
+
+* Total hours
+* Number of activities
+* Percentage of total time
+
+Use a clean horizontal bar chart or equivalent professional visualization.
+
+Clicking an activity should allow the user to drill down into the corresponding Time Tracker entries.
+
+---
+
+# 8. TIME BY MATTER
+
+Create:
+
+## Matter Activity
+
+Show matters ranked by recorded time.
+
+Columns:
+
+* Matter
+* Client
+* Total Time
+* Number of Activities
+* Number of Users
+* Last Activity
+
+Example structure:
+
+Matter A | Client A | 84h | 143 | 5 | Today
+
+Matter B | Client B | 71h | 112 | 4 | Yesterday
+
+Matter C | Client C | 47h | 87 | 3 | 3 days ago
+
+Use REAL Time Tracker data.
+
+Clicking a matter should navigate to the matter or open a filtered activity view.
+
+---
+
+# 9. TIME BY EMPLOYEE
+
+Create:
+
+## Employee Activity
+
+Display:
+
+* Employee
+* Total Hours
+* Activities
+* Matters Worked On
+* Tasks Worked On
+* Average Hours/Day
+
+Allow sorting by each relevant metric.
+
+IMPORTANT:
+
+Do not label this as a ranking of "best" or "worst" employees.
+
+Hours alone do NOT equal productivity.
+
+Use neutral terminology such as:
+
+* Recorded Activity
+* Recorded Hours
+* Workload
+* Activity Volume
+
+This is an operational productivity dashboard, not an employee punishment system.
+
+---
+
+# 10. TEAM / DEPARTMENT PRODUCTIVITY
+
+Where department/team data exists, provide:
+
+## Team Activity
+
+Show:
+
+* Team/Department
+* Total Hours
+* Activities
+* Active Users
+* Active Matters
+* Average Hours/User
+
+Allow comparison between teams.
+
+Do not create fake teams or departments.
+
+Use existing organizational data.
+
+---
+
+# 11. PRODUCTIVITY TRENDS
+
+Create:
+
+## Productivity Trends
+
+Use historical Time Tracker data.
+
+Allow the user to switch between:
+
+* Total Hours
+* Activities
+* Active Users
+* Active Matters
+* Tasks Worked On
+* Tasks Completed
+
+Display trends over:
+
+* Days
+* Weeks
+* Months
+
+depending on selected date range.
+
+The user should be able to visually determine whether recorded activity is increasing or decreasing.
+
+---
+
+# 12. WORKLOAD DISTRIBUTION
+
+Create:
+
+## Workload Distribution
+
+Show where recorded time is being allocated.
+
+Depending on available data, allow breakdown by:
+
+* Practice Area
+* Department
+* Team
+* Matter
+* Activity Type
+
+Use professional visualizations.
+
+Avoid excessive charts.
+
+Prioritize clarity.
+
+---
+
+# 13. WORK PATTERN ANALYSIS
+
+Use the actual start/end times from the Time Tracker.
+
+Create:
+
+## Work Patterns
+
+Show:
+
+* Hours by day of week
+* Hours by time of day
+* Morning vs afternoon activity
+* After-hours activity, where relevant
+* Most active periods
+
+A heatmap can be used for day/time distribution.
+
+This must be calculated from actual timestamps.
+
+---
+
+# 14. MATTER WORKLOAD ANALYSIS
+
+Create:
+
+## Matter Workload
+
+Identify:
+
+### High Activity Matters
+
+Matters consuming significant recorded time.
+
+### Low Activity Matters
+
+Matters with relatively little recent activity.
+
+### Inactive Matters
+
+Matters with no recorded activity for a configurable period.
+
+### Highly Concentrated Matters
+
+Matters where a large proportion of activity is concentrated among a small number of users.
+
+These are analytical indicators only.
+
+Do not automatically label a matter as problematic.
+
+---
+
+# 15. PRODUCTIVITY INSIGHTS
+
+Create a section:
+
+## Productivity Insights
+
+Generate data-driven observations from the actual Time Tracker dataset.
+
+Examples:
+
+"Document Review accounts for 18% of recorded firm activity this month."
+
+"Firm activity increased 7% compared with the previous period."
+
+"Litigation represents the largest share of recorded activity."
+
+"14 matters account for the majority of recorded matter activity."
+
+"Internal meetings increased compared with the previous period."
+
+IMPORTANT:
+
+These insights must be based on actual calculated data.
+
+DO NOT generate generic AI statements.
+
+DO NOT invent statistics.
+
+If there is insufficient data, clearly state:
+
+"Insufficient data to generate this insight."
+
+---
+
+# 16. TIME TRACKING HEALTH
+
+Create:
+
+## Time Tracking Health
+
+Use the existing Time Tracker data to identify data-quality issues.
+
+Where supported, show:
+
+* Total entries
+* Incomplete entries
+* Missing matter
+* Missing activity type
+* Uncategorised entries
+* Missing descriptions
+* Potentially incomplete duration
+* Late/manual entries, if the system records this information
+
+Example:
+
+Total Entries: 2,846
+
+Incomplete: 17
+
+Missing Matter: 8
+
+Missing Activity: 11
+
+Uncategorised: 23
+
+This section should help management understand whether productivity data is reliable.
+
+Do NOT invent data-quality metrics that cannot actually be calculated.
+
+---
+
+# 17. DRILL-DOWN FUNCTIONALITY
+
+This is CRITICAL.
+
+Every major dashboard metric should be traceable back to the actual Time Tracker entries.
+
+For example:
+
+Click:
+
+**214h Legal Research**
+
+↓
+
+Open/filter:
+
+**Time Tracker**
+
+with:
+
+Activity Type = Legal Research
+
+Date = Selected Period
+
+Then display the actual entries.
+
+Similarly:
+
+Click:
+
+**Matter A — 84 hours**
+
+↓
+
+Open/filter the Time Tracker for:
+
+Matter A
+
+Click:
+
+**Employee A — 168 hours**
+
+↓
+
+Open/filter the Time Tracker for:
+
+Employee A
+
+The user must always be able to understand where dashboard numbers came from.
+
+---
+
+# 18. EXPORT
+
+Add:
+
+## Export Report
+
+Supported formats where the existing application infrastructure allows:
+
+* PDF
+* Excel
+* CSV
+
+The export should reflect the currently selected:
+
+* Date range
+* Filters
+* User/team/matter selections
+
+The exported report should contain the same calculated metrics visible on the dashboard.
+
+Do NOT include billing or financial information.
+
+---
+
+# 19. PERMISSIONS
+
+Respect the existing APZ Legal role/permission system.
+
+Management users should be able to access firm-level productivity information according to their permissions.
+
+Individual users should not automatically receive unrestricted access to other employees' productivity data.
+
+Where appropriate:
+
+### Management
+
+Firm/team/department-level analytics.
+
+### Individual User
+
+Own productivity and activity.
+
+Use existing role definitions rather than creating a new permission architecture unless required.
+
+---
+
+# 20. UI/UX REQUIREMENTS
+
+The dashboard must match the existing APZ Legal design system.
+
+It must feel:
+
+* Premium
+* Corporate
+* Professional
+* Clean
+* Sophisticated
+* Data-driven
+* Legal enterprise-focused
+
+Avoid:
+
+* Childish dashboards
+* Excessive rounded cards
+* Excessive gradients
+* Excessive animations
+* Bright unnecessary colours
+* Dashboard clutter
+* Huge decorative graphics
+
+Prioritize:
+
+* Clear hierarchy
+* Dense but readable information
+* Excellent spacing
+* Professional typography
+* Clear charts
+* Useful filters
+* Fast scanning
+* Strong data visualization
+
+The dashboard should feel like a serious law-firm management tool.
+
+---
+
+# 21. RESPONSIVE DESIGN
+
+Ensure the dashboard works correctly across:
+
+* Desktop
+* Laptop
+* Tablet
+
+Mobile should remain usable where the existing APZ Legal product supports mobile layouts.
+
+Fix:
+
+* Chart overflow
+* Table overflow
+* Filter wrapping
+* Broken cards
+* Horizontal scrolling
+* Modal problems
+* Text clipping
+
+---
+
+# 22. PERFORMANCE
+
+Do not load every Time Tracker entry into the browser and calculate everything client-side if the dataset could become large.
+
+Use server-side aggregation/querying where appropriate.
+
+The dashboard should remain performant as the firm's number of users, matters and time entries increases.
+
+Use:
+
+* Aggregated queries
+* Appropriate database indexes
+* Pagination for detailed entries
+* Cached calculations where appropriate
+
+Do not sacrifice correctness for performance.
+
+---
+
+# 23. NO BILLING FUNCTIONALITY
+
+This requirement is absolute.
+
+The Firm Productivity dashboard must NOT contain:
+
+* Billing
+* Revenue
+* Fees
+* Hourly rates
+* Invoices
+* Billable hours
+* Non-billable hours
+* Unbilled time
+* Financial value
+* Profitability
+* Financial KPIs
+
+This module is ONLY:
+
+**TIME + ACTIVITY + WORKLOAD + PRODUCTIVITY**
+
+---
+
+# 24. DO NOT CREATE DUPLICATE DATA
+
+The Time Tracker remains the source of truth.
+
+Do not create a duplicate time-entry table solely for the dashboard.
+
+Do not require users to enter activity twice.
+
+Do not create separate productivity records when the information can be derived from Time Tracker entries.
+
+The dashboard is an analytics layer over the existing Time Tracker.
+
+---
+
+# 25. TESTING
+
+After implementation:
+
+Test:
+
+* Date filtering
+* User filtering
+* Matter filtering
+* Activity filtering
+* Team filtering
+* KPI calculations
+* Charts
+* Drill-down
+* Time Tracker navigation
+* Empty states
+* No-data states
+* Permissions
+* Export
+* Responsive layout
+
+Verify that dashboard totals match the underlying Time Tracker records.
+
+For example:
+
+If Time Tracker contains 100 hours for the selected period, the dashboard must report exactly 100 hours.
+
+Do not round in a way that causes totals to become misleading.
+
+---
+
+# 26. EMPTY / LOW DATA STATES
+
+If there is insufficient data:
+
+Do NOT show fake statistics.
+
+Show useful messages such as:
+
+"No time activity has been recorded for this period."
+
+"No matters have recorded activity during the selected period."
+
+"Not enough data to calculate a productivity trend."
+
+Provide an appropriate CTA where relevant:
+
+**Go to Time Tracker**
+
+---
+
+# 27. FINAL VALIDATION
+
+Before declaring this complete, verify:
+
+1. The Time Tracker remains fully functional.
+2. Existing time entries remain intact.
+3. Dashboard figures come from real Time Tracker data.
+4. No mock productivity data exists.
+5. No duplicate time tracking system was created.
+6. No billing functionality was introduced.
+7. All filters work.
+8. All KPIs recalculate correctly.
+9. Drill-down works.
+10. Permissions are respected.
+11. Empty states work.
+12. Responsive layouts work.
+13. Existing functionality has not been broken.
+
+---
+
+# 28. FINAL REPORT
+
+When complete, provide a concise implementation report containing:
+
+### Implemented
+
+* Dashboard components
+* Analytics
+* Filters
+* Charts
+* Drill-down
+* Insights
+* Exports
+* Permissions
+
+### Data Source
+
+Confirm exactly which existing Time Tracker tables/endpoints are being used.
+
+### Calculations
+
+Document how the major KPIs are calculated.
+
+### Testing
+
+List the tests performed and their results.
+
+### Remaining Issues
+
+List anything that could not be completed.
+
+IMPORTANT:
+
+DO NOT simply describe what should be built.
+
+ACTUALLY IMPLEMENT THE FEATURE IN THE EXISTING APZ LEGAL CODEBASE.
+
+DO NOT rebuild the application.
+
+DO NOT replace existing Time Tracker functionality.
+
+DO NOT use mock data.
+
+DO NOT introduce billing functionality.
+
+The final result must be a production-ready **Firm Productivity Dashboard powered entirely by the existing APZ Legal Time Tracker**.

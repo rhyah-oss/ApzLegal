@@ -1,0 +1,93 @@
+Update the APZ Legal Dashboard to align strictly with the APZ Legal PRD v2 and APZ Legal User Journeys.
+IMPORTANT:
+Do not redesign the entire application.
+Do not remove existing working functionality.
+Do not add unrelated SaaS dashboard features.
+Use the existing design system and visual language.
+The dashboard should become an operational legal command centre, not just a collection of statistic cards.
+OBJECTIVE
+The dashboard must give users a clear understanding of:
+What requires their attention
+What is blocked
+What is awaiting approval
+What risks exist
+What work is overdue
+What compliance issues require action
+GLOBAL DASHBOARD METRICS
+Add or improve the following metrics where data is available:
+Active Matters
+Matters Awaiting Approval
+Matters at Risk
+FICA Compliance Issues
+Conflict Checks Pending
+Documents Awaiting Approval
+Documents Awaiting Signature
+Overdue Tasks
+Unbilled Time
+Recent AI Risk Escalations
+Do not use fake or hardcoded statistics. Use real application data where available. If backend support does not exist, clearly identify the missing API/data requirement rather than fabricating data.
+ROLE-AWARE DASHBOARDS
+The dashboard should adapt to the logged-in user's role.
+Partner:
+Show:
+Matters awaiting approval
+Pending conflict checks
+Documents awaiting approval
+Team workload
+High-risk AI activity
+Matters at risk
+Associate Attorney:
+Show:
+My assigned Matters
+My Tasks
+Draft documents
+Research activity
+AI conversations
+Documents awaiting my action
+Compliance Officer:
+Show:
+FICA exceptions
+Expiring compliance documents
+Client risk flags
+Audit completeness
+AI activity
+High-risk compliance events
+Billing Officer:
+Show:
+Unbilled time
+Time entries awaiting review
+Draft invoices
+Outstanding invoices
+Billing leakage indicators
+Legal Secretary:
+Show:
+Upcoming calendar items
+Tasks requiring coordination
+Unlinked emails
+Emails awaiting Matter association
+Documents requiring administrative action
+ACTION-ORIENTED DESIGN
+Every important dashboard card should link to the relevant workflow.
+Examples:
+"3 Conflicts Pending"
+→ Opens Conflict Checking filtered to pending reviews.
+"5 Documents Awaiting Approval"
+→ Opens approval queue.
+"8 FICA Issues"
+→ Opens compliance issues.
+"12 Unbilled Hours"
+→ Opens billing review.
+UI REQUIREMENTS
+Make it immediately clear:
+What is urgent
+What is blocked
+What requires approval
+What requires the current user
+What is overdue
+Use clear status indicators and avoid unnecessary decorative widgets.
+After implementation:
+Audit the dashboard against the PRD.
+Verify role-specific visibility.
+Verify all metrics use real data.
+Identify any backend/API gaps.
+Do not create fake data to make the dashboard look complete.

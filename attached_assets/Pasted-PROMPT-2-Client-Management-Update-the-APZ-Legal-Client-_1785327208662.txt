@@ -1,0 +1,87 @@
+PROMPT 2 — Client Management
+Update the APZ Legal Client Management module to align strictly with the APZ Legal PRD v2 and User Journey 1.
+IMPORTANT:
+The Client Registry must exist independently from Matters.
+The correct relationship is:
+CLIENT
+→ COMPLIANCE
+→ CONFLICT CHECK
+→ PARTNER APPROVAL
+→ MATTER
+Do not allow the Client module to simply function as a contact list.
+CLIENT TYPES
+Support:
+Individual
+Corporate
+Trust
+Government / Institutional
+CLIENT PROFILE
+The client profile must support:
+Identity
+ID number
+Passport
+Company registration number where applicable
+Contact
+Phone
+Email
+Address
+Related Parties
+Directors
+Beneficial owners
+Beneficiaries
+Opposing/related parties where relevant
+Compliance
+FICA documents
+Compliance status
+Risk score
+Expiry dates
+Missing documentation
+Relationship History
+Active Matters
+Closed Matters
+Matter history
+Billing summary
+Document history
+Signature history
+CLIENT COMPLIANCE STATUS
+Add a highly visible status:
+Compliant
+Review Required
+Blocked
+Also display:
+Client Risk Score:
+Low
+Medium
+High
+CLIENT PROFILE LAYOUT
+The client profile should have clear sections/tabs:
+Overview
+Compliance
+Related Parties
+Matters
+Documents
+Billing
+Signatures
+Activity / Audit
+MATTER CREATION
+The client profile should clearly show whether the client is eligible to proceed to Matter creation.
+Example:
+COMPLIANCE STATUS: BLOCKED
+Reason:
+Missing Beneficial Ownership Documentation
+Action:
+Upload Documentation
+Do not allow Matter creation if mandatory compliance requirements are incomplete.
+IMPORTANT
+Do not duplicate the entire Matter workspace inside Clients.
+The Client stores the client relationship and history.
+The Matter stores legal work.
+Maintain the relationship:
+Client
+→ One or more Matters
+After implementation:
+Verify Client and Matter are separate entities.
+Verify client data is not duplicated unnecessarily.
+Verify compliance status is visible.
+Verify client risk score is visible.
+Verify Matter creation can be blocked by compliance.

@@ -1,0 +1,40 @@
+# APZ Legal — new application deployment
+# Joins infra_shared network for PostgreSQL, Redis, MinIO.
+# Does NOT join ai-models network (new app uses OpenAI directly, not Ollama/Qdrant).
+# Project name 'apz-legal-replit' avoids colliding with other apps.
+
+name: apz-legal-replit
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: ./deploy/Dockerfile
+    image: apz-legal-web:latest
+    container_name: apz-legal-web
+    env_file:
+      - .env.production
+    environment:
+      # Object-storage credentials MUST be supplied by the deployment secret
+      # store / orchestrator environment. There are NO defaults on purpose:
+      # if either is absent, the app fails fast at startup with a clear
+      # message instead of serving 500s or silently using a well-known key.
+      - S3_ACCESS_KEY=${S3_ACCESS_KEY}
+      - S3_SECRET_KEY=${S3_SECRET_KEY}
+    ports:
+      - "127.0.0.1:3002:3002"
+    networks:
+      - apz_legal
+      - infra_shared
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+networks:
+  apz_legal:
+    name: apz_legal_internal
+  infra_shared:
+    external: true
+    name: infra_shared

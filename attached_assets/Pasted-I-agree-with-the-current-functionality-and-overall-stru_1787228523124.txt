@@ -1,0 +1,40 @@
+I agree with the current functionality and overall structure, but the visual language still feels too colourful, busy and slightly juvenile for a professional legal application.
+
+I want to refine the existing design toward a **sleek, restrained, corporate legal-tech aesthetic**.
+
+The core issue is not the light/dark themes themselves. It is the combination of **too many colours, too many containers, excessive visual treatments and inconsistent spacing**.
+
+Please apply these principles across the application:
+
+* Reduce the number of colours used in the UI.
+* Use the existing theme/brand colours primarily for navigation, primary actions and important highlights.
+* Reserve red, yellow, green and other semantic colours strictly for meaningful status information.
+* Tone down semantic colours so they feel sophisticated rather than bright and playful.
+* Reduce unnecessary cards and nested containers.
+* Reduce excessive borders and shadows.
+* Reduce excessive rounded corners.
+* Increase intentional whitespace between major sections.
+* Strengthen typography and hierarchy instead of using colour to create emphasis.
+* Use tables, lists and clean information rows where they communicate information better than multiple cards.
+* Make dashboard metrics more restrained and editorial.
+* Make badges and status indicators smaller and less visually dominant.
+* Ensure primary actions are obvious without making the entire interface colourful.
+* Keep layouts clean, aligned and consistent across modules.
+
+The desired personality is:
+
+**Professional · Corporate · Legal · Intelligent · Minimal · Premium · Restrained**
+
+It should feel appropriate for a serious law firm using the application every day.
+
+It should NOT feel:
+
+**Playful · Colourful · Bubbly · Consumer-oriented · Over-designed**
+
+Do not change the application's functionality, navigation, Dev Mode or overall product structure.
+
+Do not redesign the light/dark themes themselves.
+
+This is a **visual refinement of the existing application**, with particular emphasis on colour restraint, spacing, hierarchy and reducing visual clutter.
+
+Please establish consistent design tokens/components for these principles and then apply them throughout the application rather than making isolated page-by-page changes.

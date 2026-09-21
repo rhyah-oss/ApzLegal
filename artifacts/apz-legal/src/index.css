@@ -1,0 +1,589 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap");
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-card-border: hsl(var(--card-border));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-popover-border: hsl(var(--popover-border));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-primary-border: var(--primary-border);
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-secondary-border: var(--secondary-border);
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-muted-border: var(--muted-border);
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-accent-border: var(--accent-border);
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-destructive-border: var(--destructive-border);
+
+  --color-chart-1: hsl(var(--chart-1));
+  --color-chart-2: hsl(var(--chart-2));
+  --color-chart-3: hsl(var(--chart-3));
+  --color-chart-4: hsl(var(--chart-4));
+  --color-chart-5: hsl(var(--chart-5));
+
+  --color-sidebar: hsl(var(--sidebar));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-primary: hsl(var(--sidebar-primary));
+  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+  --color-sidebar-primary-border: var(--sidebar-primary-border);
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  --color-sidebar-accent-border: var(--sidebar-accent-border);
+  --color-sidebar-ring: hsl(var(--sidebar-ring));
+
+  --font-sans: var(--app-font-sans);
+  --font-serif: var(--app-font-serif);
+  --font-mono: var(--app-font-mono);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+/* APZ Legal workspace palette — intentionally shared across theme states.
+   The product uses navy surfaces and cyan/royal-blue actions as its primary
+   brand language; duplicating those values in both states prevents the legacy
+   inline token layer from becoming a muddy inverted light theme. */
+:root {
+  /* Intentional APZ light palette: cool white workspace, quiet blue-grey
+     surfaces, ink text, and restrained enterprise accents. */
+   --apz-bg: #FBFBFA;
+   --apz-surface: #FFFFFF;
+   --apz-surface-b: #FCFCFA;
+   --apz-surface-el: #F5F5F2;
+   --apz-border: #E5E5E0;
+   --apz-border-sub: #EEEEEA;
+     --apz-nav: #1d2021;
+     --apz-nav-surface: #282c2d;
+     --apz-nav-border: #343839;
+    --apz-nav-text: #F7F5EF;
+    --apz-nav-text-dim: #B8BBB6;
+    --apz-nav-text-faint: #858B87;
+   --apz-text: #191B1C;
+   --apz-text-dim: #5D6360;
+   --apz-text-faint: #868B87;
+   --apz-ok: #547B66;
+   --apz-warn: #AC8140;
+   --apz-risk: #A24D50;
+   --apz-blue: #4B6879;
+   --apz-cyan: #758B8C;
+
+  --button-outline: rgba(0, 0, 0, 0.08);
+  --badge-outline: rgba(0, 0, 0, 0.04);
+
+  --opaque-button-border-intensity: -6;
+
+  --elevate-1: rgba(0, 0, 0, 0.02);
+  --elevate-2: rgba(0, 0, 0, 0.05);
+
+    --background: 60 9% 98%;
+    --foreground: 180 4% 10%;
+    --border: 60 7% 89%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 180 4% 10%;
+    --card-border: 60 7% 89%;
+
+    --sidebar: 180 7% 5%;
+    --sidebar-foreground: 48 33% 96%;
+    --sidebar-border: 120 3% 16%;
+    --sidebar-primary: 38 38% 51%;
+  --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 180 5% 11%;
+   --sidebar-accent-foreground: 48 33% 96%;
+   --sidebar-ring: 38 43% 49%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 180 4% 10%;
+    --popover-border: 60 7% 89%;
+
+    --primary: 180 5% 9%;
+  --primary-foreground: 0 0% 100%;
+    --secondary: 60 7% 96%;
+    --secondary-foreground: 180 4% 10%;
+    --muted: 60 7% 96%;
+    --muted-foreground: 150 4% 42%;
+    --accent: 60 7% 96%;
+    --accent-foreground: 180 4% 10%;
+    --destructive: 356 35% 47%;
+  --destructive-foreground: 0 0% 100%;
+
+    --input: 60 7% 89%;
+    --ring: 38 38% 51%;
+
+   --chart-1: 38 43% 49%;
+   --chart-2: 150 5% 21%;
+   --chart-3: 199 31% 42%;
+   --chart-4: 177 13% 49%;
+   --chart-5: 150 4% 42%;
+
+   --app-font-sans: 'DM Sans', sans-serif;
+   --app-font-serif: 'Newsreader', Georgia, serif;
+  --app-font-mono: 'Menlo', 'Consolas', monospace;
+  --radius: 0.375rem; /* 6px — tighter than before */
+
+  --shadow-2xs: 0px 2px 0px 0px rgba(15, 23, 42, 0.05);
+  --shadow-xs: 0px 2px 0px 0px rgba(15, 23, 42, 0.05);
+  --shadow-sm:
+    0px 2px 0px 0px rgba(15, 23, 42, 0.05),
+    0px 1px 2px -1px rgba(15, 23, 42, 0.05);
+  --shadow:
+    0px 2px 0px 0px rgba(15, 23, 42, 0.05),
+    0px 1px 2px -1px rgba(15, 23, 42, 0.05);
+  --shadow-md:
+    0px 2px 0px 0px rgba(15, 23, 42, 0.05),
+    0px 2px 4px -1px rgba(15, 23, 42, 0.05);
+  --shadow-lg:
+    0px 2px 0px 0px rgba(15, 23, 42, 0.05),
+    0px 4px 6px -1px rgba(15, 23, 42, 0.05);
+  --shadow-xl:
+    0px 2px 0px 0px rgba(15, 23, 42, 0.05),
+    0px 8px 10px -1px rgba(15, 23, 42, 0.05);
+  --shadow-2xl: 0px 2px 0px 0px rgba(15, 23, 42, 0.05);
+  --tracking-normal: 0em;
+  --spacing: 0.25rem;
+
+  --sidebar-primary-border: hsl(var(--sidebar-primary));
+  --sidebar-primary-border: hsl(
+    from hsl(var(--sidebar-primary)) h s
+      calc(l + var(--opaque-button-border-intensity)) / alpha
+  );
+  --sidebar-accent-border: hsl(var(--sidebar-accent));
+  --sidebar-accent-border: hsl(
+    from hsl(var(--sidebar-accent)) h s
+      calc(l + var(--opaque-button-border-intensity)) / alpha
+  );
+  --primary-border: hsl(var(--primary));
+  --primary-border: hsl(
+    from hsl(var(--primary)) h s
+      calc(l + var(--opaque-button-border-intensity)) / alpha
+  );
+  --secondary-border: hsl(var(--secondary));
+  --secondary-border: hsl(
+    from hsl(var(--secondary)) h s
+      calc(l + var(--opaque-button-border-intensity)) / alpha
+  );
+  --muted-border: hsl(var(--muted));
+  --muted-border: hsl(
+    from hsl(var(--muted)) h s calc(l + var(--opaque-button-border-intensity)) /
+      alpha
+  );
+  --accent-border: hsl(var(--accent));
+  --accent-border: hsl(
+    from hsl(var(--accent)) h s
+      calc(l + var(--opaque-button-border-intensity)) / alpha
+  );
+  --destructive-border: hsl(var(--destructive));
+  --destructive-border: hsl(
+    from hsl(var(--destructive)) h s
+      calc(l + var(--opaque-button-border-intensity)) / alpha
+  );
+}
+
+.dark {
+  --apz-bg: #0B0D0E;
+  --apz-surface: #121516;
+  --apz-surface-b: #181C1D;
+  --apz-surface-el: #222728;
+  --apz-border: #303536;
+  --apz-border-sub: #222728;
+  --apz-nav: #1A1D1E;
+  --apz-nav-surface: #25292A;
+  --apz-nav-border: #343839;
+  --apz-nav-text: #F7F5EF;
+  --apz-nav-text-dim: #B8BBB6;
+  --apz-nav-text-faint: #858B87;
+  --apz-text: #F1F0EB;
+  --apz-text-dim: #A7AAA6;
+  --apz-text-faint: #6F7571;
+  --apz-ok: #22c55e;
+  --apz-warn: #f59e0b;
+  --apz-risk: #ef4444;
+  --apz-blue: #4169E1;
+  --apz-cyan: #00CFFF;
+
+  --button-outline: rgba(255, 255, 255, 0.08);
+  --badge-outline: rgba(255, 255, 255, 0.04);
+
+  --opaque-button-border-intensity: 6;
+
+  --elevate-1: rgba(255, 255, 255, 0.03);
+  --elevate-2: rgba(255, 255, 255, 0.06);
+
+  /* Body — layered black/charcoal */
+  --background: 210 10% 5%;
+  /* Warm white for charcoal surfaces */
+  --foreground: 45 14% 94%;
+  /* Charcoal border */
+  --border: 200 8% 20%;
+
+  /* Card surface — #121516 */
+  --card: 200 9% 8%;
+  --card-foreground: 45 14% 94%;
+  --card-border: 200 8% 20%;
+
+  /* Sidebar — charcoal */
+  --sidebar: 200 9% 9%;
+  --sidebar-foreground: 45 14% 94%;
+  --sidebar-border: 200 8% 17%;
+  /* Royal blue from logo — #4169E1 */
+  --sidebar-primary: 224 70% 57%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 200 8% 15%;
+  --sidebar-accent-foreground: 45 14% 94%;
+  --sidebar-ring: 224 70% 57%;
+
+  /* Popover */
+  --popover: 200 9% 8%;
+  --popover-foreground: 45 14% 94%;
+  --popover-border: 200 8% 20%;
+
+  /* Primary — royal blue #4169E1 */
+  --primary: 224 70% 57%;
+  --primary-foreground: 0 0% 100%;
+  /* Secondary — charcoal surface */
+  --secondary: 200 8% 14%;
+  --secondary-foreground: 45 14% 94%;
+  /* Muted */
+  --muted: 200 8% 12%;
+  /* Muted text — neutral charcoal-grey */
+  --muted-foreground: 200 7% 66%;
+  --accent: 200 8% 14%;
+  --accent-foreground: 45 14% 94%;
+  /* Destructive */
+  --destructive: 0 50% 42%;
+  --destructive-foreground: 45 14% 94%;
+
+  /* Input */
+  --input: 200 8% 13%;
+  --ring: 224 70% 57%;
+
+  /* Chart palette — logo gradient colours */
+  --chart-1: 224 70% 57%;    /* royal blue   #4169E1 */
+  --chart-2: 194 100% 50%;   /* cyan         #00CFFF */
+  --chart-3: 214 55% 45%;    /* medium blue  #3670B0 */
+  --chart-4: 194 80% 68%;    /* light cyan   #5CE0FF */
+  --chart-5: 224 55% 35%;    /* deep blue    #1A3A9E */
+
+  --shadow-2xs: 0px 2px 0px 0px rgba(0, 0, 0, 0.35);
+  --shadow-xs: 0px 2px 0px 0px rgba(0, 0, 0, 0.35);
+  --shadow-sm:
+    0px 2px 0px 0px rgba(0, 0, 0, 0.35),
+    0px 1px 2px -1px rgba(0, 0, 0, 0.35);
+  --shadow:
+    0px 2px 0px 0px rgba(0, 0, 0, 0.35),
+    0px 1px 2px -1px rgba(0, 0, 0, 0.35);
+  --shadow-md:
+    0px 2px 0px 0px rgba(0, 0, 0, 0.35),
+    0px 2px 4px -1px rgba(0, 0, 0, 0.35);
+  --shadow-lg:
+    0px 2px 0px 0px rgba(0, 0, 0, 0.35),
+    0px 4px 6px -1px rgba(0, 0, 0, 0.35);
+  --shadow-xl:
+    0px 2px 0px 0px rgba(0, 0, 0, 0.35),
+    0px 8px 10px -1px rgba(0, 0, 0, 0.35);
+  --shadow-2xl: 0px 2px 0px 0px rgba(0, 0, 0, 0.35);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+}
+
+.light .theme-surface {
+  background: #F2F0EA;
+  color: #2B2F2D;
+}
+
+/* ── Scrollbar ───────────────────────────────────────────────────────────── */
+* {
+  scrollbar-color: var(--apz-nav-surface) var(--apz-nav);
+  scrollbar-width: thin;
+}
+
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: var(--apz-nav);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--apz-nav-surface);
+  border: 2px solid var(--apz-nav);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3A3E3E;
+}
+::-webkit-scrollbar-corner {
+  background: var(--apz-nav);
+}
+
+html.light,
+html.light * {
+  scrollbar-color: #A9AAA1 #F2F0EA;
+  color-scheme: light;
+}
+
+html.light::-webkit-scrollbar,
+html.light *::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+html.light::-webkit-scrollbar-track,
+html.light *::-webkit-scrollbar-track,
+html.light::-webkit-scrollbar-corner,
+html.light *::-webkit-scrollbar-corner {
+  background: #F2F0EA;
+}
+
+html.light::-webkit-scrollbar-thumb,
+html.light *::-webkit-scrollbar-thumb {
+  background: #A9AAA1;
+  border-color: #F2F0EA;
+}
+
+html.light::-webkit-scrollbar-thumb:hover,
+html.light *::-webkit-scrollbar-thumb:hover {
+  background: #2856B6;
+}
+
+/* The workspace rail stays charcoal in every theme, including its scrollbar. */
+html.light .ref-scroll {
+  scrollbar-color: var(--ref-sidebar-2) var(--ref-sidebar);
+}
+
+html.light .ref-scroll::-webkit-scrollbar-track,
+html.light .ref-scroll::-webkit-scrollbar-corner {
+  background: var(--ref-sidebar);
+}
+
+html.light .ref-scroll::-webkit-scrollbar-thumb {
+  background: var(--ref-sidebar-2);
+  border-color: var(--ref-sidebar);
+}
+
+html.light .ref-scroll::-webkit-scrollbar-thumb:hover {
+  background: #3A3E3E;
+}
+
+/* Legacy utility classes used by the research and workflow modules. These
+   mappings keep older screens on the same semantic light palette without
+   changing their layout or their untouched dark-mode appearance. */
+.light .workspace-root [class*="bg-[#050B1A]"] {
+  background-color: var(--apz-bg) !important;
+}
+
+.light .workspace-root [class*="bg-[#0A1628]"] {
+  background-color: var(--apz-surface) !important;
+}
+
+.light .workspace-root [class*="bg-[#0F1E35]"] {
+  background-color: var(--apz-surface-el) !important;
+}
+
+.light .workspace-root [class*="bg-[#162440]"] {
+  background-color: var(--apz-surface-el) !important;
+}
+
+.light .workspace-root [class*="border-[#162440]"] {
+  border-color: var(--apz-border) !important;
+}
+
+.light .workspace-root [class*="text-[#E8EFFF]"] {
+  color: var(--apz-text) !important;
+}
+
+.light .workspace-root [class*="text-[#6B8FBB]"],
+.light .workspace-root [class*="text-[#5A80A8]"] {
+  color: var(--apz-text-dim) !important;
+}
+
+.light .workspace-root [class*="text-[#4A6B9A]"] {
+  color: var(--apz-text-faint) !important;
+}
+
+.light .workspace-root [class*="hover:bg-[#0F1E35]"]:hover {
+  background-color: var(--apz-surface-el) !important;
+}
+
+/* A few shared review/badge components still use Tailwind slate utilities. */
+.light .workspace-root .text-slate-200,
+.light .workspace-root .text-slate-300,
+.light .workspace-root .text-gray-300 {
+  color: var(--apz-text) !important;
+}
+
+.light .workspace-root .text-slate-400,
+.light .workspace-root .text-neutral-400,
+.light .workspace-root .text-neutral-500 {
+  color: var(--apz-text-dim) !important;
+}
+
+.light .workspace-root .bg-slate-800,
+.light .workspace-root .bg-gray-800 {
+  background-color: var(--apz-surface) !important;
+}
+
+.light .workspace-root .border-slate-800,
+.light .workspace-root .border-neutral-300 {
+  border-color: var(--apz-border) !important;
+}
+
+/* Restrained semantic accents. These remain clearly distinguishable, but
+   avoid saturated traffic-light colours competing with the APZ blue. */
+.workspace-root .text-emerald-400,
+.workspace-root .text-emerald-500,
+.workspace-root .text-emerald-600 {
+  color: #4F9A7A !important;
+}
+
+.workspace-root .text-amber-300,
+.workspace-root .text-amber-400,
+.workspace-root .text-amber-500,
+.workspace-root .text-yellow-400,
+.workspace-root .text-yellow-500 {
+  color: #B3833A !important;
+}
+
+.workspace-root .text-red-400,
+.workspace-root .text-red-500,
+.workspace-root .text-rose-400,
+.workspace-root .text-rose-500 {
+  color: #B75D63 !important;
+}
+
+.workspace-root .text-orange-400,
+.workspace-root .text-orange-500 {
+  color: #B8783E !important;
+}
+
+.workspace-root .text-violet-400,
+.workspace-root .text-violet-500,
+.workspace-root .text-purple-400,
+.workspace-root .text-purple-500 {
+  color: #7F75B5 !important;
+}
+
+.workspace-root [class*="bg-emerald-500"],
+.workspace-root [class*="bg-emerald-600"] {
+  background-color: color-mix(in srgb, #4F9A7A 14%, transparent) !important;
+}
+
+.workspace-root [class*="bg-amber-500"],
+.workspace-root [class*="bg-amber-600"],
+.workspace-root [class*="bg-yellow-500"] {
+  background-color: color-mix(in srgb, #B3833A 14%, transparent) !important;
+}
+
+.workspace-root [class*="bg-red-500"],
+.workspace-root [class*="bg-red-600"],
+.workspace-root [class*="bg-rose-500"],
+.workspace-root [class*="bg-rose-600"] {
+  background-color: color-mix(in srgb, #B75D63 14%, transparent) !important;
+}
+
+.workspace-root [class*="bg-orange-500"],
+.workspace-root [class*="bg-orange-600"] {
+  background-color: color-mix(in srgb, #B8783E 14%, transparent) !important;
+}
+
+.workspace-root [class*="border-emerald-500"],
+.workspace-root [class*="border-amber-500"],
+.workspace-root [class*="border-red-500"],
+.workspace-root [class*="border-rose-500"] {
+  border-color: color-mix(in srgb, currentColor 28%, transparent) !important;
+}
+
+@layer utilities {
+  input[type='search']::-webkit-search-cancel-button {
+    @apply hidden;
+  }
+  [contenteditable][data-placeholder]:empty::before {
+    content: attr(data-placeholder);
+    color: hsl(var(--muted-foreground));
+    pointer-events: none;
+  }
+  .toggle-elevate::before,
+  .toggle-elevate-2::before {
+    content: '';
+    pointer-events: none;
+    position: absolute;
+    inset: 0px;
+    border-radius: inherit;
+    z-index: -1;
+  }
+  .toggle-elevate.toggle-elevated::before {
+    background-color: var(--elevate-2);
+  }
+  .border.toggle-elevate::before {
+    inset: -1px;
+  }
+  .hover-elevate:not(.no-default-hover-elevate),
+  .active-elevate:not(.no-default-active-elevate),
+  .hover-elevate-2:not(.no-default-hover-elevate),
+  .active-elevate-2:not(.no-default-active-elevate) {
+    position: relative;
+    z-index: 0;
+  }
+  .hover-elevate:not(.no-default-hover-elevate)::after,
+  .active-elevate:not(.no-default-active-elevate)::after,
+  .hover-elevate-2:not(.no-default-hover-elevate)::after,
+  .active-elevate-2:not(.no-default-active-elevate)::after {
+    content: '';
+    pointer-events: none;
+    position: absolute;
+    inset: 0px;
+    border-radius: inherit;
+    z-index: 999;
+  }
+  .hover-elevate:hover:not(.no-default-hover-elevate)::after,
+  .active-elevate:active:not(.no-default-active-elevate)::after {
+    background-color: var(--elevate-1);
+  }
+  .hover-elevate-2:hover:not(.no-default-hover-elevate)::after,
+  .active-elevate-2:active:not(.no-default-active-elevate)::after {
+    background-color: var(--elevate-2);
+  }
+  .border.hover-elevate:not(.no-hover-interaction-elevate)::after,
+  .border.active-elevate:not(.no-active-interaction-elevate)::after,
+  .border.hover-elevate-2:not(.no-hover-interaction-elevate)::after,
+  .border.active-elevate-2:not(.no-active-interaction-elevate)::after,
+  .border.hover-elevate:not(.no-hover-interaction-elevate)::after {
+    inset: -1px;
+  }
+}

@@ -1,0 +1,306 @@
+### APZ Legal — Desktop Landing Page Layout & Viewport Fit
+
+Redesign the **APZ Legal landing page** so that the entire primary landing-page experience is **perfectly centered, polished, balanced, and fully visible within a standard desktop viewport without vertical scrolling**.
+
+#### Core Requirement
+
+The landing page must fit within **one desktop viewport**.
+
+* No vertical page scrolling on desktop.
+* No content should be cut off at the bottom.
+* The user should be able to see the complete landing-page composition immediately after loading.
+* Design primarily for **1440 × 900**, while remaining responsive for 1280 × 720 and larger desktop screens.
+* Do NOT simply shrink everything to make it fit.
+* Instead, intelligently restructure spacing, sizing, and hierarchy so the page naturally fits.
+
+### Overall Visual Direction
+
+APZ Legal should feel:
+
+* Premium
+* Corporate
+* Sophisticated
+* Modern legal technology
+* Minimal
+* Trustworthy
+* High-end SaaS
+* Similar in quality to leading enterprise legal-tech platforms
+
+Avoid anything that looks:
+
+* Playful
+* Startup-template-like
+* Overly rounded
+* Cartoonish
+* Excessively colourful
+* Cluttered
+* Like a generic AI landing page
+
+Use a restrained **black / charcoal / warm beige / white / subtle gold accent** visual language consistent with APZ Legal's professional legal identity.
+
+### Desktop Layout
+
+Create a structured full-screen composition:
+
+#### 1. Header
+
+Keep the header compact and horizontally aligned.
+
+Left:
+
+* APZ Legal logo/wordmark
+
+Center/right navigation:
+
+* Platform
+* Solutions
+* AI
+* Security
+* About
+
+Right:
+
+* Sign In
+* Request Demo / Get Started
+
+Header should consume approximately **70–80px maximum** of vertical space.
+
+Do not create a large oversized navigation bar.
+
+---
+
+#### 2. Hero Section
+
+The hero should be the dominant visual area.
+
+Use a **two-column desktop composition**:
+
+LEFT:
+
+* Small professional eyebrow label such as:
+  "LEGAL OPERATIONS • AI • COMPLIANCE"
+* Strong headline
+* Short supporting description
+* Primary CTA
+* Secondary CTA
+
+RIGHT:
+
+* A sophisticated APZ Legal product preview/dashboard mockup.
+
+The hero should be vertically centered within the remaining viewport.
+
+Example hierarchy:
+
+**Legal work, intelligently connected.**
+
+A unified legal operating workspace for matters, documents, compliance, research, AI assistance, workflows, billing and more.
+
+[Request a Demo] [Explore Platform]
+
+Do not make the headline excessively large. It should feel premium rather than promotional.
+
+---
+
+#### 3. Product Preview
+
+The product preview should look like an actual APZ Legal interface rather than a generic dashboard illustration.
+
+Show a refined legal workspace containing elements such as:
+
+* Matter overview
+* Client information
+* Matter status
+* Recent documents
+* AI assistant/research panel
+* Tasks
+* Compliance indicators
+
+Keep this preview visually contained.
+
+It must NOT create additional page height.
+
+Use subtle depth, borders and shadows rather than huge decorative graphics.
+
+---
+
+#### 4. Bottom Trust / Capability Strip
+
+At the bottom of the viewport, add a compact capability strip rather than another large section.
+
+For example:
+
+**MATTERS** · **LEGAL AI** · **DOCUMENTS** · **COMPLIANCE** · **WORKFLOWS** · **TIME & BILLING**
+
+This should reinforce the breadth of APZ Legal without requiring the user to scroll.
+
+Keep it compact and elegant.
+
+---
+
+### Viewport Rules
+
+Treat the landing page as a **100vh desktop experience**.
+
+Use:
+
+```css
+min-height: 100vh;
+height: 100vh;
+overflow: hidden;
+```
+
+for the desktop landing-page shell where appropriate.
+
+However, do not blindly force `overflow: hidden` if it causes content to become inaccessible.
+
+The correct solution is to ensure the content actually fits.
+
+Use responsive calculations such as:
+
+```css
+min-height: calc(100vh - header-height);
+```
+
+and carefully control:
+
+* Hero padding
+* Typography
+* Image/mockup dimensions
+* Navigation height
+* Vertical gaps
+* CTA spacing
+* Bottom strip height
+
+### Important Responsive Behaviour
+
+For desktop:
+
+**1280 × 720**
+
+* Everything must still fit.
+* Reduce spacing and preview dimensions slightly.
+* No vertical scrolling.
+
+**1440 × 900**
+
+* This should be the ideal presentation.
+* Plenty of breathing room.
+* Everything vertically centered.
+
+**1920 × 1080**
+
+* Do NOT allow the content to become excessively stretched.
+* Keep the hero at a controlled maximum width.
+* Maintain a premium composition rather than spreading elements across the entire screen.
+
+For tablet/mobile:
+
+* It is acceptable for the page to become vertically scrollable.
+* Do NOT compromise the desktop composition to accommodate mobile.
+
+### Container
+
+Use a controlled maximum-width container:
+
+```css
+max-width: 1400px;
+margin: 0 auto;
+padding-inline: 40px;
+```
+
+Adjust the values based on the existing design system.
+
+The landing page should feel **centered within the screen**, not pinned to the left.
+
+### Spacing
+
+Use intentional spacing.
+
+Do not use large empty vertical gaps.
+
+The visual rhythm should be approximately:
+
+Header
+↓
+Hero content
+↓
+Product preview
+↓
+Capability strip
+
+Everything should feel balanced inside the viewport.
+
+### Typography
+
+Use a professional modern sans-serif.
+
+Create a strong hierarchy:
+
+* Eyebrow: small and tracked
+* H1: large but controlled
+* Supporting text: readable and restrained
+* Buttons: compact
+* Navigation: understated
+
+Avoid enormous H1 typography that forces the rest of the page below the fold.
+
+### Eliminate Unnecessary Sections
+
+For the desktop landing page, do NOT stack multiple marketing sections such as:
+
+* Huge feature sections
+* Long AI explanations
+* Testimonials
+* Large pricing sections
+* Repeated CTA sections
+* Large footer content
+
+Those can exist on other pages or below the fold if required, but the **primary landing viewport must remain clean and immediately understandable**.
+
+### Visual Quality Requirements
+
+The final result must look intentionally designed at a desktop resolution.
+
+Check the page at:
+
+* 1280 × 720
+* 1366 × 768
+* 1440 × 900
+* 1920 × 1080
+
+At each resolution:
+
+1. No unwanted horizontal scrolling.
+2. No unwanted vertical scrolling.
+3. No clipped hero content.
+4. No overlapping elements.
+5. No excessive whitespace.
+6. Hero remains visually centered.
+7. Header remains compact.
+8. CTA buttons remain visible.
+9. Product preview remains fully visible.
+10. Bottom capability strip remains visible.
+
+### Do Not
+
+* Do not just reduce the entire page using CSS transforms.
+* Do not use `scale()` to force the UI to fit.
+* Do not make the typography microscopic.
+* Do not create a giant hero image that pushes content below the fold.
+* Do not add unnecessary decorative elements.
+* Do not introduce excessive rounded cards.
+* Do not make the page look like a template.
+* Do not create a page where the user has to scroll to understand the product.
+
+### Final Objective
+
+When someone opens APZ Legal on a desktop monitor, the **entire first impression should be visible immediately**.
+
+It should look like a polished enterprise legal platform:
+
+**Logo → Navigation → Strong Hero → Product Interface Preview → Core Capabilities**
+
+All contained within one clean, balanced desktop viewport.
+
+The result should feel **finished, intentional, premium and production-ready**, not like a collection of sections placed one underneath another.

@@ -1,0 +1,871 @@
+# APZ LEGAL — FULLY FUNCTIONALISE TEMPLATES MODULE
+
+You need to review the **existing APZ Legal Templates module** and make it fully functional according to the approved **APZ Legal PRD v2 and User Journeys**.
+
+Do NOT create a mock/demo implementation.
+
+First inspect the existing:
+
+* Templates frontend
+* Templates routes/pages
+* Templates components
+* Templates API endpoints
+* Database schema/models
+* Document management functionality
+* Knowledge Base functionality
+* Approval/workflow functionality
+* Audit logging
+* Authentication and RBAC
+* File/document storage
+* AI indexing/RAG functionality
+
+Reuse existing architecture and services wherever possible.
+
+---
+
+## 1. PURPOSE OF THE TEMPLATES MODULE
+
+Templates must function as a **controlled legal template library**, not simply a file upload/download page.
+
+The intended lifecycle is:
+
+**Create/Upload → Categorise → Review → Approve → AI Index → Available to Legal Staff → Create Matter Document → Version/Track/Audit**
+
+The User Journey specifically requires that a Partner/Senior Partner can upload:
+
+* Templates
+* Legal opinions
+* Internal guidance
+
+and categorise the content, mark it as Approved, trigger AI indexing, and make the approved content available to legal staff.
+
+For this implementation, focus specifically on the **Templates** portion of that workflow.
+
+---
+
+# 2. TEMPLATE LIBRARY
+
+Build a proper Template Library.
+
+The main Templates page must display real database-backed templates.
+
+Each template should show:
+
+* Template name
+* Description
+* Category
+* Practice area
+* Document type
+* Jurisdiction
+* Version
+* Status
+* Created by
+* Last updated
+* Approval status
+* AI indexing status
+
+Provide:
+
+### Search
+
+Search templates by:
+
+* Name
+* Description
+* Category
+* Practice area
+* Tags
+* Document type
+
+### Filters
+
+Allow filtering by:
+
+* Status
+* Approval status
+* Practice area
+* Category
+* Document type
+* AI indexing status
+* Created by
+
+### Sorting
+
+Allow sorting by:
+
+* Recently updated
+* Recently created
+* Name
+* Version
+* Status
+
+Do not use hardcoded template records.
+
+---
+
+# 3. TEMPLATE STATUS MODEL
+
+Implement a proper lifecycle.
+
+Use:
+
+**Draft**
+
+→ **Pending Review**
+
+→ **Approved**
+
+→ **Archived**
+
+Also support:
+
+**Changes Required / Rejected**
+
+Rules:
+
+### Draft
+
+Template is being prepared and is not available to general legal staff.
+
+### Pending Review
+
+Template has been submitted for Partner review.
+
+### Approved
+
+Template is officially approved for firm use.
+
+An approved template can:
+
+* Be used to create matter documents
+* Be indexed by AI
+* Be retrieved by the Legal AI/Knowledge Base
+* Be available to authorised legal staff
+
+### Archived
+
+Template is retained for historical/audit purposes but should no longer be selectable as the current template.
+
+Do NOT delete historical versions when a template is archived.
+
+---
+
+# 4. ROLE-BASED ACCESS
+
+Use the existing APZ Legal RBAC system.
+
+Do not invent a new permission system.
+
+The PRD establishes that Partners have Knowledge Base approval capabilities and that Senior Partners can contribute approved knowledge.
+
+Apply appropriate existing permissions so that:
+
+### Attorneys
+
+Can:
+
+* View approved templates
+* Search approved templates
+* Preview approved templates
+* Create documents from approved templates
+
+### Partners / authorised approvers
+
+Can:
+
+* Upload templates
+* Edit template metadata
+* Submit templates for review
+* Review templates
+* Approve templates
+* Reject/request changes
+* Archive templates
+* Manage versions
+
+### Administrators
+
+Retain appropriate system-level control according to existing RBAC.
+
+Do not expose approval controls to users who do not have approval permissions.
+
+---
+
+# 5. UPLOAD TEMPLATE
+
+Create a proper **Upload Template** workflow.
+
+Required metadata:
+
+* Template name
+* Description
+* Document type
+* Category
+* Practice area
+* Jurisdiction
+* Tags
+* Version
+* Effective date
+* Review date
+* Owner
+* Notes
+
+Allow the actual template document to be uploaded.
+
+Supported document formats should follow the existing APZ Legal document-storage capabilities.
+
+After upload:
+
+**Template = Draft**
+
+unless the existing workflow explicitly supports direct submission.
+
+Do not automatically make newly uploaded templates available to the entire firm.
+
+---
+
+# 6. TEMPLATE DETAILS PAGE
+
+Clicking a template must open a dedicated Template Details view.
+
+Display:
+
+### Template Information
+
+* Name
+* Description
+* Category
+* Practice area
+* Document type
+* Jurisdiction
+* Tags
+* Owner
+* Version
+* Created date
+* Updated date
+
+### Status
+
+Clearly display:
+
+* Draft
+* Pending Review
+* Approved
+* Changes Required
+* Archived
+
+### Approval
+
+Display:
+
+* Submitted by
+* Submitted date
+* Reviewed by
+* Review date
+* Approval decision
+* Approval comments
+
+### AI Indexing
+
+Display:
+
+* Not indexed
+* Indexing
+* Indexed
+* Indexing failed
+
+### Actions
+
+Based on permissions/status:
+
+* Edit
+* Preview
+* Submit for Review
+* Approve
+* Request Changes
+* Archive
+* Create Document
+* View Versions
+* View Audit Trail
+
+---
+
+# 7. TEMPLATE PREVIEW
+
+Allow authorised users to preview the actual template document.
+
+Do not simply show the filename.
+
+Use the existing APZ Legal document preview functionality if available.
+
+The preview should allow the user to understand what they are approving.
+
+---
+
+# 8. APPROVAL WORKFLOW
+
+Implement the approval workflow properly.
+
+### Submit for Review
+
+Authorised user selects:
+
+**Submit for Review**
+
+Template changes:
+
+**Draft → Pending Review**
+
+Record the event in the audit trail.
+
+### Partner Review
+
+Partner opens the template.
+
+Partner can:
+
+**Approve**
+
+or
+
+**Request Changes / Reject**
+
+If approved:
+
+**Pending Review → Approved**
+
+If changes are requested:
+
+**Pending Review → Changes Required**
+
+Record:
+
+* User
+* Timestamp
+* Action
+* Previous status
+* New status
+* Comments
+
+Do not allow an unauthorised user to approve a template.
+
+---
+
+# 9. VERSION CONTROL
+
+Templates must support versioning.
+
+Never overwrite the historical approved version.
+
+Example:
+
+```text
+Letter of Demand
+
+v1.0 — Archived
+v2.0 — Archived
+v3.0 — Approved / Current
+```
+
+When a new version is created:
+
+* Preserve the previous version
+* Increment the version
+* Keep historical metadata
+* Maintain the audit trail
+* Require approval for the new version
+
+Only the current approved version should be treated as the firm's active template.
+
+---
+
+# 10. CREATE DOCUMENT FROM TEMPLATE
+
+This is one of the most important functions.
+
+An authorised legal user should be able to select:
+
+**Create Document**
+
+from an approved template.
+
+The system should then:
+
+### Step 1
+
+Ask the user to select a Matter.
+
+### Step 2
+
+Create a new document based on the approved template.
+
+### Step 3
+
+Associate the new document with the selected matter.
+
+### Step 4
+
+Store the document inside the Matter Workspace.
+
+The created document should then enter the normal APZ Legal document lifecycle:
+
+**Draft → AI Assist → Review → Partner Approval → Client Signing → Archived**
+
+where applicable.
+
+Do NOT create a completely separate document workflow for templates.
+
+Use the existing Document Management workflow.
+
+---
+
+# 11. TEMPLATE + MATTER INTEGRATION
+
+The Templates module must integrate with Matter Management.
+
+Example:
+
+```text
+Templates
+   ↓
+Letter of Demand
+   ↓
+Create Document
+   ↓
+Select Matter
+   ↓
+Matter: Smith v Jones
+   ↓
+Create
+   ↓
+Matter Documents
+   ↓
+Letter of Demand — Draft
+```
+
+The document must appear in the selected Matter Workspace.
+
+It must not exist as an isolated template-generated file.
+
+---
+
+# 12. AI KNOWLEDGE BASE INTEGRATION
+
+This is REQUIRED.
+
+When a template becomes:
+
+**Approved**
+
+trigger the existing AI indexing process.
+
+The flow should be:
+
+```text
+Template Approved
+        ↓
+AI Indexing Triggered
+        ↓
+Document Processed
+        ↓
+Content Indexed
+        ↓
+Available to Knowledge Base / Legal AI
+```
+
+Display the indexing status to the user.
+
+Use the existing Knowledge Base/RAG infrastructure.
+
+Do NOT create a second independent indexing system.
+
+---
+
+# 13. AI RETRIEVAL
+
+Approved templates should be retrievable by the APZ Legal AI where appropriate.
+
+For example:
+
+User:
+
+> "Use the firm's approved Letter of Demand template for this matter."
+
+The AI should be able to identify the relevant approved template from the firm's knowledge repository.
+
+The system must prioritise:
+
+**Approved current templates**
+
+over:
+
+* Draft templates
+* Rejected templates
+* Archived templates
+* Old versions
+
+Do not expose unapproved templates through general AI retrieval.
+
+---
+
+# 14. AUDIT TRAIL
+
+Every material template action must be auditable.
+
+Record at minimum:
+
+* Created
+* Uploaded
+* Edited
+* Submitted for review
+* Approved
+* Rejected
+* Changes requested
+* Version created
+* Archived
+* AI indexing started
+* AI indexing completed
+* AI indexing failed
+* Document created from template
+
+Audit entries must include:
+
+* User
+* Timestamp
+* Action
+* Template
+* Version
+* Previous state
+* New state
+* Relevant comments/details
+
+Use the existing APZ Legal Audit module/service.
+
+Do NOT create a separate isolated audit system.
+
+---
+
+# 15. TEMPLATE CATEGORIES
+
+The category system should support legal organisation.
+
+Examples may include:
+
+* Commercial
+* Litigation
+* Conveyancing
+* Corporate
+* Compliance
+* Employment
+* General
+* Client Onboarding
+
+Do not hardcode these if APZ Legal already has a configurable category system.
+
+Reuse existing configuration where available.
+
+---
+
+# 16. DASHBOARD / COUNTS
+
+The Templates page should provide useful summary information.
+
+For example:
+
+**Total Templates**
+
+**Approved**
+
+**Pending Review**
+
+**Draft**
+
+**Archived**
+
+**AI Indexed**
+
+These values must come from the database.
+
+No fake numbers.
+
+---
+
+# 17. EMPTY / ERROR / LOADING STATES
+
+Implement proper production states.
+
+Examples:
+
+### No Templates
+
+" No templates have been added yet."
+
+with:
+
+**Upload Template**
+
+### No Search Results
+
+"No templates match your search."
+
+### Upload Failure
+
+Display a useful error.
+
+### Approval Failure
+
+Do not silently change the status.
+
+### AI Indexing Failure
+
+Show:
+
+**Indexing Failed**
+
+with an appropriate retry action if supported.
+
+---
+
+# 18. DATABASE / BACKEND
+
+Inspect the current database architecture before creating anything.
+
+If a Templates entity/table already exists:
+
+**extend it rather than duplicating it.**
+
+If it does not exist, create the appropriate model.
+
+The model should support:
+
+* Template identity
+* File/document reference
+* Metadata
+* Version
+* Status
+* Approval information
+* Ownership
+* AI indexing state
+* Timestamps
+
+Use the existing ORM/database conventions.
+
+Implement proper backend validation.
+
+Do not rely only on frontend validation.
+
+---
+
+# 19. API
+
+Inspect existing APIs first.
+
+Implement or complete the necessary endpoints for:
+
+* List templates
+* Search templates
+* Get template
+* Create template
+* Upload template
+* Update template
+* Submit for review
+* Approve template
+* Request changes/reject
+* Archive template
+* Create new version
+* Create document from template
+* Get template versions
+* Get template audit history
+* Trigger/retry AI indexing where appropriate
+
+Follow the existing API architecture and authentication middleware.
+
+---
+
+# 20. SECURITY
+
+Templates may contain confidential legal material.
+
+Ensure:
+
+* Authentication is required
+* RBAC is enforced server-side
+* Unapproved templates cannot be accessed by unauthorised users
+* Archived versions remain protected
+* Download/preview permissions are enforced
+* Approval endpoints cannot be called by unauthorised roles
+* Matter association respects matter permissions
+
+Do not rely on hiding buttons in the frontend for security.
+
+---
+
+# 21. UI/UX
+
+The Templates module must match the existing APZ Legal design language.
+
+It should feel:
+
+* Corporate
+* Premium
+* Professional
+* Legal-tech
+* Clean
+* Dense but readable
+* Enterprise-grade
+
+Avoid:
+
+* Childish UI
+* Excessive rounded cards
+* Huge cards
+* Excessive gradients
+* Unnecessary illustrations
+* Fake statistics
+* Excessive whitespace
+* Generic SaaS styling
+
+Use a professional table/list-based interface where appropriate.
+
+The Templates page should feel like an actual **law-firm document management system**.
+
+---
+
+# 22. IMPORTANT — DO NOT BUILD MOCK FUNCTIONALITY
+
+Before finishing, test the complete real workflow:
+
+```text
+Partner logs in
+        ↓
+Templates
+        ↓
+Upload Template
+        ↓
+Enter metadata
+        ↓
+Template saved
+        ↓
+Submit for Review
+        ↓
+Partner reviews
+        ↓
+Approve
+        ↓
+Audit entry created
+        ↓
+AI indexing triggered
+        ↓
+Template becomes indexed
+        ↓
+Attorney searches Templates
+        ↓
+Attorney opens approved template
+        ↓
+Create Document
+        ↓
+Select Matter
+        ↓
+Document created
+        ↓
+Document appears in Matter Workspace
+        ↓
+Normal document approval workflow continues
+```
+
+Everything above must use the **real backend, database, storage, RBAC, audit and AI services**.
+
+Do not simulate any of these with frontend state or static JSON.
+
+---
+
+# 23. REGRESSION TESTING
+
+After implementation, test at minimum:
+
+### Template creation
+
+* Upload succeeds
+* Metadata persists
+* File persists
+* Draft status is correct
+
+### Approval
+
+* Submit works
+* Partner can approve
+* Unauthorised users cannot approve
+* Status changes correctly
+* Audit record created
+
+### Versioning
+
+* New version preserves old version
+* Correct version becomes current
+* Old versions remain accessible according to permissions
+
+### AI
+
+* Approval triggers indexing
+* Indexing status updates
+* Approved template becomes searchable
+* Draft/rejected templates are not exposed through general AI retrieval
+
+### Matter integration
+
+* Create Document works
+* Matter selection works
+* Generated document is stored against the matter
+* Document appears in Matter Workspace
+
+### Audit
+
+* All important actions are recorded
+
+### Permissions
+
+* Test each relevant role
+
+---
+
+# 24. FINAL ACCEPTANCE CRITERIA
+
+Do not consider the Templates module complete until all of the following are true:
+
+* [ ] Templates are database-backed
+* [ ] Templates can be uploaded
+* [ ] Templates can be categorised
+* [ ] Templates have lifecycle statuses
+* [ ] Templates have proper RBAC
+* [ ] Templates can be submitted for review
+* [ ] Partners can approve/request changes
+* [ ] Approval is audited
+* [ ] Templates support version control
+* [ ] Historical versions are preserved
+* [ ] Approved templates trigger AI indexing
+* [ ] AI indexing status is visible
+* [ ] Approved templates become available to authorised legal staff
+* [ ] AI can retrieve approved templates where appropriate
+* [ ] Users can preview templates
+* [ ] Users can create documents from approved templates
+* [ ] Created documents are linked to a Matter
+* [ ] Created documents enter the existing Document Management workflow
+* [ ] Audit trail records material actions
+* [ ] No mock/static data is being used
+* [ ] No duplicate services have been created unnecessarily
+* [ ] Existing APZ Legal architecture has been reused
+* [ ] End-to-end workflow has been tested
+
+Finally, provide a concise implementation report showing:
+
+1. What already existed
+2. What you changed
+3. Database changes
+4. API changes
+5. Frontend changes
+6. AI/Knowledge Base integration
+7. RBAC changes
+8. Audit changes
+9. Tests performed
+10. Any remaining limitations or dependencies
+
+Do not stop at creating the UI. **The Templates module must be fully functional end-to-end.**

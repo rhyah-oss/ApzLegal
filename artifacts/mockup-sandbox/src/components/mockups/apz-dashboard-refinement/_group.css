@@ -1,0 +1,21 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;1,14..32,400&display=swap");
+
+/* ── APZ Legal dark navy token foundation ─────────────────────────────────── */
+.apz-dash-root {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: #030A15;
+  color: #D4E5F7;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbars */
+.apz-dash-root * {
+  scrollbar-color: #28446A #071020;
+  scrollbar-width: thin;
+}
+.apz-dash-root ::-webkit-scrollbar { width: 5px; height: 5px; }
+.apz-dash-root ::-webkit-scrollbar-track { background: #071020; }
+.apz-dash-root ::-webkit-scrollbar-thumb { background: #28446A; border-radius: 999px; }
+.apz-dash-root ::-webkit-scrollbar-thumb:hover { background: #4169E1; }

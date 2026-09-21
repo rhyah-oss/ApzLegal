@@ -1,0 +1,96 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap");
+
+.apz-legal-slate {
+  --slate-bg: #071321;
+  --slate-sidebar: #091827;
+  --slate-surface: #0d1d2e;
+  --slate-raised: #12263a;
+  --slate-line: #20364b;
+  --slate-line-soft: #172b40;
+  --slate-ink: #d9e5ee;
+  --slate-muted: #91a6b8;
+  --slate-quiet: #607b93;
+  --slate-accent: #67bfd2;
+  --slate-accent-deep: #2f8ca6;
+  --slate-ok: #78a893;
+  --slate-warn: #b79562;
+  --slate-risk: #b8787c;
+  min-height: 100vh;
+  background: var(--slate-bg);
+  color: var(--slate-ink);
+  font-family: "DM Sans", sans-serif;
+}
+
+.apz-legal-slate * { box-sizing: border-box; }
+.apz-legal-slate button { font: inherit; color: inherit; }
+.apz-legal-slate .mono { font-family: "IBM Plex Mono", monospace; }
+.apz-legal-slate .shell { min-height: 100vh; display: flex; }
+.apz-legal-slate .sidebar {
+  width: 238px; flex: 0 0 238px; background: var(--slate-sidebar);
+  border-right: 1px solid var(--slate-line-soft); padding: 24px 15px 16px;
+  display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh;
+}
+.apz-legal-slate .brand { display:flex; align-items:center; gap:11px; padding: 0 10px 26px; }
+.apz-legal-slate .brand img { width: 31px; height:31px; object-fit:cover; border-radius:8px; filter: grayscale(1) saturate(.35) brightness(1.35); opacity:.86; }
+.apz-legal-slate .brand b { display:block; font-size:15px; letter-spacing:-.02em; }
+.apz-legal-slate .brand small { display:block; color:var(--slate-quiet); font-size:8px; letter-spacing:.15em; margin-top:3px; }
+.apz-legal-slate .profile { border-top:1px solid var(--slate-line-soft); border-bottom:1px solid var(--slate-line-soft); padding:15px 9px; display:flex; align-items:center; gap:9px; }
+.apz-legal-slate .avatar { width:28px; height:28px; display:grid; place-items:center; border:1px solid #356276; background:#173347; color:#b9d9e1; border-radius:50%; font:600 9px "IBM Plex Mono"; }
+.apz-legal-slate .avatar.small { width:25px; height:25px; font-size:8px; }
+.apz-legal-slate .profile div:nth-child(2) { flex:1; min-width:0; }
+.apz-legal-slate .profile b { font-size:11px; display:block; white-space:nowrap; }
+.apz-legal-slate .profile small { color:var(--slate-quiet); font-size:9px; display:block; margin-top:2px; }
+.apz-legal-slate .profile svg { color:var(--slate-quiet); }
+.apz-legal-slate .side-search { height:32px; margin:18px 3px 13px; display:flex; align-items:center; gap:8px; padding:0 9px; color:var(--slate-quiet); border:1px solid var(--slate-line); background:#0b1a2a; font-size:10px; border-radius:5px; }
+.apz-legal-slate .side-search kbd { margin-left:auto; font:10px "IBM Plex Mono"; color:#7991a7; border:1px solid #2b4256; border-radius:3px; padding:2px 4px; }
+.apz-legal-slate .nav-list { display:flex; flex-direction:column; gap:2px; }
+.apz-legal-slate .nav-item { border:0; background:transparent; width:100%; display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:5px; color:var(--slate-muted); font-size:11px; text-align:left; cursor:pointer; }
+.apz-legal-slate .nav-item:hover { background:#102437; color:var(--slate-ink); }
+.apz-legal-slate .nav-item.selected { background:#153447; color:#d4eff3; box-shadow:inset 2px 0 var(--slate-accent); }
+.apz-legal-slate .nav-item svg { width:15px; color:var(--slate-quiet); }
+.apz-legal-slate .nav-item.selected svg { color:var(--slate-accent); }
+.apz-legal-slate .nav-item em { margin-left:auto; font:10px "IBM Plex Mono"; font-style:normal; color:var(--slate-accent); }
+.apz-legal-slate .side-bottom { margin-top:auto; }
+.apz-legal-slate .new-matter { width:100%; padding:10px; border:1px solid #2d7284; background:#113442; color:#c3e5ea; border-radius:5px; display:flex; align-items:center; justify-content:center; gap:7px; font-size:11px; cursor:pointer; }
+.apz-legal-slate .new-matter:hover { background:#174656; }
+.apz-legal-slate .side-foot { display:flex; justify-content:space-between; margin-top:15px; padding:13px 5px 0; border-top:1px solid var(--slate-line-soft); }
+.apz-legal-slate .side-foot button { display:flex; gap:7px; align-items:center; border:0; background:transparent; color:var(--slate-quiet); font-size:10px; cursor:pointer; }
+.apz-legal-slate .content { flex:1; min-width:0; }
+.apz-legal-slate .header { height:92px; border-bottom:1px solid var(--slate-line-soft); display:flex; align-items:center; justify-content:space-between; padding:0 34px; }
+.apz-legal-slate h1 { margin:0; font-size:20px; font-weight:500; letter-spacing:-.025em; }
+.apz-legal-slate .header p { margin:6px 0 0; color:var(--slate-quiet); font-size:10px; }
+.apz-legal-slate .header p span { padding:0 5px; color:#38536a; }
+.apz-legal-slate .header-actions { display:flex; align-items:center; gap:9px; }
+.apz-legal-slate .icon-button,.apz-legal-slate .filter,.apz-legal-slate .date-button { background:#0c1b2b; border:1px solid var(--slate-line); color:var(--slate-muted); border-radius:5px; cursor:pointer; }
+.apz-legal-slate .icon-button { width:32px; height:32px; display:grid; place-items:center; position:relative; }
+.apz-legal-slate .icon-button i { width:5px; height:5px; border-radius:50%; background:var(--slate-accent); position:absolute; top:6px; right:6px; }
+.apz-legal-slate .filter,.apz-legal-slate .date-button { padding:8px 10px; display:flex; align-items:center; gap:7px; font-size:10px; }
+.apz-legal-slate .main { padding:28px 34px 42px; max-width:1600px; margin:auto; }
+.apz-legal-slate .context-row { display:flex; justify-content:space-between; align-items:end; margin-bottom:20px; }
+.apz-legal-slate .eyebrow { color:var(--slate-accent); font:600 9px "IBM Plex Mono"; letter-spacing:.14em; }
+.apz-legal-slate .context-row p { color:var(--slate-muted); font-size:11px; margin:7px 0 0; }
+.apz-legal-slate .date-button { color:var(--slate-ink); background:transparent; }
+.apz-legal-slate .panel { border:1px solid var(--slate-line); background:var(--slate-surface); border-radius:6px; }
+.apz-legal-slate .alert-strip { margin-bottom:18px; border:1px solid #493c31; background:#111f2c; border-radius:6px; overflow:hidden; }
+.apz-legal-slate .alert-head { display:flex; align-items:center; gap:9px; padding:12px 14px; border-bottom:1px solid #2c3440; font-size:11px; }
+.apz-legal-slate .alert-head button { margin-left:auto; border:0; background:transparent; color:var(--slate-quiet); cursor:pointer; display:grid; }
+.apz-legal-slate .badge { font:600 8px "IBM Plex Mono"; padding:4px 6px; border-radius:3px; margin-left:3px; }
+.apz-legal-slate .badge.risk { color:#d39a9d; background:#482c35; }.apz-legal-slate .badge.warn { color:#d5b77f; background:#463923; }
+.apz-legal-slate .alert-items { display:grid; grid-template-columns:repeat(3,1fr); }
+.apz-legal-slate .alert-item { min-width:0; border:0; border-right:1px solid #2b3540; background:transparent; padding:11px 13px; display:flex; align-items:center; gap:8px; cursor:pointer; text-align:left; }
+.apz-legal-slate .alert-item:hover { background:#172a3a; }.apz-legal-slate .alert-item i { width:5px; height:5px; border-radius:50%; flex:0 0 auto; }.apz-legal-slate .alert-item span { font-size:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }.apz-legal-slate .alert-item svg { margin-left:auto; color:var(--slate-quiet); flex:0 0 auto; }
+.apz-legal-slate .kpis { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:18px; }
+.apz-legal-slate .kpi { min-width:0; background:var(--slate-surface); border:1px solid var(--slate-line); border-radius:6px; text-align:left; padding:15px 16px 13px; cursor:pointer; }
+.apz-legal-slate .hoverable { transition:background .16s ease, border-color .16s ease; }.apz-legal-slate .kpi:hover { background:var(--slate-raised); border-color:#31516a; }
+.apz-legal-slate .kpi-label { display:flex; gap:7px; align-items:center; color:var(--slate-quiet); font:600 9px "IBM Plex Mono"; letter-spacing:.04em; white-space:nowrap; }
+.apz-legal-slate .kpi strong { display:block; font-size:26px; font-weight:500; letter-spacing:-.04em; margin:13px 0 5px; }.apz-legal-slate .kpi small { color:var(--slate-quiet); font-size:9px; }
+.apz-legal-slate .content-grid { display:grid; grid-template-columns:1.15fr 1fr 1.1fr; gap:14px; align-items:start; }.apz-legal-slate .left-col,.apz-legal-slate .middle-col { display:flex; flex-direction:column; gap:14px; }
+.apz-legal-slate .section-title { padding:16px 17px 13px; display:flex; align-items:center; gap:9px; color:var(--slate-muted); font:600 9px "IBM Plex Mono"; text-transform:uppercase; letter-spacing:.1em; }.apz-legal-slate .section-title i { width:2px; height:13px; border-radius:2px; }
+.apz-legal-slate .pipeline { padding:2px 17px 9px; }.apz-legal-slate .pipe-row { display:flex; align-items:center; gap:10px; height:28px; }.apz-legal-slate .pipe-label { width:100px; display:flex; align-items:center; gap:7px; color:var(--slate-muted); font-size:10px; }.apz-legal-slate .pipe-label i { width:5px; height:5px; border-radius:50%; }.apz-legal-slate .bar { flex:1; height:4px; background:#1a3044; border-radius:99px; overflow:hidden; }.apz-legal-slate .bar i { display:block; height:100%; border-radius:99px; opacity:.85; }.apz-legal-slate .pipe-row b { width:22px; text-align:right; color:var(--slate-ink); font-size:10px; }
+.apz-legal-slate .footer-link { width:calc(100% - 34px); margin:3px 17px 14px; padding:11px 0 0; border:0; border-top:1px solid var(--slate-line-soft); background:transparent; display:flex; align-items:center; color:var(--slate-quiet); font-size:10px; cursor:pointer; }.apz-legal-slate .footer-link svg { margin-left:auto; }.apz-legal-slate .footer-link:hover { color:var(--slate-accent); }
+.apz-legal-slate .metric { width:calc(100% - 28px); margin:0 14px 2px; padding:8px 7px 8px 9px; display:flex; align-items:center; border:0; border-left:2px solid transparent; background:transparent; text-align:left; cursor:pointer; }.apz-legal-slate .metric:hover { background:#14283b; }.apz-legal-slate .metric span { flex:1; color:var(--slate-muted); font-size:10px; }.apz-legal-slate .metric b { font-size:11px; }.apz-legal-slate .metric svg { color:var(--slate-quiet); margin-left:8px; opacity:.65; }
+.apz-legal-slate .workload { padding:2px 17px 17px; }.apz-legal-slate .person { display:flex; gap:9px; align-items:center; margin:10px 0; }.apz-legal-slate .person-main { flex:1; }.apz-legal-slate .person-main>div:first-child { display:flex; justify-content:space-between; margin-bottom:5px; color:var(--slate-muted); font-size:10px; }.apz-legal-slate .person-main b { color:var(--slate-ink); font-size:10px; }.apz-legal-slate .person-main .bar { height:3px; }
+.apz-legal-slate .revenue-head { display:flex; justify-content:space-between; padding:1px 17px 4px; }.apz-legal-slate .revenue-head strong { font-size:25px; font-weight:500; letter-spacing:-.05em; }.apz-legal-slate .revenue-head span { color:var(--slate-ok); font-size:9px; margin-left:9px; }.apz-legal-slate .revenue-head b { display:block; text-align:right; font:500 12px "IBM Plex Mono"; }.apz-legal-slate .revenue-head small { display:block; color:var(--slate-quiet); font-size:8px; letter-spacing:.1em; text-align:right; margin-top:4px; }.apz-legal-slate .chart { height:108px; padding:4px 10px 8px; }
+.apz-legal-slate .activity { padding:1px 17px 4px; }.apz-legal-slate .activity-row { display:flex; align-items:flex-start; gap:9px; padding:11px 0; border-bottom:1px solid var(--slate-line-soft); }.apz-legal-slate .activity-row p { flex:1; margin:0; color:var(--slate-muted); font-size:10px; line-height:1.45; }.apz-legal-slate .activity-row p b { color:var(--slate-ink); font-weight:600; }.apz-legal-slate .activity-row time { color:var(--slate-quiet); font-size:9px; white-space:nowrap; padding-top:1px; }.apz-legal-slate .quick-links { display:flex; gap:5px; padding:12px 17px 15px; }.apz-legal-slate .quick-links button { border:1px solid var(--slate-line); background:#102236; color:var(--slate-muted); border-radius:4px; padding:5px 7px; font-size:9px; cursor:pointer; }.apz-legal-slate .quick-links button:hover { color:var(--slate-accent); border-color:#316072; }
+@media (max-width: 1050px) { .apz-legal-slate .sidebar { width:200px; flex-basis:200px; }.apz-legal-slate .main { padding-left:22px; padding-right:22px; }.apz-legal-slate .header { padding:0 22px; }.apz-legal-slate .content-grid { grid-template-columns:1fr 1fr; }.apz-legal-slate .right-col { grid-column:1 / -1; }.apz-legal-slate .alert-items { grid-template-columns:repeat(2,1fr); } }
+@media (max-width: 720px) { .apz-legal-slate .shell { display:block; }.apz-legal-slate .sidebar { position:relative; width:100%; height:auto; padding:14px; }.apz-legal-slate .brand { padding-bottom:14px; }.apz-legal-slate .profile,.apz-legal-slate .side-search,.apz-legal-slate .side-bottom { display:none; }.apz-legal-slate .nav-list { display:grid; grid-template-columns:repeat(4,1fr); }.apz-legal-slate .nav-item { justify-content:center; padding:8px 3px; }.apz-legal-slate .nav-item span,.apz-legal-slate .nav-item em { display:none; }.apz-legal-slate .header { height:auto; padding:20px 16px; align-items:flex-start; }.apz-legal-slate .header-actions .filter { display:none; }.apz-legal-slate .main { padding:20px 16px 30px; }.apz-legal-slate .context-row { align-items:flex-start; }.apz-legal-slate .context-row p { max-width:230px; line-height:1.4; }.apz-legal-slate .kpis { grid-template-columns:repeat(2,1fr); }.apz-legal-slate .kpi:last-child { grid-column:1 / -1; }.apz-legal-slate .content-grid { grid-template-columns:1fr; }.apz-legal-slate .right-col { grid-column:auto; }.apz-legal-slate .alert-items { grid-template-columns:1fr; }.apz-legal-slate .alert-item { border-bottom:1px solid #2b3540; }.apz-legal-slate .alert-head { flex-wrap:wrap; }.apz-legal-slate .badge { margin-left:0; } }

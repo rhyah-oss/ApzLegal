@@ -1,0 +1,86 @@
+PROMPT 3 — FICA Compliance
+Implement or improve the APZ Legal FICA Compliance module according to the APZ Legal PRD v2.
+This is a CORE Phase 1 requirement.
+Do not treat FICA as a generic document upload feature.
+The application must support compliance-first client onboarding.
+REQUIRED COMPLIANCE CHECKS
+Support tracking for:
+ID / Passport validation
+Company registration verification
+Proof of address
+Beneficial ownership mapping
+Each requirement must have a clear status.
+Statuses may include:
+Missing
+Uploaded
+Pending Verification
+Verified
+Rejected
+Expired
+COMPLIANCE DASHBOARD
+Create a clear Client Compliance view showing:
+Requirement
+Status
+Expiry
+Verification Date
+Verified By
+Action
+Example:
+ID / Passport
+Verified
+Proof of Address
+Verified
+Expires: [date]
+Company Registration
+Pending Verification
+Beneficial Ownership
+Missing
+RISK SCORING
+Add client risk classification:
+Low
+Medium
+High
+The risk score should be visible on the client profile and compliance dashboard.
+COMPLIANCE TIMELINE
+Track:
+Document uploaded
+Document verified
+Document rejected
+Document expired
+Risk score changed
+Compliance status changed
+Manual override
+Reviewer
+AUTOMATED COMPLIANCE BLOCKING
+Implement the following rule:
+If a critical FICA requirement is missing, expired, or rejected:
+MATTER CREATION = BLOCKED
+Display a clear reason.
+Example:
+MATTER CREATION BLOCKED
+Reason:
+Beneficial Ownership documentation is missing.
+Required action:
+Upload and verify the required documentation.
+CLIENT ONBOARDING WORKFLOW
+Implement this sequence:
+Create Client
+→ Capture Details
+→ Upload FICA Documents
+→ Validate Required Documents
+→ Submit Client Profile
+→ Conflict Check
+→ Partner Review
+→ Partner Approval
+→ Matter Creation
+Do not allow users to bypass compliance by directly creating a Matter.
+IMPORTANT
+Do not fake external verification.
+If actual ID, company, or address verification integrations do not exist, show the verification status as pending/manual rather than claiming successful verification.
+After implementation, test:
+Missing documents
+Expired documents
+Rejected documents
+Fully compliant client
+Matter creation blocked
+Matter creation allowed after compliance completion

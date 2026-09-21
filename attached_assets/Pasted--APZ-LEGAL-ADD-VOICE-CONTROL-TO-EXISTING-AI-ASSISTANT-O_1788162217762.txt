@@ -1,0 +1,630 @@
+# APZ LEGAL — ADD VOICE CONTROL TO EXISTING AI ASSISTANT
+
+## OBJECTIVE
+
+Add voice control to the **existing APZ Legal AI assistant**.
+
+The user must be able to speak naturally to the existing APZ Legal AI instead of typing.
+
+The initial flow should be:
+
+**Lawyer speaks → Speech-to-Text → Existing APZ Legal AI → Existing AI response**
+
+Do NOT build a separate chatbot or separate AI assistant.
+
+Voice must simply become another input method for the existing AI.
+
+---
+
+# IMPORTANT — INSPECT BEFORE CHANGING ANYTHING
+
+Before writing or modifying code, inspect the current APZ Legal application and identify:
+
+* Frontend framework and structure
+* Existing AI assistant/chat component
+* Existing AI API endpoints
+* AI streaming implementation
+* Authentication/session system
+* Current user model
+* RBAC/permissions
+* Matter context
+* Document functionality
+* Templates
+* Firm knowledge base/RAG
+* Legal research functionality
+* Existing API/service architecture
+* Existing audit logging
+* Existing environment variables
+* Existing error-handling patterns
+
+Do not assume any of these.
+
+Use the application's actual architecture.
+
+Do not rebuild existing functionality that already works.
+
+---
+
+# PHASE 1 — VOICE INPUT
+
+Implement a microphone button directly inside the existing APZ Legal AI assistant.
+
+The user should be able to:
+
+1. Click the microphone.
+2. Grant microphone permission if required.
+3. Speak.
+4. See that the AI is listening.
+5. Stop recording.
+6. Convert speech to text.
+7. Review/edit the transcription if appropriate.
+8. Submit the transcription to the existing AI assistant.
+9. Receive the normal AI response.
+
+The voice transcript must ultimately use the SAME AI processing pipeline as typed messages.
+
+Architecture:
+
+```text
+TEXT INPUT
+    ↓
+Existing AI Pipeline
+    ↓
+AI Response
+
+
+VOICE INPUT
+    ↓
+Speech-to-Text
+    ↓
+Transcript
+    ↓
+Existing AI Pipeline
+    ↓
+AI Response
+```
+
+Do NOT create a second AI pipeline.
+
+---
+
+# MICROPHONE UI
+
+Add a professional microphone control to the existing AI composer.
+
+States:
+
+### IDLE
+
+Microphone icon is visible.
+
+### LISTENING
+
+Clearly indicate that the microphone is active.
+
+Show an appropriate listening animation/state, but keep it subtle and professional.
+
+### PROCESSING
+
+Show that the speech is being converted to text.
+
+### TRANSCRIBED
+
+Place the resulting text into the existing AI input/composer.
+
+### ERROR
+
+Show a clear error and allow the user to retry.
+
+### CANCELLED
+
+Return cleanly to the normal input state.
+
+The user must always be able to return to normal text input.
+
+---
+
+# SPEECH-TO-TEXT
+
+Implement speech-to-text using a production-appropriate speech recognition/transcription service.
+
+Before choosing the implementation:
+
+1. Inspect the existing project dependencies.
+2. Determine whether a speech-to-text provider is already configured.
+3. Determine whether the current AI provider already supports speech/audio capabilities.
+4. Reuse existing infrastructure where appropriate.
+
+If a new provider/API is required, implement it behind a service abstraction.
+
+Do not hard-code API keys.
+
+Use environment variables.
+
+Do not expose secret API credentials in browser/client-side code.
+
+---
+
+# SERVICE ARCHITECTURE
+
+Keep voice functionality modular.
+
+Use an architecture conceptually similar to:
+
+```text
+Voice UI
+   ↓
+Voice Service
+   ↓
+Speech-to-Text Provider
+   ↓
+Transcript
+   ↓
+Existing AI Service
+```
+
+Do not tightly couple the entire application to one provider.
+
+The speech provider should be replaceable later without rewriting the AI assistant.
+
+---
+
+# EXISTING AI CONTEXT MUST BE PRESERVED
+
+This is extremely important.
+
+If the lawyer is currently inside a matter and uses voice, the existing matter context must remain available.
+
+Example:
+
+Lawyer is viewing:
+
+**Matter: Smith v Jones**
+
+Lawyer says:
+
+> "Summarise the latest correspondence."
+
+The AI must process this using the same matter context it would have used if the lawyer typed the request.
+
+Do not require the lawyer to repeat information already available in the current application context.
+
+Preserve:
+
+* User
+* Role
+* Matter
+* Client
+* Conversation
+* AI context
+* Knowledge-base context
+* Permissions
+
+where applicable.
+
+---
+
+# TRANSCRIPTION QUALITY
+
+The system should handle normal legal language and terminology as accurately as possible.
+
+The implementation should be designed to handle terms such as:
+
+* FICA
+* POPIA
+* Magistrates' Court
+* High Court
+* affidavit
+* applicant
+* respondent
+* plaintiff
+* defendant
+* attorney
+* advocate
+* subpoena
+* summons
+* discovery
+* correspondence
+* matter numbers
+* client names
+* legal terminology
+
+Do not artificially modify or "correct" the transcript without showing the user what was transcribed.
+
+If the transcript is uncertain, allow the lawyer to edit it before submission.
+
+---
+
+# DO NOT SEND AUTOMATICALLY IF TRANSCRIPTION IS UNCERTAIN
+
+Prefer this workflow:
+
+**Speak → Transcribe → Display transcript → User can edit → Send**
+
+rather than blindly sending an incorrect transcription.
+
+For example:
+
+```text
+┌──────────────────────────────────────┐
+│ Ask APZ Legal AI...                  │
+│                                      │
+│ "Summarise the latest document..."   │
+│                                      │
+│ 🎤                         Send →     │
+└──────────────────────────────────────┘
+```
+
+The user should retain control over the final request.
+
+---
+
+# PHASE 2 — OPTIONAL AI VOICE RESPONSE
+
+After Phase 1 is working reliably, add optional text-to-speech.
+
+The lawyer should be able to choose whether AI responses are:
+
+* Text only
+* Text + spoken response
+
+Provide a voice/speaker control.
+
+The user must also be able to stop playback.
+
+Do not automatically enable voice playback for every user without considering the existing UX.
+
+Keep TTS behind a separate service abstraction.
+
+Conceptually:
+
+```text
+AI Response
+     ↓
+Text
+     ↓
+Optional Text-to-Speech
+     ↓
+Audio
+```
+
+---
+
+# FUTURE VOICE ACTIONS
+
+Do NOT implement unrestricted AI actions yet.
+
+However, structure the implementation so that voice can later support controlled APZ Legal actions.
+
+The future architecture should allow:
+
+```text
+Lawyer Voice
+      ↓
+Speech-to-Text
+      ↓
+APZ Legal AI
+      ↓
+Intent
+      ↓
+Approved Tool
+      ↓
+RBAC
+      ↓
+Confirmation if required
+      ↓
+APZ Legal Action
+      ↓
+Audit Log
+```
+
+Future examples:
+
+> "Open the Smith matter."
+
+> "Find the latest correspondence."
+
+> "Summarise this document."
+
+> "Create a task for Sarah to review the contract."
+
+> "Create a letter using our standard demand letter template."
+
+> "Search the firm's knowledge base for our precedent on this issue."
+
+> "Draft an email to the client."
+
+These should eventually use controlled backend tools rather than allowing the AI to directly manipulate the database.
+
+For this implementation, prepare the architecture for this future capability but do not unnecessarily build all of these actions now.
+
+---
+
+# SECURITY
+
+APZ Legal is a legal application.
+
+Voice must NOT bypass any existing security.
+
+The authenticated user must remain the source of identity.
+
+Do not allow the transcript or AI to specify its own permissions.
+
+Do not allow:
+
+```text
+Voice → AI → Direct database access
+```
+
+Instead use:
+
+```text
+Voice → AI → Existing authorized API/service → Database
+```
+
+All existing:
+
+* Authentication
+* RBAC
+* Matter permissions
+* Document permissions
+* User permissions
+
+must remain enforced.
+
+---
+
+# PRIVACY
+
+Treat voice data as potentially sensitive legal information.
+
+Do not permanently store raw audio recordings unless the existing product requirements explicitly require it.
+
+Prefer:
+
+**Audio → Transcription → Existing AI**
+
+and discard temporary audio when no longer required.
+
+Do not log sensitive audio unnecessarily.
+
+Do not expose audio or transcripts to unauthorized users.
+
+Follow the application's existing data-retention and privacy architecture.
+
+---
+
+# ERROR HANDLING
+
+Handle all of the following gracefully:
+
+* Microphone permission denied
+* Microphone unavailable
+* Browser does not support required functionality
+* Speech-to-text API failure
+* Network failure
+* Empty recording
+* Empty transcript
+* AI API failure
+* Session expiration
+* Authentication failure
+* Timeout
+* User cancellation
+
+Never leave the microphone permanently stuck in:
+
+**Listening**
+
+or
+
+**Processing**
+
+if an error occurs.
+
+The normal text AI must continue working if voice fails.
+
+---
+
+# RESPONSIVE DESIGN
+
+The voice control must work with the existing APZ Legal responsive layout.
+
+Check:
+
+* Desktop
+* Tablet
+* Mobile where supported
+
+Do not break the existing AI composer.
+
+---
+
+# DESIGN
+
+Use the existing APZ Legal design system.
+
+The interface should feel:
+
+* Corporate
+* Professional
+* Modern
+* Minimal
+* Legal-tech focused
+
+Avoid:
+
+* childish UI
+* excessive rounded cards
+* unnecessary gradients
+* oversized microphone graphics
+* excessive animations
+* dating-app-style UI
+* unnecessary visual clutter
+
+The microphone should feel like a natural extension of the existing AI assistant.
+
+---
+
+# ENVIRONMENT VARIABLES
+
+If a new speech provider is required:
+
+1. Add the required environment variables through Replit's secret/environment-variable system.
+2. Never hard-code API keys.
+3. Never expose secret keys in frontend JavaScript.
+4. Document every required environment variable.
+5. Provide a clear error if the configuration is missing.
+
+---
+
+# TESTING
+
+Create or update tests for:
+
+### UI
+
+* Microphone button renders.
+* Microphone starts.
+* Microphone stops.
+* Recording can be cancelled.
+* Listening state displays correctly.
+* Processing state displays correctly.
+* Errors display correctly.
+
+### Speech-to-text
+
+* Successful transcription.
+* Empty transcription.
+* Transcription failure.
+* Retry after failure.
+
+### AI integration
+
+Verify:
+
+```text
+voice → transcript → existing AI
+```
+
+The transcript must reach the same AI endpoint/service used by typed messages.
+
+### Context
+
+Verify that:
+
+* authenticated user remains correct
+* current matter remains correct
+* conversation context remains correct
+* existing AI context remains correct
+
+### Regression
+
+Verify that normal text chat continues working exactly as before.
+
+Run the existing APZ Legal test suite.
+
+Fix any regressions introduced by the voice implementation.
+
+---
+
+# IMPLEMENTATION RULES
+
+Do NOT:
+
+* Rebuild the existing AI assistant.
+* Replace the existing AI provider unnecessarily.
+* Create a second chatbot.
+* Create a separate conversation system.
+* Create mock AI responses.
+* Use mock transcription in production.
+* Hard-code API credentials.
+* Store raw audio unnecessarily.
+* Bypass authentication.
+* Bypass RBAC.
+* Directly manipulate the database from the AI.
+* Remove existing text input.
+* Break existing matter context.
+* Break existing RAG/knowledge-base functionality.
+* Replace existing UI unnecessarily.
+
+---
+
+# IMPORTANT — WORK IN SMALL STEPS
+
+Implement this incrementally.
+
+### Step 1
+
+Inspect the existing APZ Legal application.
+
+### Step 2
+
+Identify the existing AI assistant architecture.
+
+### Step 3
+
+Identify the best location for the microphone control.
+
+### Step 4
+
+Implement speech-to-text.
+
+### Step 5
+
+Connect the transcript to the existing AI pipeline.
+
+### Step 6
+
+Test the complete flow.
+
+### Step 7
+
+Fix errors and regressions.
+
+### Step 8
+
+Only after Phase 1 works, implement optional TTS.
+
+Do not attempt to rewrite unrelated parts of APZ Legal.
+
+---
+
+# FINAL ACCEPTANCE CRITERIA
+
+The feature is successful when a lawyer can:
+
+1. Open APZ Legal AI.
+2. Click the microphone.
+3. Speak naturally.
+4. Stop recording.
+5. See the resulting transcript.
+6. Edit the transcript if necessary.
+7. Submit it.
+8. Receive the response from the EXISTING APZ Legal AI.
+9. Maintain the same user/matter/context/permissions as typed interaction.
+10. Continue using normal text chat without any regression.
+
+The final architecture must support:
+
+**Typed AI**
+
+and
+
+**Voice AI**
+
+through the same underlying APZ Legal AI pipeline.
+
+After implementation, provide a concise implementation report containing:
+
+* Files changed
+* Components created
+* Services created
+* Speech provider used
+* Environment variables required
+* Existing AI services reused
+* Tests executed
+* Test results
+* Known limitations
+* Any recommended next steps
+
+Do not claim the feature is complete unless the actual implementation has been tested in the running Replit application.

@@ -1,0 +1,726 @@
+I need you to audit and realign the current APZ Legal application against the attached APZ LEGAL PRD v2 and APZ Legal User Journeys.
+
+IMPORTANT: Treat the PRD and User Journeys as the single source of truth. Do not invent new product features, workflows, navigation, or terminology that are not supported by these documents.
+
+The current application is a prototype and I need you to improve it so that it accurately represents the intended APZ Legal product.
+
+## PRIMARY OBJECTIVE
+
+Audit the entire application — frontend, backend structure, navigation, workflows, permissions, data models, and UI — against the PRD and User Journeys.
+
+Do NOT simply add more screens.
+
+APZ Legal must be treated as a legal operating system where the key workflows connect together.
+
+The application should prioritise:
+
+1. Compliance
+2. Matter lifecycle
+3. Document governance
+4. AI governance
+5. Role-based access control
+6. Auditability
+7. Legal workflow execution
+
+Before changing anything, inspect the existing codebase and produce an audit identifying:
+
+* What already matches the PRD
+* What partially matches
+* What is missing
+* What is incorrectly implemented
+* What is unnecessary or outside the current MVP scope
+* What should be moved to Phase 2
+* What should be redesigned rather than simply patched
+
+Do not remove working functionality without first explaining why it conflicts with the PRD.
+
+---
+
+# 1. CORE NAVIGATION
+
+Ensure the application navigation reflects the PRD's actual modules.
+
+The core application should support:
+
+* Dashboard
+* Clients
+* Matters
+* Documents
+* AI Legal Assistant
+* Knowledge Base
+* Conflict Checking
+* Research
+* Workflows
+* Time Tracking
+* Billing
+* Calendar
+* Tasks
+* Templates
+* Audit / Compliance
+* Admin / Settings
+
+The navigation should not become overloaded with generic SaaS features.
+
+The following are Phase 2 and should NOT be treated as completed MVP functionality:
+
+* Client Portal
+* Court Management
+* External Legal Database Integrations
+
+If any Phase 2 functionality currently exists, clearly label it as "Coming in Phase 2" or move it out of the primary MVP workflow.
+
+---
+
+# 2. ROLE-BASED ACCESS CONTROL
+
+Implement the PRD roles explicitly:
+
+* Super Administrator
+* Managing Partner
+* Partner
+* Associate Attorney
+* Candidate Attorney
+* Paralegal
+* Secretary
+* Billing Officer
+* Compliance Officer
+* Client Portal User
+
+Do not use one generic "Admin/User" permission model.
+
+The UI, routes, API endpoints, actions, and data visibility must respect the user's role.
+
+Examples:
+
+Managing Partner:
+
+* Firm-wide matter visibility
+* Final approval for high-risk AI and documents
+* Billing oversight
+* Compliance/reporting access
+
+Partner:
+
+* Assigned and configurable unassigned matter visibility
+* Medium-risk AI approvals
+* Legal document approvals
+* Team supervision
+* Knowledge Base approvals
+
+Associate Attorney:
+
+* Assigned matter ownership
+* Drafting
+* Low/medium-risk AI use
+* Research
+* Document preparation
+
+Candidate Attorney:
+
+* Restricted drafting
+* Research
+* Matter support
+
+Paralegal:
+
+* Document handling
+* Filing
+* Administrative matter support
+
+Secretary:
+
+* Calendar
+* Scheduling
+* Task coordination
+* Email-to-matter linking
+
+Billing Officer:
+
+* Time tracking
+* Invoice generation
+* Financial reporting
+
+Compliance Officer:
+
+* Audit logs
+* FICA compliance
+* Risk flags
+
+Implement permission checks at BOTH frontend and backend level.
+
+---
+
+# 3. CLIENT MANAGEMENT + FICA
+
+Clients must exist independently from matters.
+
+Support client types:
+
+* Individual
+* Corporate
+* Trust
+* Government / Institutional
+
+Client profiles must support:
+
+* Identity / ID / Registration / Passport
+* Contact details
+* Address
+* Related parties
+* Directors
+* Beneficiaries
+* FICA documentation
+* Matter history
+* Billing summary
+* Document history
+* Signature history
+* Compliance status
+* Client risk score
+
+Add a clear FICA compliance dashboard or status component.
+
+The system must support:
+
+* ID / passport validation status
+* Company registration verification status
+* Proof of address status
+* Beneficial ownership mapping
+* Document expiry dates
+* Compliance timeline
+* Expiry alerts
+* Client risk scoring
+
+CRITICAL RULE:
+
+A matter must NOT be allowed to proceed to creation if critical compliance documentation is missing.
+
+The workflow should be:
+
+Create Client
+→ Capture client information
+→ Upload FICA documents
+→ Validate compliance
+→ Run conflict check
+→ Classify conflict severity
+→ Partner review
+→ Partner approval
+→ Create Matter
+
+Do not allow the current UI to imply that an attorney can simply create a matter immediately without compliance and conflict checks.
+
+---
+
+# 4. CONFLICT CHECKING
+
+Conflict checking must be a real workflow, not a decorative feature.
+
+Search across:
+
+* Clients
+* Opposing parties
+* Directors
+* Historical matters
+* Knowledge Base references
+
+Conflict workflow:
+
+Matter initiation
+→ System scan
+→ Risk classification
+→ Partner review
+→ Approve or reject
+
+Support:
+
+* Low conflict
+* Medium conflict
+* High conflict
+
+For flagged conflicts, provide explainable AI reasoning.
+
+The user should be able to understand:
+
+* What caused the conflict
+* Which existing client/matter/entity triggered it
+* Why the system classified the conflict at that severity
+* Who reviewed it
+* Who approved/rejected it
+* When the decision occurred
+
+All decisions must be recorded in the audit trail.
+
+---
+
+# 5. MATTER LIFECYCLE
+
+Implement the official lifecycle:
+
+Lead
+→ Conflict Check
+→ Approved
+→ Active
+→ Review
+→ Completed
+→ Closed
+→ Archived
+
+Do not replace this with generic statuses unless there is a strong technical reason.
+
+Every matter should support:
+
+* Documents
+* Tasks
+* Emails
+* Research
+* Billing
+* AI conversations
+* Audit trail
+* Matter timeline
+* Risk flag
+
+Add:
+
+* Matter risk flag state
+* AI-generated matter summary timeline
+* Automated lifecycle triggers
+* Approval-driven status transitions
+
+A matter should not be considered "Active" until required approval steps are complete.
+
+---
+
+# 6. DOCUMENT MANAGEMENT
+
+Documents must follow this lifecycle:
+
+Draft
+→ AI Assist
+→ Review
+→ Partner Approval
+→ Client Signing
+→ Archived
+
+Support:
+
+* Version control
+* Document history
+* AI drafting
+* Citation tracking
+* Approval routing
+* Audit trail
+* AI-generated content tagging
+
+Every document state change must generate an audit event.
+
+Examples:
+
+* Created
+* Edited
+* AI-assisted
+* Submitted for review
+* Approved
+* Rejected
+* Changes requested
+* Sent for signing
+* Signed
+* Archived
+
+The document UI must clearly distinguish:
+
+* Human-generated content
+* AI-generated content
+* AI-assisted content
+
+AI-generated content tagging is mandatory for compliance visibility.
+
+---
+
+# 7. AI GOVERNANCE
+
+The AI Legal Assistant must NOT behave like a generic chatbot.
+
+Implement visible AI risk classification:
+
+LOW RISK:
+
+* Email drafting
+* Summaries
+
+MEDIUM RISK:
+
+* Contracts
+* Clause recommendations
+
+HIGH RISK:
+
+* Legal opinions
+* Litigation guidance
+
+Every AI interaction that generates legal content must capture:
+
+* Risk level
+* Confidence score
+* Citations
+* AI explanation/reasoning metadata where applicable
+* Human reviewer
+* Human override
+* Approval status
+* Traceability/audit information
+
+Confidence scoring must be visible to the user.
+
+Citation enforcement must be built into the workflow.
+
+The system should prevent submission for approval when required citation verification has not been completed.
+
+Implement:
+
+AI generation
+→ Risk classification
+→ Confidence score
+→ Citations
+→ Citation verification
+→ AI content tagging
+→ Attorney review
+→ Approval workflow
+
+Do not allow high-risk AI outputs to bypass the required human approval process.
+
+---
+
+# 8. AI CONTRACT DRAFTING USER JOURNEY
+
+The exact workflow should be:
+
+Attorney opens Matter
+→ Opens AI Legal Assistant
+→ Selects contract type
+→ Selects jurisdiction
+→ Selects relevant clauses
+→ AI generates draft
+→ Display draft
+→ Display confidence score
+→ Display citations
+→ Display AI risk classification
+→ Citation verification
+→ Attorney reviews and edits
+→ Document saved to Matter
+→ Approval workflow initiated
+
+Ensure the generated document is automatically associated with the correct Matter.
+
+---
+
+# 9. AI LEGAL RESEARCH
+
+Research must search across:
+
+* Internal precedents
+* Knowledge Base
+* Case law
+* Legislation
+
+The output should include:
+
+* AI summary
+* Case references
+* Relevant legislation
+* Suggested precedents
+* Confidence score
+
+The attorney must be able to save research findings to a Matter.
+
+Saved research must appear in the Matter timeline for traceability.
+
+Do not make the research module a generic web search interface.
+
+---
+
+# 10. KNOWLEDGE BASE
+
+Support:
+
+* Templates
+* Legal opinions
+* Internal guidance
+
+Partners/Senior Partners should be able to:
+
+* Upload content
+* Categorise content
+* Approve content
+* Mark content as Approved
+* Trigger AI indexing
+
+Only approved knowledge should become available to the relevant legal staff through AI retrieval.
+
+Track:
+
+* Uploader
+* Approver
+* Approval date
+* Version
+* Category
+* AI indexing status
+
+---
+
+# 11. EMAIL DISCOVERY
+
+Support the defined workflow:
+
+Email received via Outlook / Microsoft 365
+→ APZ Legal imports email
+→ AI suggests related Matter
+→ User confirms association
+→ Attachments extracted
+→ Email added to Matter timeline
+→ AI drafts response
+→ User reviews
+→ User sends response
+
+Do not build this as a generic inbox.
+
+The key purpose is maintaining a complete Matter communication history.
+
+---
+
+# 12. TIME TRACKING + BILLING
+
+Implement the workflow:
+
+Attorney opens Matter
+→ Starts timer
+→ Performs work
+→ Stops timer
+→ Adds activity description
+→ Time entry linked to Matter
+→ Billing team reviews
+→ Invoice generated
+
+Time entries must be associated with:
+
+* User
+* Matter
+* Activity
+* Duration
+* Billable/non-billable status
+
+Billing must connect back to Matters.
+
+---
+
+# 13. APZ SIGN
+
+Implement the defined workflow:
+
+Attorney uploads final document
+→ Selects Send for Signature
+→ APZ Sign workflow created
+→ Client receives secure signing link
+→ Client reviews
+→ Client signs
+→ Signature certificate generated
+→ Signed document stored in Matter
+
+The UI should show signature status clearly.
+
+---
+
+# 14. AUDIT + COMPLIANCE
+
+Audit logging is a core system capability.
+
+Track:
+
+* User activity
+* Matter activity
+* Document activity
+* AI activity
+* Approval history
+* FICA activity
+* Conflict checks
+* Human overrides
+* Signature events
+* Permission changes
+
+Audit records must be immutable or protected against alteration.
+
+Compliance Officers must be able to:
+
+* Filter by date
+* Filter by user
+* Filter by Matter
+* Filter by event type
+* Review AI activity
+* Review approval history
+* Generate compliance reports
+* Export findings
+
+---
+
+# 15. REPORTING
+
+Add reporting aligned with the PRD.
+
+Operational:
+
+* Matter lifecycle metrics
+* Team workload distribution
+
+Financial:
+
+* Revenue per Matter
+* Billing leakage detection
+
+Compliance:
+
+* FICA status
+* Audit completeness
+
+AI:
+
+* AI usage by role
+* Accuracy feedback loop
+* Risk escalation frequency
+
+Do not create arbitrary analytics that are not relevant to legal operations.
+
+---
+
+# 16. CLIENT PORTAL
+
+Treat Client Portal as PHASE 2.
+
+Do not represent it as a fully implemented MVP feature unless clearly marked.
+
+Phase 2 capabilities:
+
+* Matter tracking
+* Secure messaging
+* Document upload/download
+* Signing workflow
+* Invoice viewing
+* MFA
+* Session timeout
+* Device tracking logs
+
+---
+
+# 17. SECURITY
+
+Ensure the architecture accounts for:
+
+* Encryption in transit
+* Encryption at rest
+* Session monitoring
+* Full audit immutability
+* RBAC
+* MFA where required
+* Secure document access
+
+Do not expose sensitive legal information through frontend-only permission checks.
+
+---
+
+# 18. UI/UX DIRECTION
+
+The interface should feel like a professional legal operating system.
+
+Avoid:
+
+* Generic startup dashboard aesthetics
+* Excessive rounded cards
+* Excessive gradients
+* Childish visual elements
+* Decorative widgets with no functional purpose
+* Fake AI features
+* Fake statistics
+* Placeholder legal data presented as real data
+
+Prioritise:
+
+* Clear information hierarchy
+* Dense but readable legal workflows
+* Matter-centric navigation
+* Strong status indicators
+* Risk visibility
+* Compliance visibility
+* Approval visibility
+* Auditability
+
+Every important action should make it clear:
+
+* What state the item is in
+* What action is required next
+* Who is responsible
+* Whether approval is required
+* Whether compliance blocks progress
+
+---
+
+# 19. CRITICAL PRODUCT PRINCIPLE
+
+Do not design isolated screens.
+
+Design connected workflows.
+
+The following workflow must work end-to-end:
+
+CLIENT
+→ FICA
+→ CONFLICT CHECK
+→ PARTNER APPROVAL
+→ MATTER
+→ DOCUMENTS
+→ AI ASSISTANCE
+→ REVIEW
+→ APPROVAL
+→ SIGNING
+→ BILLING
+→ AUDIT
+→ ARCHIVE
+
+Every stage must connect to the underlying Matter and maintain traceability.
+
+---
+
+# 20. IMPLEMENTATION APPROACH
+
+Before modifying code:
+
+1. Audit the existing application.
+2. Map every current route/page to the PRD.
+3. Map every current feature to the PRD.
+4. Identify missing workflows.
+5. Identify features that are outside scope.
+6. Identify fake/mock functionality.
+7. Identify hardcoded data.
+8. Identify missing backend/API support.
+9. Identify missing RBAC.
+10. Identify missing audit events.
+
+Then create a prioritised implementation plan:
+
+P0 — Critical PRD compliance gaps
+P1 — Core MVP workflows
+P2 — Intelligence and AI governance
+P3 — Operations
+P4 — Integrations
+P5 — Phase 2
+
+Do not implement everything at once.
+
+Start by fixing the P0 gaps and core workflow architecture.
+
+After the audit, show me a table with:
+
+Feature | PRD Requirement | Current State | Gap | Recommended Action | Priority
+
+Then begin implementing only the highest-priority gaps.
+
+Do not redesign working features simply for visual reasons.
+
+Do not add features outside the PRD unless you explicitly identify them as optional recommendations.
+
+The goal is to make the current application a faithful, workflow-driven implementation of APZ Legal — not a generic legal SaaS application.

@@ -1,0 +1,209 @@
+APZ LEGAL PRD v2 (REVISED + ALIGNED)
+
+1. User Roles &amp; Permissions (Refined)
+System Roles
+Super Administrator
+● Full system control
+● Security
+● AI configuration
+● Infrastructure monitoring access
+● Audit log override access
+Managing Partner
+● Firm-wide access to matters
+● Final approval authority (High Risk AI + documents)
+● Billing oversight
+● Compliance and reporting access
+Partner
+● Assigned + unassigned matter visibility (configurable)
+● Approvals (Medium risk AI + legal docs)
+● Team supervision
+● Knowledge base approvals
+Associate Attorney
+● Matter ownership (assigned)
+● Drafting
+● AI usage (Low/Medium risk)
+● Research and document preparation
+Candidate Attorney
+● Restricted drafting
+● Research access
+● Matter support only
+Paralegal
+● Document handling
+
+● Filing
+● Administrative matter support
+Secretary
+● Calendar and scheduling
+● Task coordination
+● Email/matter linking support
+Billing Officer
+● Time tracking
+● Invoice generation
+● Financial reporting
+Compliance Officer
+● Audit logs access
+● FICA compliance monitoring
+● Risk flag review
+Client Portal User
+● View assigned matters
+● Upload documents
+● Sign documents
+● View invoices
+● Secure messaging
+
+2. Client Management Module (Enhanced)
+Purpose
+Centralised client registry independent of matters with compliance-first design.
+Features
+Client Types
+● Individual
+● Corporate
+● Trust
+● Government / Institutional
+
+Core Data Model
+● Identity (ID / Registration / Passport)
+● Contact + address
+● Related parties (directors, beneficiaries)
+● FICA documentation status
+● Matter history linkage
+Relationship View
+● Active / closed matters
+● Billing summary
+● Document history
+● Signature history
+● Compliance status indicator
+Enhancement Added
+● Client risk score (new)
+
+3. FICA COMPLIANCE MODULE (Enhanced)
+Purpose
+Ensure full POPIA + South African FICA compliance enforcement.
+Features
+● ID / Passport validation
+● Company registration verification
+● Proof of address validation
+● Beneficial ownership mapping
+NEW ADDITIONS
+● Automated compliance blocking (cannot open matter if critical docs missing)
+● Risk scoring per client
+● Compliance timeline (expiry tracking + alerts)
+
+4. CONFLICT CHECKING MODULE (Enhanced)
+Workflow
+Matter initiation → system scan → risk classification → partner review → approval/rejection
+Data Sources
+● Clients
+● Opposing parties
+● Directors
+● Historical matters
+● Knowledge base references (NEW)
+Enhancement
+● Conflict severity levels (Low / Medium / High)
+● Explainable AI reasoning for flagged conflicts
+
+5. MATTER LIFECYCLE (REFINED)
+Status Flow
+Lead → Conflict Check → Approved → Active → Review → Completed → Closed → Archived
+Matter Workspace Includes
+● Documents
+● Tasks
+● Emails
+● Research
+● Billing
+● AI conversations
+● Audit trail
+NEW ADDITIONS
+● Matter “risk flag” state (compliance override)
+● AI-generated matter summary timeline
+● Automated lifecycle triggers (approval-driven transitions)
+
+6. DOCUMENT MANAGEMENT &amp; WORKFLOWS (NEWLY CLARIFIED)
+Lifecycle
+Draft → AI Assist → Review → Partner Approval → Client Signing → Archived
+Features
+● Version control
+● AI drafting support
+● Citation tracking
+● Approval routing engine
+Enhancement
+● Mandatory audit log per document state change
+● AI-generated content tagging (required for compliance visibility)
+
+7. AI GOVERNANCE FRAMEWORK (REFINED)
+Risk Classification
+Low Risk
+● Email drafting
+● Summaries
+Medium Risk
+● Contracts
+● Clause recommendations
+High Risk
+● Legal opinions
+● Litigation guidance
+
+Controls Added
+● AI explanation logging
+● Citation enforcement layer
+
+● Confidence scoring mandatory display
+● Human override tracking
+● AI decision traceability log
+
+8. REPORTING &amp; ANALYTICS (ENHANCED)
+Operational
+● Matter lifecycle metrics
+● Team workload distribution
+Financial
+● Revenue per matter
+● Billing leakage detection
+Compliance
+● FICA status dashboard
+● Audit trail completeness
+AI Metrics (NEW)
+● AI usage per role
+● Accuracy feedback loop tracking
+● Risk escalation frequency
+
+9. CLIENT PORTAL (PHASE 2 - REFINED)
+Features
+● Matter tracking
+● Secure messaging
+● Document upload/download
+● Signing workflow
+● Invoice viewing
+Security Enhancements
+● MFA enforced
+● Session timeout controls
+● Device tracking logs
+
+10. SECURITY FRAMEWORK (EXPANDED)
+● Encryption at rest + transit
+● Session monitoring
+● Full audit immutability layer
+
+11. PHASED MVP ALIGNMENT (UPDATED)
+Phase 1A (CORE SYSTEM)
+● Auth + RBAC
+● Client Management
+● Matter Management
+● Document System
+● Audit Logs
+Phase 1B (INTELLIGENCE LAYER)
+● AI Legal Assistant
+● Knowledge Base
+● Conflict Checking
+● Workflow engine
+Phase 1C (OPERATIONS)
+● APZ Sign
+● Time Tracking
+● Billing
+● Reporting
+Phase 1D (INTEGRATIONS)
+● Email ingestion
+● Legal research engine
+● Citation validation
+Phase 2
+● Client portal
+● Court management
+● External legal DB integrations

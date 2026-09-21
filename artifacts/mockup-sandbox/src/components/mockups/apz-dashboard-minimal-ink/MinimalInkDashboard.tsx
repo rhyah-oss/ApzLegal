@@ -1,0 +1,50 @@
+import './_group.css'
+import React, { useState } from 'react'
+import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from 'recharts'
+import { Activity, AlertTriangle, ArrowRight, BarChart3, Bell, BookOpen, BriefcaseBusiness, CalendarDays, CheckCircle2, CheckSquare, ChevronDown, CircleDollarSign, ClipboardCheck, Clock3, FileSearch, FileText, GitBranch, GitMerge, LayoutDashboard, LogOut, Mail, Plus, Receipt, Search, Settings, ShieldAlert, ShieldCheck, SlidersHorizontal, Users, X } from 'lucide-react'
+
+const C = { petrol:'#216765', ink:'#1b2629', slate:'#536064', muted:'#8b9495', ok:'#5d806c', warn:'#a67d3f', risk:'#ad6259' }
+const groups = [
+  { name:'CORE', items:[['Dashboard',LayoutDashboard],['My Actions',ClipboardCheck],['Clients',Users],['Matters',BriefcaseBusiness]] },
+  { name:'INTELLIGENCE', items:[['Legal AI',BarChart3],['Research',FileSearch],['Knowledge Base',BookOpen],['Conflict Check',GitMerge]] },
+  { name:'DOCUMENTS', items:[['Documents',FileText],['Templates',FileText],['Email',Mail]] },
+  { name:'OPERATIONS', items:[['Workflows',GitBranch],['Calendar',CalendarDays],['Appointments',Users],['Tasks',CheckSquare],['Time Tracking',Clock3],['Billing',Receipt]] },
+  { name:'COMPLIANCE', items:[['FICA Compliance',ShieldAlert],['Audit Logs',FileSearch],['Admin',ShieldCheck]] },
+] as const
+const pipeline = [['Lead',8],['Conflict check',5],['Approved',11],['Active',47],['Review',9],['Completed',23],['Closed',31]] as const
+const revenue = [{m:'Feb',v:1477000},{m:'Mar',v:1846000},{m:'Apr',v:2074000},{m:'May',v:2300000},{m:'Jun',v:2582000},{m:'Jul',v:2840000}]
+const workload = [['AK','Andile Khumalo',14],['ND','Nothando Dlamini',11],['SM','Sipho Mokoena',9],['LN','Lindiwe Nkosi',7],['TS','Thabo Sithole',6],['ZM','Zanele Mthembu',4]] as const
+const activity = [['Nothando Dlamini','created Matter M-2024-0391 for Sasol Ltd','8m',FileText,C.slate],['System','conflict check completed — no conflicts found','22m',GitMerge,C.ok],['Sipho Mokoena','time entry logged — 3.5h on M-2024-0367','55m',Activity,C.muted],['Zanele Mthembu','client contact added — Standard Bank Treasury','2h',Users,C.petrol],['Andile Khumalo','approved Matter M-2024-0388 for commencement','3h',CheckCircle2,C.ok],['Lindiwe Nkosi','document NDA-Draft-v3.docx marked high-risk by AI','5h',AlertTriangle,C.risk]] as const
+function money(v:number){ return new Intl.NumberFormat('en-ZA',{style:'currency',currency:'ZAR',maximumFractionDigits:0}).format(v) }
+function Panel({title,children}:{title:string;children:React.ReactNode}){ return <section className="ink-panel"><div className="ink-panel-head"><i/>{title}</div><div className="ink-panel-body">{children}</div></section> }
+function MinimalInkDashboard(){
+  const [selected,setSelected] = useState('Dashboard')
+  const [dismissed,setDismissed] = useState(false)
+  const [toast,setToast] = useState('')
+  const notify=(text:string)=>{ setToast(text); window.setTimeout(()=>setToast(''),2200) }
+  return <div className="ink-dashboard"><div className="ink-shell">
+    <aside className="ink-sidebar">
+      <div className="ink-brand"><div className="ink-mark">A</div><div><b>APZ Legal</b><small>LEGAL OPERATING SYSTEM</small></div></div>
+      <div className="ink-profile"><div className="ink-avatar">AK</div><div><b>Andile Khumalo</b><small>Managing Partner</small></div><ChevronDown size={13} style={{marginLeft:'auto',color:C.muted}}/></div>
+      <div className="ink-search"><Search size={13}/><span>Search workspace</span><kbd>⌘K</kbd></div>
+      <nav className="ink-nav ink-scroll">{groups.map(group=><div key={group.name}><div className="ink-nav-group">{group.name}</div>{group.items.map(([label,Icon])=><button key={label} className={selected===label?'active':''} onClick={()=>{setSelected(label);notify(`${label} selected`)}}><Icon size={14}/><span>{label}</span>{['My Actions','Conflict Check','Documents','FICA Compliance'].includes(label)&&<em>{label==='Documents'?'12':label==='Conflict Check'?'5':label==='FICA Compliance'?'3':'4'}</em>}</button>)}</div>)}</nav>
+      <div className="ink-side-bottom"><button className="ink-new" onClick={()=>notify('New matter form ready')}><Plus size={14}/>New matter</button><div className="ink-side-actions"><button onClick={()=>notify('Settings selected')}><Settings size={13}/>Settings</button><button onClick={()=>notify('Signed out')} aria-label="Sign out"><LogOut size={13}/></button></div></div>
+    </aside>
+    <main className="ink-content">
+      <header className="ink-topbar"><div className="ink-crumb"><span>APZ Legal</span><ArrowRight size={11}/><strong>{selected}</strong></div><div className="ink-top-actions"><button className="ink-icon" onClick={()=>notify('Search opened')} aria-label="Search"><Search size={14}/></button><button className="ink-icon" onClick={()=>notify('Notifications opened')} aria-label="Notifications"><Bell size={14}/><i className="ink-dot"/></button><button className="ink-icon" onClick={()=>notify('Attention queue opened')} aria-label="Attention"><AlertTriangle size={14}/></button><span className="ink-role">Managing Partner</span></div></header>
+      <div className="ink-main ink-scroll">
+        <div className="ink-heading"><div><span className="ink-eyebrow">OPERATIONS OVERVIEW</span><h1>Good morning, Andile</h1><p>Monday, 18 November 2024 <span>·</span> Firm overview</p></div><div className="ink-controls"><button className="ink-control" onClick={()=>notify('Showing today')}><CalendarDays size={13}/>Today<ChevronDown size={12}/></button><button className="ink-control" onClick={()=>notify('Department filter opened')}><SlidersHorizontal size={13}/>All departments<ChevronDown size={12}/></button><button className="ink-control primary" onClick={()=>notify('New matter form ready')}><Plus size={13}/>New matter</button></div></div>
+        {!dismissed&&<div className="ink-alert"><div className="ink-alert-head"><Bell size={14} color={C.risk}/><b>6 items requiring your attention</b><span className="ink-badge risk">3 critical</span><span className="ink-badge warn">3 warnings</span><button className="ink-dismiss" onClick={()=>setDismissed(true)} aria-label="Dismiss alerts"><X size={14}/></button></div><div className="ink-alert-items">{[['1 client blocked — FICA incomplete',C.risk],['2 expired FICA documents',C.risk],['2 matters flagged at risk',C.risk],['2 AI documents flagged high-risk',C.warn],['FICA at 87% — below threshold',C.warn],['4 tasks overdue',C.warn]].map(([t,c])=><button className="ink-alert-item" key={t as string} onClick={()=>notify('Opening attention item')}><i style={{background:c as string}}/><span>{t}</span><ArrowRight size={12}/></button>)}</div></div>}
+        <div className="ink-kpis">{[[BriefcaseBusiness,'Active matters','47','+4 from last month'],[GitMerge,'Conflict checks','5','Awaiting review'],[ShieldCheck,'FICA compliant','87%','Firm threshold 90%'],[CircleDollarSign,'Unbilled hours','38h','Across active matters'],[ClipboardCheck,'Overdue tasks','4','Requires attention']].map(([Icon,label,value,sub])=>{const KpiIcon=Icon as React.ElementType;return <button className="ink-kpi" key={String(label)} onClick={()=>notify(`${label} opened`)}><div className="ink-kpi-label"><KpiIcon size={13} style={{color:C.petrol}}/>{String(label)}</div><strong>{String(value)}</strong><small>{String(sub)}</small></button>})}</div>
+        <div className="ink-grid">
+          <div className="ink-col"><Panel title={`Matter pipeline · ${pipeline.reduce((a,p)=>a+p[1],0)} total`}>{pipeline.map(([n,v])=><div className="ink-pipe-row" key={n}><span className="ink-pipe-label"><i/>{n}</span><div className="ink-bar"><i style={{width:`${Number(v)/134*100}%`}}/></div><span className="ink-pipe-count">{v}</span></div>)}<button className="ink-footer-link" onClick={()=>notify('Matters workspace opened')}>View all matters<ArrowRight size={12} style={{marginLeft:'auto'}}/></button></Panel><Panel title="Revenue · 6-month trend"><div className="ink-revenue"><div><strong>{money(2840000)}</strong><span>↑ YTD</span></div><div><b>{money(620000)}</b><small>OUTSTANDING</small></div></div><div className="ink-chart"><ResponsiveContainer width="100%" height="100%"><AreaChart data={revenue}><XAxis dataKey="m" tick={{fill:C.muted,fontSize:9}} axisLine={false} tickLine={false}/><Tooltip contentStyle={{background:C.ink,border:0,fontSize:10,color:'#f7f4eb'}} formatter={(v)=>money(Number(v))}/><Area dataKey="v" stroke={C.petrol} fill={C.petrol} fillOpacity={.08} strokeWidth={2} dot={false}/></AreaChart></ResponsiveContainer></div></Panel></div>
+          <div className="ink-col"><Panel title="Requires approval">{[['Matters awaiting commencement',6,C.slate],['Conflict checks pending',5,C.warn],['Documents awaiting approval',12,C.warn],['AI high-risk documents',2,C.risk],['Matters flagged at risk',2,C.risk]].map(([label,value,color])=><button className="ink-metric" key={label as string} style={{borderLeftColor:color as string}} onClick={()=>notify('Approval queue opened')}><span>{label}</span><b style={{color: color as string}}>{value}</b><ArrowRight size={12}/></button>)}</Panel><Panel title="Team workload">{workload.map(([initials,name,count])=><div className="ink-person" key={name}><div className="ink-avatar">{initials}</div><div className="ink-person-main"><div><span>{name}</span><b>{count}</b></div><div className="ink-bar"><i style={{width:`${Number(count)/14*100}%`}}/></div></div></div>)}</Panel></div>
+          <div className="ink-col"><Panel title="Recent activity"><div>{activity.map(([who,desc,time,Icon,color])=><div className="ink-activity" key={desc}><Icon size={13} style={{color}}/><p><b>{who}</b> {desc}</p><time>{time}</time></div>)}</div><div className="ink-quick">{['All matters','Conflicts','Billing','Audit log'].map(x=><button key={x} onClick={()=>notify(`${x} opened`)}>{x}</button>)}</div></Panel></div>
+        </div>
+      </div>
+    </main>
+    {toast&&<div className="ink-toast">{toast}</div>}
+  </div></div>
+}
+export { MinimalInkDashboard }
+export default MinimalInkDashboard

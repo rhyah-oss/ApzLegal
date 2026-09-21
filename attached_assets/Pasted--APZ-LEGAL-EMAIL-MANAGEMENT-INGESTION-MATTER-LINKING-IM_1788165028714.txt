@@ -1,0 +1,1153 @@
+# APZ LEGAL — EMAIL MANAGEMENT, INGESTION & MATTER LINKING IMPLEMENTATION
+
+## OBJECTIVE
+
+Implement the APZ Legal email functionality in accordance with **APZ Legal PRD v2 (Revised + Aligned)**.
+
+Email must NOT be treated as a standalone generic inbox.
+
+The primary purpose of email functionality is to make email correspondence a **secure, matter-linked legal record** that can be searched, viewed, audited and used by the APZ Legal AI within the appropriate matter context.
+
+The target architecture is:
+
+```text
+External Email Provider
+        ↓
+Email Ingestion
+        ↓
+Email Processing
+        ↓
+Matter / Client Matching
+        ↓
+Matter Workspace
+        ↓
+Emails
+        ↓
+APZ Legal AI / Search / Audit
+```
+
+Outbound communication should separately follow:
+
+```text
+AI / User
+   ↓
+Email Draft
+   ↓
+Human Review
+   ↓
+Send
+   ↓
+Audit Log
+```
+
+---
+
+# 1. INSPECT THE EXISTING APZ LEGAL APPLICATION FIRST
+
+Before modifying anything, inspect the entire existing application.
+
+Identify:
+
+* Frontend framework
+* Backend framework
+* Database/ORM
+* Existing authentication
+* Existing RBAC
+* User roles
+* Matter model
+* Client model
+* Document model
+* Audit log model
+* AI assistant
+* AI tool/function calling
+* Knowledge base/RAG
+* Existing integrations
+* Existing email-related code
+* Existing API structure
+* Existing background jobs/queues
+* Existing notification infrastructure
+* Existing environment variables
+* Existing UI design system
+
+Do not assume the architecture.
+
+Do not rebuild functionality that already exists.
+
+Do not create duplicate Matter, Client, Document, User or Audit systems.
+
+Reuse existing services/models wherever possible.
+
+---
+
+# 2. PRD ALIGNMENT
+
+The PRD currently defines:
+
+### Matter Workspace
+
+The Matter Workspace includes:
+
+* Documents
+* Tasks
+* Emails
+* Research
+* Billing
+* AI conversations
+* Audit trail
+
+Therefore, every relevant matter should have an **Emails** area.
+
+The PRD also identifies:
+
+### Phase 1D — Integrations
+
+* Email ingestion
+* Legal research engine
+* Citation validation
+
+The email implementation must therefore support the ingestion and matter-linking foundation required for Phase 1D.
+
+---
+
+# 3. EMAIL SHOULD BE MATTER-CENTRIC
+
+Do NOT design this as:
+
+```text
+APZ Legal → Generic Email Inbox
+```
+
+Design it as:
+
+```text
+APZ Legal
+   ↓
+Matter
+   ↓
+Emails
+```
+
+The email record should be linked to:
+
+* Matter where applicable
+* Client where applicable
+* Users/participants where applicable
+* Documents/attachments where applicable
+
+The system should preserve the original email information.
+
+---
+
+# 4. EMAIL DATA MODEL
+
+Inspect the existing database first.
+
+If an email model does not already exist, create an appropriate model.
+
+The model should support, where applicable:
+
+* Internal ID
+* External email/message ID
+* Thread/conversation ID
+* Provider
+* Mailbox/account
+* Sender
+* Recipients
+* CC
+* BCC where available
+* Subject
+* Body
+* Plain-text body
+* HTML body where appropriate
+* Received date/time
+* Sent date/time
+* Matter ID
+* Client ID
+* Related user IDs
+* Attachment metadata
+* Email status
+* Read/unread status if required
+* Inbound/outbound indicator
+* AI-generated flag
+* Draft/sent status
+* Created timestamp
+* Updated timestamp
+
+Do not store duplicate emails when the provider sends the same message more than once.
+
+Use the provider's stable external message ID and/or appropriate identifiers for idempotency.
+
+---
+
+# 5. EMAIL INGESTION
+
+Implement an email ingestion service.
+
+The service should be designed so that an external provider can be connected without changing the rest of APZ Legal.
+
+Do not hard-code the application to one provider if this can reasonably be avoided.
+
+Create an abstraction similar to:
+
+```text
+EmailProvider
+    ↓
+EmailIngestionService
+    ↓
+EmailProcessor
+    ↓
+MatterLinkingService
+    ↓
+APZ Legal Email Repository
+```
+
+The initial provider should be selected based on the existing APZ Legal environment and requirements.
+
+If no provider is currently configured, implement the provider abstraction and configuration structure without pretending that live ingestion works.
+
+Do not use mock emails as production functionality.
+
+---
+
+# 6. MATTER MATCHING
+
+This is a core APZ Legal requirement.
+
+When an email is ingested, determine whether it can be associated with an existing matter.
+
+Matching should use reliable information such as:
+
+### Primary matching
+
+* Matter number/reference in subject/body
+* Existing email thread associated with a matter
+
+### Secondary matching
+
+* Sender
+* Recipient
+* Client
+* Opposing party
+* Known matter participants
+* Subject
+* Existing correspondence history
+
+### AI-assisted matching
+
+AI may suggest a matter when deterministic matching is insufficient.
+
+Example:
+
+```text
+Potential Matter Match
+
+Matter:
+Smith v Jones
+MTR-2026-0148
+
+Confidence:
+92%
+
+Reason:
+Sender and recipient match known matter participants and
+the email subject is consistent with existing correspondence.
+
+[Link to Matter]
+[Choose Different Matter]
+[Leave Unlinked]
+```
+
+Do not allow AI to silently create high-confidence legal associations without appropriate safeguards.
+
+Make the matching behaviour configurable.
+
+---
+
+# 7. EMAIL LINKING
+
+Users must be able to manually link an email to a matter.
+
+Provide:
+
+* Link to Matter
+* Change Matter
+* Remove Matter Link
+* Leave Unlinked
+
+When manually linked, record the action in the audit trail.
+
+The system should also support configurable automatic linking where the confidence/rules are sufficient.
+
+---
+
+# 8. MATTER EMAILS UI
+
+Add an **Emails** section/tab to the existing Matter Workspace.
+
+Do not redesign the entire Matter Workspace unless necessary.
+
+Use the existing APZ Legal design system.
+
+The Emails area should support:
+
+* Email list
+* Search
+* Filtering
+* Sorting
+* Sender
+* Recipients
+* Subject
+* Date/time
+* Thread
+* Attachments
+* Linked matter
+* Inbound/outbound status
+
+Example:
+
+```text
+SMITH v JONES
+
+Overview | Documents | Emails | Tasks | Research | Billing | AI | Audit
+
+EMAILS
+
+Search correspondence...
+
+────────────────────────────────────────────
+
+28 Aug 2026
+John Smith
+RE: Settlement Proposal
+2 attachments
+
+26 Aug 2026
+Smith Attorneys
+RE: Settlement Proposal
+1 attachment
+
+24 Aug 2026
+ABC Legal
+RE: Discovery Documents
+3 attachments
+```
+
+Clicking an email should open the complete email.
+
+---
+
+# 9. EMAIL VIEWER
+
+Create an email detail view.
+
+Display:
+
+* Sender
+* Recipients
+* CC
+* Date/time
+* Subject
+* Body
+* Attachments
+* Matter
+* Thread
+* Source/provider
+* Relevant metadata
+
+Preserve the original email content as much as practical.
+
+Do not allow ordinary users to alter the original ingested email record.
+
+If annotations/notes are required, store them separately.
+
+---
+
+# 10. THREADING
+
+Support email conversations/threads.
+
+Where the provider exposes thread/conversation IDs, preserve them.
+
+Allow the user to view related messages as a conversation.
+
+Do not merge unrelated emails merely because they have similar subjects.
+
+Use provider thread identifiers plus appropriate message metadata.
+
+---
+
+# 11. ATTACHMENTS
+
+Email attachments must be handled securely.
+
+For each attachment:
+
+* Preserve filename
+* Preserve MIME type
+* Preserve source email
+* Preserve external attachment ID where available
+* Store securely
+* Associate with the email
+* Allow authorised users to access it
+
+Where an attachment is relevant to the matter, it should be accessible from the matter's Documents area.
+
+However:
+
+DO NOT silently create duplicate document records.
+
+If the existing document system supports document ingestion, integrate with that system.
+
+Maintain the relationship:
+
+```text
+Matter
+   ↓
+Email
+   ↓
+Attachment
+   ↓
+Document
+```
+
+The original email must remain traceable as the source.
+
+---
+
+# 12. EMAIL SEARCH
+
+Implement secure email search.
+
+Users should be able to search by:
+
+* Subject
+* Sender
+* Recipient
+* Matter
+* Client
+* Date
+* Thread
+* Attachment name
+* Email body where supported
+
+Search results must respect:
+
+* RBAC
+* Matter permissions
+* User permissions
+* Client confidentiality boundaries
+
+A user must never be able to search for an email they are not authorized to access.
+
+---
+
+# 13. AI INTEGRATION
+
+This is a major requirement.
+
+The existing APZ Legal AI should eventually be able to reason over emails within the user's authorized matter context.
+
+Examples:
+
+> "Summarise the latest correspondence."
+
+> "Find all correspondence with the opposing attorney."
+
+> "What did the client say about the settlement?"
+
+> "When did the client first raise this issue?"
+
+> "Summarise the email correspondence from the last two weeks."
+
+The AI must retrieve the underlying emails using the existing authorized data-access architecture.
+
+Do not give the AI unrestricted database access.
+
+Use controlled backend tools/services.
+
+Architecture:
+
+```text
+APZ Legal AI
+     ↓
+Email Search Tool
+     ↓
+Authorization
+     ↓
+Email Service
+     ↓
+Authorized Emails
+     ↓
+AI Context
+```
+
+---
+
+# 14. AI CITATIONS
+
+Where the AI uses email information to answer a question, provide a reference to the underlying email where the existing AI citation architecture supports this.
+
+The user should be able to identify:
+
+* Email subject
+* Date
+* Sender
+* Matter
+* Relevant source
+
+This aligns with the PRD requirement for citation enforcement and AI decision traceability.
+
+Do not invent citations.
+
+---
+
+# 15. EMAIL DRAFTING
+
+The PRD explicitly classifies:
+
+**Email drafting = LOW RISK AI**
+
+The existing APZ Legal AI should be able to generate email drafts.
+
+Example:
+
+User:
+
+> "Draft an email to the client explaining the next steps."
+
+The AI should generate a draft.
+
+The draft must clearly be a draft.
+
+The system should NOT send the email automatically.
+
+The lawyer must be able to:
+
+* Review
+* Edit
+* Save draft
+* Discard
+* Send
+
+---
+
+# 16. OUTBOUND EMAIL
+
+If outbound email functionality already exists, integrate with it.
+
+If it does not exist, create the architecture for it without pretending it is production-ready until an actual provider is configured.
+
+Outbound email flow:
+
+```text
+AI/User
+   ↓
+Draft
+   ↓
+Review
+   ↓
+User confirmation
+   ↓
+Send
+   ↓
+Provider
+   ↓
+Sent Email
+   ↓
+Matter
+   ↓
+Audit Log
+```
+
+Never automatically send an AI-generated email merely because the AI generated it.
+
+---
+
+# 17. AI + EMAIL CONFIRMATION
+
+The following distinction must be enforced:
+
+### Draft request
+
+User:
+
+> "Draft an email to the client."
+
+Result:
+
+**Draft created.**
+
+No confirmation needed to create the draft.
+
+### Send request
+
+User:
+
+> "Send the email to the client."
+
+Result:
+
+The system should display the email and request explicit confirmation if required by the application's approval policy.
+
+Example:
+
+> "The email is ready to send to John Smith. Would you like me to send it?"
+
+Only explicit confirmation should trigger sending.
+
+---
+
+# 18. ROLE-BASED ACCESS
+
+Use the existing APZ Legal RBAC.
+
+At minimum, consider the PRD's role responsibilities:
+
+### Secretary
+
+* Email/matter linking support
+* Access to permitted matter correspondence
+* Filing correspondence
+
+### Paralegal
+
+* Document/email handling
+* Matter correspondence support
+
+### Candidate Attorney
+
+* Restricted access based on assigned matter permissions
+
+### Associate Attorney
+
+* Draft correspondence
+* Manage correspondence for permitted matters
+
+### Partner
+
+* Matter correspondence
+* Appropriate review/approval
+
+### Managing Partner
+
+* Firm-wide access according to policy
+
+### Billing Officer
+
+Do not automatically provide unrestricted access to confidential email content.
+
+### Compliance Officer
+
+Access according to compliance/audit requirements.
+
+The backend must enforce authorization.
+
+Do not rely on frontend hiding.
+
+---
+
+# 19. MATTER CONFIDENTIALITY
+
+Email access must follow the same confidentiality model as matter access.
+
+If User A cannot access Matter X:
+
+User A must NOT be able to:
+
+* View Matter X emails
+* Search Matter X emails
+* Ask AI to retrieve Matter X emails
+* Download Matter X attachments
+* Retrieve Matter X email metadata
+
+This must be enforced server-side.
+
+---
+
+# 20. AUDIT LOGGING
+
+Email activity must integrate with the existing APZ Legal audit system.
+
+Audit important actions including:
+
+* Email ingested
+* Email linked to matter
+* Email unlinked
+* Matter association changed
+* Attachment accessed where required by policy
+* Email draft generated by AI
+* Email edited
+* Email sent
+* Email deleted/archived where supported
+* AI searched email
+* Unauthorized email access attempt
+* Administrative email configuration changes
+
+Capture where appropriate:
+
+* User
+* Timestamp
+* Action
+* Matter ID
+* Email ID
+* Source/provider
+* AI involvement
+* Authorization result
+* Correlation/request ID
+
+Do not log sensitive email body content unnecessarily.
+
+---
+
+# 21. AI GOVERNANCE
+
+Email drafting is Low Risk according to the PRD.
+
+However:
+
+* AI-generated content must be identifiable as AI-generated.
+* Human review must remain possible.
+* AI explanation/citation mechanisms should be preserved.
+* AI actions must be traceable.
+* Existing confidence/risk controls must remain intact.
+
+Do not classify all email-related AI operations as the same risk.
+
+For example:
+
+**Summarising an email → Low Risk**
+
+**Drafting an email → Low Risk**
+
+**Making a consequential legal recommendation based on emails → appropriate higher-risk classification according to the existing AI governance framework.**
+
+---
+
+# 22. EMAIL + DOCUMENT MANAGEMENT
+
+When an email contains an attachment:
+
+```text
+Email
+  ↓
+Attachment
+  ↓
+Document System
+  ↓
+Matter
+```
+
+The attachment should remain traceable to its originating email.
+
+If the document is subsequently:
+
+* reviewed
+* AI analysed
+* approved
+* signed
+* archived
+
+those workflows must continue using the existing Document Management system.
+
+Do not create a second document lifecycle inside Email.
+
+---
+
+# 23. EMAIL + KNOWLEDGE BASE
+
+Do NOT automatically place all client/matter emails into the firm's general knowledge base.
+
+Matter correspondence and firm knowledge are different data domains.
+
+Email content should remain within the appropriate:
+
+**Client → Matter → Email**
+
+context unless a specific approved process exists to promote information into the firm knowledge base.
+
+Any future knowledge-base ingestion should require explicit rules/approval.
+
+---
+
+# 24. EMAIL + POPIA / CONFIDENTIALITY
+
+Treat email as confidential legal information.
+
+Ensure:
+
+* Access controls
+* Encryption through existing infrastructure
+* Secure storage
+* Secure transmission
+* Appropriate retention
+* Auditability
+* No unauthorized AI exposure
+* No cross-matter leakage
+
+Do not expose email content to external AI services without following the application's existing AI/data-processing controls.
+
+---
+
+# 25. EMAIL CONFIGURATION
+
+Create an appropriate administrative configuration area if one does not already exist.
+
+Administrators should eventually be able to configure:
+
+* Email provider
+* Connected mailbox
+* Ingestion status
+* Sync status
+* Last successful sync
+* Error status
+* Connection status
+* Sync frequency/webhook status where applicable
+
+Do not expose provider secrets to ordinary users.
+
+---
+
+# 26. BACKGROUND PROCESSING
+
+If the existing application supports background workers/queues, use them for email ingestion.
+
+Do not make a user wait for an entire mailbox synchronization request.
+
+Conceptually:
+
+```text
+Provider
+   ↓
+Webhook/Polling
+   ↓
+Queue
+   ↓
+Email Processor
+   ↓
+Database
+```
+
+The exact implementation should follow the existing APZ Legal architecture.
+
+---
+
+# 27. IDEMPOTENCY
+
+Email ingestion must be idempotent.
+
+If the same email is received multiple times, APZ Legal must not create duplicate records.
+
+Use stable provider identifiers.
+
+Test duplicate ingestion explicitly.
+
+---
+
+# 28. SECURITY TESTING
+
+Test:
+
+### User access
+
+User without matter access attempts to retrieve email.
+
+Expected:
+
+**403/unauthorized response.**
+
+### AI access
+
+User asks:
+
+> "Show me emails from a matter I cannot access."
+
+Expected:
+
+AI cannot retrieve them.
+
+### Attachment access
+
+Unauthorized user attempts to access attachment.
+
+Expected:
+
+Denied.
+
+### Search
+
+Unauthorized user searches for confidential email.
+
+Expected:
+
+Email does not appear.
+
+### Sending
+
+User attempts to send without required authorization/confirmation.
+
+Expected:
+
+Blocked.
+
+---
+
+# 29. UI DESIGN
+
+Use the existing APZ Legal design language.
+
+The Email interface should be:
+
+* Professional
+* Corporate
+* Clean
+* Information-dense where appropriate
+* Easy to scan
+* Consistent with the Matter Workspace
+
+Avoid:
+
+* Childish styling
+* Excessive rounded cards
+* Excessive gradients
+* Unnecessary animations
+* Oversized controls
+* Generic consumer email-app styling
+
+The objective is a legal practice management workspace, not Gmail/Outlook duplication.
+
+---
+
+# 30. DO NOT BREAK EXISTING FUNCTIONALITY
+
+Do NOT:
+
+* Rebuild Matter Management
+* Rebuild Client Management
+* Rebuild Documents
+* Rebuild AI
+* Replace the existing authentication
+* Replace existing RBAC
+* Replace the existing audit system
+* Replace existing RAG
+* Introduce mock production data
+* Hard-code provider credentials
+* Bypass permissions
+* Give AI direct database access
+* Automatically send AI-generated emails
+* Automatically expose matter emails to the knowledge base
+
+Reuse what already exists.
+
+---
+
+# 31. IMPLEMENTATION ORDER
+
+Work incrementally.
+
+### STEP 1
+
+Inspect the application architecture.
+
+### STEP 2
+
+Identify existing email-related functionality.
+
+### STEP 3
+
+Identify existing Matter, Client, Document and Audit models.
+
+### STEP 4
+
+Create/extend the Email data model.
+
+### STEP 5
+
+Implement secure email repository/service.
+
+### STEP 6
+
+Implement email ingestion abstraction.
+
+### STEP 7
+
+Implement matter-linking logic.
+
+### STEP 8
+
+Implement Matter → Emails UI.
+
+### STEP 9
+
+Implement email viewer.
+
+### STEP 10
+
+Implement secure email search.
+
+### STEP 11
+
+Integrate email attachments with the existing document system.
+
+### STEP 12
+
+Integrate authorized email retrieval with APZ Legal AI.
+
+### STEP 13
+
+Implement AI email drafting.
+
+### STEP 14
+
+Implement outbound email only if the required provider/configuration is available.
+
+### STEP 15
+
+Implement audit logging.
+
+### STEP 16
+
+Run security and regression testing.
+
+---
+
+# 32. IMPORTANT — DO NOT FAKE EXTERNAL INTEGRATION
+
+If the Replit environment does not currently contain credentials or an actual email provider connection:
+
+Do NOT claim live email ingestion is working.
+
+Instead:
+
+1. Build the provider abstraction.
+2. Build the database/service layer.
+3. Build the UI.
+4. Build the ingestion pipeline.
+5. Clearly identify the missing provider configuration.
+6. Document exactly what is required to enable live ingestion.
+
+Do not use fake emails and label the integration as complete.
+
+---
+
+# 33. ACCEPTANCE CRITERIA
+
+The implementation will be considered successful when:
+
+### Matter
+
+A user can open a matter and access:
+
+**Overview | Documents | Emails | Tasks | Research | Billing | AI | Audit**
+
+where the Emails section is available according to permissions.
+
+### Email
+
+An authorized user can:
+
+* View emails
+* Search emails
+* View threads
+* View attachments
+* Link emails to matters
+* Change email matter associations where authorized
+
+### AI
+
+The authorized AI assistant can eventually:
+
+* Search permitted emails
+* Summarise permitted emails
+* Answer questions using permitted email correspondence
+* Produce appropriate source references
+* Draft emails
+
+### Security
+
+Unauthorized users cannot access restricted matter emails.
+
+### Audit
+
+Important email actions are recorded in the APZ Legal audit system.
+
+### Outbound
+
+AI-generated emails are never silently sent.
+
+### Regression
+
+Existing APZ Legal functionality continues to work.
+
+---
+
+# 34. FINAL IMPLEMENTATION REPORT
+
+After implementation, provide a report containing:
+
+## Architecture
+
+* Existing email functionality found
+* New functionality added
+* Services created
+* Database changes
+* API endpoints created/modified
+
+## Integration
+
+* Email provider selected
+* Provider configuration required
+* Ingestion method
+* Sync/webhook mechanism
+
+## Matter Linking
+
+* Matching rules
+* AI-assisted matching
+* Manual linking
+
+## AI
+
+* AI email capabilities
+* Tools/services exposed
+* Citation implementation
+* Risk classification
+
+## Security
+
+* RBAC enforcement
+* Matter-level access
+* Attachment security
+* Audit logging
+
+## Testing
+
+Provide:
+
+* Tests executed
+* Pass/fail results
+* Security tests
+* Regression results
+
+## Limitations
+
+Clearly state anything that cannot currently operate because the Replit environment lacks:
+
+* Provider credentials
+* External mailbox access
+* API configuration
+* Infrastructure
+* Other required dependencies
+
+Do not claim functionality is production-ready unless it has actually been tested against the real integration.
+
+## FINAL PRINCIPLE
+
+APZ Legal Email is NOT simply an email inbox.
+
+It is:
+
+**EMAIL → MATTER → CLIENT → DOCUMENTS → AI → WORKFLOW → AUDIT**
+
+and every part of that chain must respect:
+
+**Authentication + RBAC + Matter Permissions + Legal Confidentiality + AI Governance + Auditability.**

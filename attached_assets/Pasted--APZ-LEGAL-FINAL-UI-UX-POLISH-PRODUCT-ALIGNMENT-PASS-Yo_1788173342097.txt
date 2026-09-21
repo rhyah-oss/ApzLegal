@@ -1,0 +1,622 @@
+# APZ LEGAL — FINAL UI/UX POLISH + PRODUCT ALIGNMENT PASS
+
+You are performing the FINAL UI/UX, visual consistency, copy, interaction, and product-alignment pass on the existing APZ Legal application before it is exported from Replit and migrated to our own server.
+
+This is a POLISH AND ALIGNMENT PASS.
+
+DO NOT rebuild the application.
+DO NOT replace working functionality.
+DO NOT introduce mock functionality.
+DO NOT remove existing functionality.
+DO NOT make unnecessary architectural changes.
+DO NOT change database structures unless absolutely required to fix an existing UI/functionality issue.
+
+The objective is to make the existing application feel like a finished, production-ready, premium legal technology platform.
+
+---
+
+## 1. FULL APPLICATION UI/UX AUDIT
+
+Go through the ENTIRE application screen-by-screen and module-by-module.
+
+Inspect:
+
+* Login
+* Registration
+* Authentication
+* Dashboard
+* Matters
+* Matter workspace
+* Clients
+* Documents
+* Legal AI
+* Legal Research
+* Firm Knowledge Base
+* Email / Email Discovery
+* Workflows
+* Time & Billing
+* Calendar
+* Tasks
+* Templates
+* Audit
+* Admin
+* Settings
+* User management
+* Notifications
+* Search
+* Upload flows
+* Approval flows
+* Modals
+* Drawers
+* Forms
+* Empty states
+* Loading states
+* Error states
+* Success states
+* Confirmation dialogs
+* AI interactions
+* Navigation
+* Sidebar
+* Header
+* Breadcrumbs
+* Tables
+* Cards
+* Filters
+* Pagination
+* Dropdowns
+* Tabs
+
+Check both desktop and responsive layouts.
+
+---
+
+# 2. TEXT AND COPY QUALITY
+
+Audit EVERY piece of visible text.
+
+Fix:
+
+* Spelling errors
+* Grammar errors
+* Typographical errors
+* Incorrect capitalization
+* Inconsistent terminology
+* Awkward wording
+* Placeholder text
+* Developer-facing terminology
+* Debug text
+* Technical/internal labels exposed to users
+* Duplicate wording
+* Inconsistent module names
+* Incorrect button labels
+* Incorrect field labels
+* Incorrect helper text
+* Incorrect error messages
+* Incorrect success messages
+
+All user-facing copy must feel professional and appropriate for a South African law firm.
+
+Use consistent terminology throughout the application.
+
+For example, do not use different terms for the same concept in different areas.
+
+Ensure labels such as:
+
+* Matter
+* Client
+* Contact
+* Document
+* Template
+* Task
+* Workflow
+* Approval
+* Time Entry
+* Invoice
+* Knowledge Base
+* Legal AI
+* Research
+* Audit Log
+
+are used consistently.
+
+---
+
+# 3. BUTTON AUDIT
+
+Inspect EVERY button in the application.
+
+Every button must:
+
+* Have a clear purpose
+* Have correct wording
+* Use consistent terminology
+* Use appropriate capitalization
+* Have a logical action
+* Have a visible hover state
+* Have a visible disabled state
+* Have a loading state where appropriate
+* Prevent duplicate submissions where necessary
+* Provide appropriate feedback after an action
+
+Fix buttons that:
+
+* Do nothing
+* Have unclear wording
+* Use placeholder text
+* Are incorrectly positioned
+* Are visually inconsistent
+* Are unnecessarily large
+* Are unnecessarily rounded
+* Have inconsistent icon placement
+* Have incorrect icons
+* Have missing confirmation where destructive
+* Have missing success/error feedback
+
+Examples:
+
+"Submit" should be replaced with a more meaningful action where appropriate, such as:
+
+* Create Matter
+* Save Changes
+* Upload Document
+* Send Email
+* Approve
+* Reject
+* Generate
+* Run Research
+* Create Invoice
+
+Do not use generic button labels when a specific action is clearer.
+
+---
+
+# 4. FORMS
+
+Audit every form.
+
+Check:
+
+* Labels
+* Required fields
+* Optional fields
+* Validation
+* Validation messages
+* Input types
+* Date fields
+* Dropdowns
+* Search fields
+* File uploads
+* Character limits
+* Helper text
+* Save/cancel behaviour
+* Unsaved changes
+* Error handling
+
+Every field must clearly communicate:
+
+1. What information is required
+2. What format is expected
+3. Whether the field is optional
+4. Why the information is required where appropriate
+
+Ensure validation messages are human-readable.
+
+Do not expose raw API errors, database errors, stack traces, or technical messages to users.
+
+---
+
+# 5. TABLES AND DATA DISPLAY
+
+Review every table.
+
+Ensure:
+
+* Column names are correct
+* Data is aligned properly
+* Dates use a consistent format
+* Currency uses a consistent format
+* Status labels are consistent
+* Long text is handled properly
+* Actions are understandable
+* Row actions are not confusing
+* Sorting works correctly
+* Filtering works correctly
+* Pagination is clear
+* Empty states are useful
+* Loading states are polished
+
+Do not allow text to overlap, clip, or become unreadable.
+
+---
+
+# 6. EMPTY STATES
+
+Every empty state should be intentional and useful.
+
+Do NOT show:
+
+* "No data"
+* "Nothing here"
+* Blank panels
+* Broken-looking layouts
+
+Where appropriate, explain:
+
+* What the section is for
+* Why it is empty
+* What the user can do next
+
+Example:
+
+"No matters have been created yet."
+
+"Create your first matter to begin managing the client, documents, tasks and legal work from one workspace."
+
+Include an appropriate CTA where useful.
+
+---
+
+# 7. LOADING AND ERROR STATES
+
+Review every asynchronous action.
+
+Ensure users receive proper feedback when:
+
+* Data is loading
+* AI is processing
+* Documents are uploading
+* Research is running
+* Emails are sending
+* Forms are submitting
+* Reports are generating
+* Actions succeed
+* Actions fail
+
+Avoid unexplained spinners.
+
+Where appropriate, use meaningful loading messages.
+
+Never expose technical errors directly to users.
+
+---
+
+# 8. MODALS AND DRAWERS
+
+Audit all modals and drawers.
+
+Ensure:
+
+* Clear titles
+* Clear descriptions
+* Proper spacing
+* Correct button hierarchy
+* Cancel/close functionality
+* Escape handling where appropriate
+* Correct confirmation for destructive actions
+* No accidental data loss
+* No content overflow
+* Proper responsive behaviour
+
+---
+
+# 9. VISUAL CONSISTENCY
+
+Make the entire application feel like ONE product.
+
+Standardize:
+
+* Typography
+* Font sizes
+* Font weights
+* Spacing
+* Borders
+* Border radius
+* Shadows
+* Icons
+* Buttons
+* Inputs
+* Tables
+* Cards
+* Status badges
+* Dropdowns
+* Modals
+* Navigation
+* Headers
+* Section headings
+
+Do not introduce random new styles.
+
+Reuse existing design tokens/components where possible.
+
+---
+
+# 10. APZ LEGAL VISUAL DIRECTION
+
+The application should feel:
+
+* Premium
+* Corporate
+* Professional
+* Sophisticated
+* Modern
+* Trustworthy
+* Legal/enterprise-oriented
+* AI-native without looking gimmicky
+
+Avoid:
+
+* Childish UI
+* Excessive rounded cards
+* Excessive gradients
+* Excessive animations
+* Overly colourful interfaces
+* "Startup toy" aesthetics
+* Excessive empty space
+* Unnecessary decorative elements
+* Excessive icons
+* Visual clutter
+
+The interface should feel closer to a premium enterprise legal platform than a generic SaaS template.
+
+Prioritize hierarchy, clarity, density and usability.
+
+---
+
+# 11. NAVIGATION ALIGNMENT
+
+Review the entire navigation system.
+
+Ensure:
+
+* Every navigation item has a purpose
+* Names are consistent
+* No duplicate modules
+* No dead navigation links
+* No missing navigation links
+* Active states work correctly
+* Breadcrumbs are accurate
+* Back buttons behave correctly
+* Users can easily understand where they are
+
+Ensure navigation terminology aligns with the APZ Legal PRD.
+
+---
+
+# 12. AI UX
+
+Perform a specific polish pass on all AI functionality.
+
+AI interfaces should feel integrated into the legal workflow rather than like a generic chatbot.
+
+Review:
+
+* AI input
+* AI response display
+* Loading states
+* Citations
+* Sources
+* Knowledge Base results
+* Research results
+* Document analysis
+* AI-generated content
+* Copy/export actions
+* Regenerate actions
+* Error states
+* Confidence/context indicators where implemented
+
+Ensure users understand when information is AI-generated.
+
+Do not make unsupported legal claims or imply that AI output is automatically authoritative.
+
+---
+
+# 13. DOCUMENTS AND UPLOAD UX
+
+Review every document upload and document-management flow.
+
+Ensure:
+
+* Upload buttons are clear
+* Supported formats are communicated
+* Upload progress is visible
+* Errors are understandable
+* File names display correctly
+* Document status is clear
+* Preview/download actions are obvious
+* Delete actions require appropriate confirmation
+* Empty states are useful
+
+---
+
+# 14. TEMPLATES UX
+
+Review the Templates module carefully.
+
+Templates should feel like a real functional legal template system, not a static gallery.
+
+Check:
+
+* Template listing
+* Search
+* Categories
+* Template details
+* Create template
+* Edit template
+* Duplicate
+* Delete
+* Use template
+* Variables/placeholders
+* Document generation
+* Save behaviour
+* Permissions
+* Empty states
+* Error states
+
+Ensure terminology and UI align with the APZ Legal PRD.
+
+---
+
+# 15. TIME & BILLING UX
+
+Perform a dedicated polish pass on:
+
+* Time entries
+* Matter billing
+* Rates
+* Billable/non-billable entries
+* Invoices
+* Billing summaries
+* Totals
+* Currency
+* Statuses
+* Actions
+
+Make sure numbers, currency and dates are formatted professionally.
+
+---
+
+# 16. RESPONSIVE DESIGN
+
+Test the application at:
+
+* Desktop
+* Laptop
+* Tablet
+* Mobile where applicable
+
+Fix:
+
+* Horizontal scrolling
+* Clipped text
+* Overlapping elements
+* Broken tables
+* Broken modals
+* Incorrect sidebar behaviour
+* Incorrect button wrapping
+* Form layout problems
+* Navigation issues
+
+Desktop remains the primary experience for APZ Legal, but responsive behaviour must remain usable.
+
+---
+
+# 17. ACCESSIBILITY AND USABILITY
+
+Check:
+
+* Keyboard navigation
+* Focus states
+* Form labels
+* Button accessibility
+* Icon-only button tooltips
+* Colour contrast
+* Error identification
+* Modal accessibility
+* Screen-reader-friendly labels where appropriate
+
+Do not rely solely on colour to communicate status.
+
+---
+
+# 18. REMOVE DEVELOPMENT ARTIFACTS
+
+Before final export, search the entire application for:
+
+* Lorem ipsum
+* TODO
+* FIXME
+* Test text
+* Placeholder names
+* Fake client data
+* Mock legal content
+* Debug messages
+* Console-facing UI
+* Replit-specific UI
+* Replit branding
+* Development-only labels
+* Broken links
+* Unused buttons
+* Dummy actions
+* "Coming soon" features that are actually expected to work
+
+Do not remove legitimate test infrastructure.
+
+---
+
+# 19. PRD ALIGNMENT
+
+Cross-check the UI against the APZ Legal PRD and User Journeys.
+
+For each major module, verify that:
+
+* The correct functionality is represented
+* The correct terminology is used
+* The correct user roles are reflected
+* Appropriate actions are visible
+* Permissions are respected
+* Workflow states make sense
+* The UI supports the intended user journey
+
+Do not invent new product functionality.
+
+Where the existing implementation differs from the PRD, identify the discrepancy and correct it only where it is clearly a UI/UX or alignment issue.
+
+---
+
+# 20. FINAL FUNCTIONALITY CHECK
+
+After making UI/UX changes, verify that you have NOT broken:
+
+* Authentication
+* Authorization
+* Routing
+* API calls
+* Forms
+* Database operations
+* Document uploads
+* AI functionality
+* Search
+* Knowledge Base
+* Templates
+* Email
+* Billing
+* Workflows
+* Audit logging
+
+Run the existing tests where available.
+
+Fix regressions caused by this polish pass.
+
+---
+
+# 21. FINAL QUALITY STANDARD
+
+When finished, the application should pass this test:
+
+"If a senior partner at a professional South African law firm opened APZ Legal for the first time, would the interface look polished, trustworthy, coherent and production-ready?"
+
+If the answer is no, continue polishing.
+
+Do not stop after fixing obvious spelling mistakes.
+
+This is the FINAL presentation-quality pass before the project leaves Replit.
+
+At the end, provide a concise report containing:
+
+1. UI/UX issues found
+2. Issues fixed
+3. Copy/text corrections made
+4. Button/action corrections made
+5. Responsive issues fixed
+6. PRD alignment corrections made
+7. Any remaining issues
+8. Any functionality that should NOT be changed during migration
+9. Confirmation that the project is ready for export/migration
+
+IMPORTANT:
+
+Do not tell me something is fixed unless you actually inspect and fix it.
+
+Do not simply provide recommendations.
+
+MAKE THE CHANGES IN THE CODEBASE.

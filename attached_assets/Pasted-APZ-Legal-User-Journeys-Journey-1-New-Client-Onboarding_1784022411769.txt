@@ -1,0 +1,215 @@
+APZ Legal - User Journeys
+Journey 1: New Client Onboarding &amp; Matter Creation
+Actor
+Attorney / Legal Secretary
+Objective
+Create a new client profile, complete compliance checks, and open a legal matter.
+Flow
+1. User logs into APZ Legal.
+2. User navigates to Clients.
+3. User selects &quot;Create New Client&quot;.
+4. User captures:
+o Personal details
+o Contact information
+o Identification information
+o Company information (if applicable)
+5. User uploads FICA documents.
+6. System validates required documentation.
+7. User submits client profile.
+8. System performs conflict check.
+9. Potential conflicts are flagged.
+10. Partner reviews conflict results.
+11. Partner approves matter creation.
+12. Matter is created.
+13. Matter workspace is generated.
+14. Attorney begins working on the matter.
+Outcome
+Client successfully onboarded and matter opened.
+
+Journey 2: AI Assisted Contract Drafting
+
+Actor
+Attorney
+Objective
+Generate a first draft of a legal contract.
+Flow
+1. Attorney opens a matter.
+2. Attorney selects AI Legal Assistant.
+3. Attorney chooses:
+o Contract type
+o Jurisdiction
+o Relevant clauses
+4. AI generates draft.
+5. System displays:
+o Draft document
+o Confidence score
+o Citation references
+6. Attorney reviews draft.
+7. Attorney edits content.
+8. Document saved to matter.
+9. Approval workflow initiated.
+Outcome
+Draft contract prepared and submitted for review.
+Added
+● AI risk classification display
+● Citation verification step before review submission
+● Mandatory AI content tagging
+
+Journey 3: Document Approval Workflow
+Actor
+
+Partner
+Objective
+Approve legal documentation before client release.
+Flow
+1. Attorney submits document for approval.
+2. Partner receives notification.
+3. Partner opens document.
+4. Partner reviews:
+o Content
+o AI-generated sections
+o Citations
+5. Partner chooses:
+o Approve
+o Reject
+o Request Changes
+6. System records decision.
+7. Audit trail updated.
+Outcome
+Document approved or returned for revision.
+
+Journey 4: Legal Research Using AI
+Actor
+Attorney
+Objective
+Research a legal issue using firm knowledge and external legal sources.
+Flow
+1. Attorney opens Research Module.
+2. Attorney enters legal query.
+3. System searches:
+
+o Internal precedents
+o Knowledge Base
+o Case law
+o Legislation
+4. AI summarises findings.
+5. AI provides:
+o Case references
+o Relevant legislation
+o Suggested precedents
+6. Attorney saves findings to matter.
+Outcome
+Research completed and attached to matter.
+Enhanced :
+● AI confidence scoring added to results
+● Research traceability saved to matter timeline
+
+Journey 5: Email Discovery &amp; Matter Linking
+Actor
+Legal Secretary
+Objective
+Associate incoming emails with the correct matter.
+Flow
+1. Email received via Outlook or Microsoft 365.
+2. APZ Legal imports email.
+3. System suggests related matter.
+4. User confirms association.
+5. Attachments extracted automatically.
+6. Email added to matter timeline.
+7. AI generates draft response.
+
+8. User reviews and sends response.
+Outcome
+Matter communication history maintained.
+
+Journey 6: Time Tracking &amp; Billing
+Actor
+Attorney
+Objective
+Capture billable time for legal work.
+Flow
+1. Attorney opens matter.
+2. Attorney starts timer.
+3. Attorney performs legal work.
+4. Timer stopped upon completion.
+5. Activity description added.
+6. Time entry linked to matter.
+7. Billing team reviews entries.
+8. Invoice generated.
+Outcome
+Billable time captured accurately.
+
+Journey 7: Digital Signature Workflow
+Actor
+Attorney &amp; Client
+Objective
+Obtain legally binding signatures.
+Flow
+1. Attorney uploads final document.
+2. Attorney selects &quot;Send for Signature&quot;.
+
+3. APZ Sign workflow created.
+4. Client receives secure signing link.
+5. Client reviews document.
+6. Client signs electronically.
+7. Signature certificate generated.
+8. Signed document stored in matter.
+Outcome
+Document legally executed.
+
+Journey 8: Compliance Audit Review
+Actor
+Compliance Officer
+Objective
+Review firm activity for compliance.
+Flow
+1. Compliance Officer accesses Audit Module.
+2. Officer reviews:
+o User activity
+o Matter activity
+o AI activity
+o Approval history
+3. Officer filters by date range.
+4. Compliance report generated.
+5. Findings exported.
+Outcome
+Regulatory compliance maintained.
+
+Journey 9: Knowledge Base Contribution
+Actor
+
+Senior Partner
+Objective
+Add approved legal knowledge to the firm&#39;s repository.
+Flow
+1. Partner opens Knowledge Base.
+2. Partner uploads:
+o Templates
+o Legal opinions
+o Internal guidance
+3. Partner categorises content.
+4. Content marked as Approved.
+5. AI indexing initiated.
+6. Content becomes available to legal staff.
+Outcome
+Institutional knowledge preserved and searchable.
+
+Journey 10: Client Portal Interaction (Phase 2)
+Actor
+Client
+Objective
+Track matter progress and exchange documents.
+Flow
+1. Client logs into Client Portal.
+2. Client views active matters.
+3. Client reviews matter status.
+4. Client uploads requested documents.
+5. Client signs pending agreements.
+6. Client views invoices.
+7. Client communicates securely with attorney.
+
+Outcome
+Improved client transparency and communication.
+Enhanced
+● Activity logging visible to attornys
+● Document access audit trail

@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/"
+title = "APZ Legal"
+version = "1.0.0"
+id = "artifacts/apz-legal"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18593
+
+[services.development]
+run = "pnpm --filter @workspace/apz-legal run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/apz-legal", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/apz-legal/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18593"
+BASE_PATH = "/"

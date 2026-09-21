@@ -1,0 +1,27 @@
+The current light mode does not look professional enough and feels like the dark theme has simply been converted into light colours.
+
+Please refine the light mode across the entire APZ Legal application so it feels intentionally designed as a **professional, modern legal/enterprise interface**.
+
+Do not change the existing dark mode.
+
+For light mode:
+
+* Use a clean, sophisticated neutral/white foundation rather than harsh pure white everywhere.
+* Create clear hierarchy between the page background, cards, panels, navigation, inputs and elevated surfaces.
+* Use subtle borders and restrained shadows instead of heavy boxes.
+* Ensure text has strong but comfortable contrast and clear hierarchy.
+* Keep the existing APZ Legal accent colours, but use them selectively rather than making the interface overly colourful.
+* Make tables, forms, dashboards, sidebars, modals and document/workspace areas feel cohesive.
+* Ensure disabled, hover, active, selected, error, warning and success states are clearly distinguishable.
+* Make inputs and controls look polished and consistent.
+* Avoid excessive rounded cards, excessive shadows, overly bright backgrounds, gradients or "playful" styling.
+* Maintain the existing professional/legal character of the application.
+* Ensure the light theme works consistently across every module rather than only the main dashboard.
+
+The goal is for light mode to feel like a **purposefully designed APZ Legal light theme**, not an inverted version of dark mode.
+
+Please inspect the existing dark theme and current light theme first, identify what is causing the light mode to look visually inconsistent, and then refine the light theme systematically using the existing design system/theme variables where possible.
+
+Do not redesign the application or change layouts/functionality. This is a visual refinement of the light theme only.
+
+After making the changes, check the major screens including Dashboard, Matters, Matter Workspace, Documents, Legal AI, Research, Tasks, Calendar, Billing, Admin, Settings and Dev Mode to ensure the light theme is consistent throughout.
