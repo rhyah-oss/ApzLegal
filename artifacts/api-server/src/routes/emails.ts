@@ -1,6 +1,7 @@
+import { trustedIngestion, InboundEmailBody } from "../lib/trusted-ingestion";
 import { Router, type IRouter, type Request, type Response } from "express";
 import { and, desc, eq, inArray, isNull } from "drizzle-orm";
-import { db, documentsTable, emailAttachmentsTable, emailLinkCandidatesTable, emailThreadsTable, emailsTable } from "@workspace/db";
+import { db, documentsTable, emailAttachmentsTable, emailLinkCandidatesTable, emailThreadsTable, emailsTable, auditLogsTable } from "@workspace/db";
 import { getCurrentUser, logAudit } from "../lib/context";
 import {
   getAccessibleMatter,
@@ -15,7 +16,7 @@ import {
 } from "../lib/email-service";
 import { ObjectNotFoundError, ObjectStorageService } from "../lib/objectStorage";
 import { Readable } from "stream";
-import { PARTNER_ROLES, requireRole } from "../lib/permissions";
+import { PARTNER_ROLES, LEGAL_AUTHOR_ROLES, requireRole } from "../lib/permissions";
 
 const router: IRouter = Router();
 const objectStorageService = new ObjectStorageService();
@@ -52,23 +53,15 @@ router.post("/emails/ingest", async (req, res): Promise<void> => {
     });
     return;
   }
-  const body = req.body ?? {};
-  const receivedAt = new Date(String(body.receivedAt ?? ""));
-  const sentAt = body.sentAt ? new Date(String(body.sentAt)) : undefined;
-  if (!body.provider || !body.externalMessageId || !body.externalThreadId || !body.senderEmail || isNaN(receivedAt.getTime())) {
-    res.status(400).json({ error: "provider, externalMessageId, externalThreadId, senderEmail and a valid receivedAt are required." });
-    return;
+  if (!trustedIngestion(req.headers["x-email-ingestion-token"], process.env.EMAIL_INGESTION_SECRET)) {
+    res.status(403).json({ error: "Trusted ingestion source required", code: "INGESTION_SOURCE_REQUIRED" }); return;
+  }
+  const parsed = InboundEmailBody.safeParse(req.body);
+  if (!parsed.success || parsed.data.provider !== process.env.EMAIL_PROVIDER_NAME) {
+    res.status(400).json({ error: "Invalid provider email payload" }); return;
   }
   try {
-    const result = await ingestNormalizedEmail({
-      ...body,
-      provider: String(body.provider),
-      externalMessageId: String(body.externalMessageId),
-      externalThreadId: String(body.externalThreadId),
-      senderEmail: String(body.senderEmail),
-      receivedAt,
-      sentAt,
-    } as NormalizedInboundEmail);
+    const result = await ingestNormalizedEmail(parsed.data);
     await logAudit({
       action: result.duplicate ? "email_ingest_duplicate" : "email_ingested",
       entityType: "email",
@@ -80,8 +73,8 @@ router.post("/emails/ingest", async (req, res): Promise<void> => {
     });
     res.status(result.duplicate ? 200 : 201).json(result);
   } catch (error: any) {
-    req.log.error({ err: error }, "Email ingestion failed");
-    res.status(502).json({ error: error?.message ?? "Unable to ingest normalized email.", code: "EMAIL_INGESTION_FAILED" });
+    req.log.error("Email ingestion failed");
+    res.status(502).json({ error: "Unable to ingest normalized email.", code: "EMAIL_INGESTION_FAILED" });
   }
 });
 
@@ -337,7 +330,7 @@ router.get("/email-attachments/:attachmentId", async (req, res): Promise<void> =
 });
 
 router.post("/matters/:matterId/emails/:emailId/attachments/:attachmentId/document", async (req, res): Promise<void> => {
-  const user = await requireAuthenticated(req, res);
+  const user = await requireRole(req, res, LEGAL_AUTHOR_ROLES, "Only legal staff may promote attachments.");
   if (!user) return;
   const matterId = Number(req.params.matterId);
   const emailId = Number(req.params.emailId);
@@ -347,24 +340,21 @@ router.post("/matters/:matterId/emails/:emailId/attachments/:attachmentId/docume
     res.status(404).json({ error: "Email not found in this Matter." });
     return;
   }
-  const [attachment] = await db.select().from(emailAttachmentsTable).where(and(
-    eq(emailAttachmentsTable.id, attachmentId),
-    eq(emailAttachmentsTable.emailId, emailId),
-  ));
+  const result = await db.transaction(async tx => {
+  const [attachment] = await tx.select().from(emailAttachmentsTable).where(and(
+    eq(emailAttachmentsTable.id, attachmentId), eq(emailAttachmentsTable.emailId, emailId),
+  )).for("update");
   if (!attachment) {
-    res.status(404).json({ error: "Attachment not found on this email." });
-    return;
+    return { status: 404, body: { error: "Attachment not found on this email." } };
   }
   if (attachment.documentId) {
-    const [existing] = await db.select().from(documentsTable).where(eq(documentsTable.id, attachment.documentId));
-    res.json(existing ?? { documentId: attachment.documentId });
-    return;
+    const [existing] = await tx.select().from(documentsTable).where(eq(documentsTable.id, attachment.documentId));
+    return { status: 200, body: existing ?? { documentId: attachment.documentId } };
   }
   if (!attachment.fileObjectPath) {
-    res.status(409).json({ error: "The attachment has no private stored object to promote.", code: "ATTACHMENT_OBJECT_REQUIRED" });
-    return;
+    return { status: 409, body: { error: "The attachment has no private stored object to promote.", code: "ATTACHMENT_OBJECT_REQUIRED" } };
   }
-  const [document] = await db.insert(documentsTable).values({
+  const [document] = await tx.insert(documentsTable).values({
     matterId,
     title: req.body?.title ? String(req.body.title).slice(0, 255) : attachment.filename,
     documentType: "correspondence",
@@ -377,14 +367,13 @@ router.post("/matters/:matterId/emails/:emailId/attachments/:attachmentId/docume
     createdById: user.id,
   }).returning();
   if (!document) {
-    res.status(500).json({ error: "Unable to create the governed Matter document." });
-    return;
+    throw new Error("Unable to create governed document");
   }
-  const [updatedAttachment] = await db.update(emailAttachmentsTable)
+  const [updatedAttachment] = await tx.update(emailAttachmentsTable)
     .set({ documentId: document.id })
     .where(eq(emailAttachmentsTable.id, attachment.id))
     .returning();
-  await logAudit({
+  await tx.insert(auditLogsTable).values({
     action: "email_attachment_promoted_to_document",
     entityType: "document",
     entityId: document.id,
@@ -393,7 +382,9 @@ router.post("/matters/:matterId/emails/:emailId/attachments/:attachmentId/docume
     details: `Governed Matter document created from Email ${emailId}; original attachment remains traceable.`,
     ipAddress: req.ip,
   });
-  res.status(201).json({ document, attachment: updatedAttachment ?? attachment });
+  return { status: 201, body: { document, attachment: updatedAttachment ?? attachment } };
+  });
+  res.status(result.status).json(result.body);
 });
 
 export default router;

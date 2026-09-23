@@ -10,6 +10,5 @@ export type ProviderStatusUpdateInputStatus = typeof ProviderStatusUpdateInputSt
 
 
 export const ProviderStatusUpdateInputStatus = {
-  provider_confirmed: 'provider_confirmed',
   failed: 'failed',
 } as const;

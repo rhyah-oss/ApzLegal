@@ -10,6 +10,9 @@ import { retrieveForResearch } from "../lib/retrieval-service";
 import { buildResearchContext } from "../lib/context-builder";
 import { buildCitations, formatCitationsForStorage, buildSourceSummary } from "../lib/citation-service";
 
+import { hasMatterAccess } from "../lib/permissions";
+import { recordResearchProviderFailure } from "../lib/metrics";
+
 const router: IRouter = Router();
 
 // ── Research sources (PRD v2, User Journey 4) ────────────────────────────────
@@ -104,7 +107,7 @@ router.post("/research/query", async (req, res): Promise<void> => {
   }
 
   const [matter] = await db.select().from(mattersTable).where(eq(mattersTable.id, mid));
-  if (!matter) { res.status(404).json({ error: "Matter not found" }); return; }
+  if (!matter || !hasMatterAccess(user, matter)) { res.status(404).json({ error: "Matter not found" }); return; }
 
   // Semantic retrieval: search matter documents and approved firm knowledge.
   const retrievedChunks = await retrieveForResearch(req, {
@@ -204,6 +207,7 @@ Respond with a single JSON object:
       aiStatus = "ok";
     } catch (err: any) {
       clearTimeout(aiTimeoutHandle);
+      recordResearchProviderFailure();
       const errMsg = [
         err?.message,
         err?.error?.message,

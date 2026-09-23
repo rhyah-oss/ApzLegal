@@ -9,6 +9,7 @@ import type { AiOutputCitationStatus } from './aiOutputCitationStatus';
 import type { AiOutputParams } from './aiOutputParams';
 import type { AiOutputReviewStatus } from './aiOutputReviewStatus';
 import type { AiOutputRiskLevel } from './aiOutputRiskLevel';
+import type { AiOutputSourcesUsedItem } from './aiOutputSourcesUsedItem';
 
 export interface AiOutput {
   id: number;
@@ -22,6 +23,12 @@ export interface AiOutput {
   params?: AiOutputParams;
   query: string;
   response: string;
+  /** @nullable */
+  retrievalMode?: string | null;
+  /** @minimum 0 */
+  chunksRetrieved?: number;
+  /** @nullable */
+  sourcesUsed?: AiOutputSourcesUsedItem[] | null;
   /** @nullable */
   model?: string | null;
   /** @nullable */

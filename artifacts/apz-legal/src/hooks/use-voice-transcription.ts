@@ -109,8 +109,8 @@ export function useVoiceTranscription(onTranscript: (text: string) => void) {
         return
       }
 
-      const recorder = new MediaRecorder(stream, { mimeType })
       streamRef.current = stream
+      const recorder = new MediaRecorder(stream, { mimeType })
       recorderRef.current = recorder
       chunksRef.current = []
       recorder.ondataavailable = (event) => {

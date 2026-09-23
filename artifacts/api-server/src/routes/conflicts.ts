@@ -1,3 +1,4 @@
+import { pagination } from "../lib/pagination";
 import { Router, type IRouter } from "express";
 import { tryTransitionMatter } from "../lib/matter-lifecycle";
 import {
@@ -10,7 +11,7 @@ import {
   knowledgeItemsTable,
   notificationsTable,
 } from "@workspace/db";
-import { eq, ilike, and, or, desc, type SQL } from "drizzle-orm";
+import { eq, ilike, and, or, desc, inArray, type SQL } from "drizzle-orm";
 import {
   RunConflictCheckBody,
   ListConflictsQueryParams,
@@ -349,6 +350,8 @@ router.post("/conflicts/:id/review", async (req, res): Promise<void> => {
 });
 
 router.get("/conflicts", async (req, res): Promise<void> => {
+  const page = pagination(req, res);
+  if (!page) return;
   const params = ListConflictsQueryParams.safeParse(req.query);
   if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
 
@@ -361,14 +364,12 @@ router.get("/conflicts", async (req, res): Promise<void> => {
     .select()
     .from(conflictsTable)
     .where(conditions.length ? and(...conditions) : undefined)
-    .orderBy(desc(conflictsTable.checkedAt));
+    .orderBy(desc(conflictsTable.checkedAt), conflictsTable.id).limit(page.limit).offset(page.offset);
 
-  const enriched = await Promise.all(records.map(async (r) => {
-    let reviewedByName: string | null = null;
-    if (r.reviewedById) {
-      const [u] = await db.select().from(usersTable).where(eq(usersTable.id, r.reviewedById));
-      reviewedByName = u?.name ?? null;
-    }
+  const reviewerIds = records.map((record) => record.reviewedById).filter((id): id is number => id != null);
+  const reviewers = reviewerIds.length ? await db.select().from(usersTable).where(inArray(usersTable.id, reviewerIds)) : [];
+  const enriched = records.map((r) => {
+    const reviewedByName = r.reviewedById == null ? null : reviewers.find((u) => u.id === r.reviewedById)?.name ?? null;
     return {
       id: r.id,
       matterId: r.matterId,
@@ -384,7 +385,7 @@ router.get("/conflicts", async (req, res): Promise<void> => {
       reviewedAt: r.reviewedAt,
       checkedAt: r.checkedAt,
     };
-  }));
+  });
 
   res.json(enriched);
 });

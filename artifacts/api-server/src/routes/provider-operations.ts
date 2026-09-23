@@ -1,3 +1,4 @@
+import { pagination } from "../lib/pagination";
 import { Router, type IRouter } from "express";
 import crypto from "crypto";
 import { and, desc, eq } from "drizzle-orm";
@@ -53,6 +54,8 @@ function operationTitle(operation: typeof providerOperationsTable.$inferSelect):
 }
 
 router.get("/provider-operations", async (req, res): Promise<void> => {
+  const page = pagination(req, res);
+  if (!page) return;
   const user = await getCurrentUser(req);
   if (!user) { res.status(401).json({ error: "Not authenticated" }); return; }
   const kind = req.query.kind === "email" || req.query.kind === "signature" ? String(req.query.kind) : undefined;
@@ -66,7 +69,7 @@ router.get("/provider-operations", async (req, res): Promise<void> => {
   ];
   const operations = await db.select().from(providerOperationsTable)
     .where(conditions.length ? and(...conditions) : undefined)
-    .orderBy(desc(providerOperationsTable.createdAt));
+    .orderBy(desc(providerOperationsTable.createdAt), providerOperationsTable.id).limit(page.limit).offset(page.offset);
   res.json(operations);
 });
 
@@ -118,6 +121,12 @@ router.post("/provider-operations/:id/status", async (req, res): Promise<void> =
     errorMessage: z.string().max(2000).optional(),
   }).safeParse(req.body);
   if (!Number.isInteger(id) || !parsed.success) { res.status(400).json({ error: "Invalid provider status update." }); return; }
+  // A staff session and caller-supplied event ID are not provider verification.
+  // Confirmation must come from a verified provider integration, not this UI route.
+  if (parsed.data.status === "provider_confirmed") {
+    res.status(403).json({ error: "Provider confirmation requires a verified provider callback.", code: "TRUSTED_PROVIDER_REQUIRED" });
+    return;
+  }
   const [operation] = await db.select().from(providerOperationsTable).where(eq(providerOperationsTable.id, id));
   if (!operation) { res.status(404).json({ error: "Provider operation not found." }); return; }
   if (operation.providerEventId === parsed.data.providerEventId && operation.providerName === parsed.data.providerName) { res.json(operation); return; }
@@ -135,10 +144,6 @@ router.post("/provider-operations/:id/status", async (req, res): Promise<void> =
   }
   if (operation.status !== "queued") {
     res.status(409).json({ error: "This provider operation already has a terminal status.", code: "PROVIDER_OPERATION_TERMINAL" });
-    return;
-  }
-  if (parsed.data.status === "provider_confirmed" && !parsed.data.providerRequestId) {
-    res.status(400).json({ error: "Provider confirmation requires a provider request ID.", code: "PROVIDER_REQUEST_ID_REQUIRED" });
     return;
   }
   if (operation.providerRequestId && parsed.data.providerRequestId && operation.providerRequestId !== parsed.data.providerRequestId) {

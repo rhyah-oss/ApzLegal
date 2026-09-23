@@ -1,8 +1,9 @@
+import { pagination } from "../lib/pagination";
 import { Router, type IRouter } from "express";
 import {
   db, invoicesTable, clientsTable, mattersTable, timeEntriesTable, usersTable, notificationsTable,
 } from "@workspace/db";
-import { eq, and, inArray, type SQL } from "drizzle-orm";
+import { eq, and, inArray, sql, type SQL } from "drizzle-orm";
 import { getCurrentUser, logAudit } from "../lib/context";
 import { BILLING_ROLES, PARTNER_ROLES, requireRole } from "../lib/permissions";
 import {
@@ -32,15 +33,21 @@ async function auditInvoice(req: any, inv: typeof invoicesTable.$inferSelect, ac
   });
 }
 
-async function enrichInvoice(inv: typeof invoicesTable.$inferSelect) {
-  const [client] = await db.select().from(clientsTable).where(eq(clientsTable.id, inv.clientId));
+async function enrichInvoice(inv: typeof invoicesTable.$inferSelect, cached?: {
+  clients: (typeof clientsTable.$inferSelect)[];
+  matters: (typeof mattersTable.$inferSelect)[];
+  users: (typeof usersTable.$inferSelect)[];
+}) {
+  const clients = cached?.clients ?? await db.select().from(clientsTable).where(eq(clientsTable.id, inv.clientId));
+  const client = clients.find((item) => item.id === inv.clientId);
   let matterTitle: string | null = null;
   if (inv.matterId) {
-    const [m] = await db.select().from(mattersTable).where(eq(mattersTable.id, inv.matterId));
+    const matters = cached?.matters ?? await db.select().from(mattersTable).where(eq(mattersTable.id, inv.matterId));
+    const m = matters.find((item) => item.id === inv.matterId);
     matterTitle = m?.title ?? null;
   }
   const ids = [inv.createdById, inv.reviewedById].filter((x): x is number => x != null);
-  const users = ids.length ? await db.select().from(usersTable).where(inArray(usersTable.id, ids)) : [];
+  const users = cached?.users ?? (ids.length ? await db.select().from(usersTable).where(inArray(usersTable.id, ids)) : []);
   const nameOf = (id: number | null) => (id ? users.find((u) => u.id === id)?.name ?? null : null);
   return {
     ...inv,
@@ -54,12 +61,14 @@ async function enrichInvoice(inv: typeof invoicesTable.$inferSelect) {
   };
 }
 
-async function nextInvoiceNumber() {
-  const count = await db.$count(invoicesTable);
-  return `INV-${new Date().getFullYear()}-${String(count + 1).padStart(5, "0")}`;
+export async function nextInvoiceNumber(executor: Pick<typeof db, "execute"> = db) {
+  const result = await executor.execute<{ value: string }>(sql`SELECT nextval('apz_invoice_number_seq')::text AS value`);
+  return `INV-${new Date().getFullYear()}-${String(result.rows[0].value).padStart(5, "0")}`;
 }
 
 router.get("/invoices", async (req, res): Promise<void> => {
+  const page = pagination(req, res);
+  if (!page) return;
   const current = await requireUser(req, res);
   if (!current) return;
   const params = ListInvoicesQueryParams.safeParse(req.query);
@@ -70,11 +79,17 @@ router.get("/invoices", async (req, res): Promise<void> => {
   if (params.data.matterId) conditions.push(eq(invoicesTable.matterId, params.data.matterId));
   if (params.data.status) conditions.push(eq(invoicesTable.status, params.data.status));
 
-  const invoices = await db.select().from(invoicesTable).where(conditions.length ? and(...conditions) : undefined).orderBy(invoicesTable.createdAt);
-  const visible = ["candidate_attorney", "paralegal", "secretary"].includes(current.role)
-    ? invoices.filter(invoice => invoice.createdById === current.id)
-    : invoices;
-  res.json(await Promise.all(visible.map(enrichInvoice)));
+  if (["candidate_attorney", "paralegal", "secretary"].includes(current.role)) conditions.push(eq(invoicesTable.createdById, current.id));
+  const invoices = await db.select().from(invoicesTable).where(conditions.length ? and(...conditions) : undefined).orderBy(invoicesTable.createdAt, invoicesTable.id).limit(page.limit).offset(page.offset);
+  const clientIds = invoices.map((invoice) => invoice.clientId);
+  const matterIds = invoices.map((invoice) => invoice.matterId).filter((id): id is number => id != null);
+  const userIds = invoices.flatMap((invoice) => [invoice.createdById, invoice.reviewedById]).filter((id): id is number => id != null);
+  const [clients, matters, users] = await Promise.all([
+    clientIds.length ? db.select().from(clientsTable).where(inArray(clientsTable.id, clientIds)) : Promise.resolve([]),
+    matterIds.length ? db.select().from(mattersTable).where(inArray(mattersTable.id, matterIds)) : Promise.resolve([]),
+    userIds.length ? db.select().from(usersTable).where(inArray(usersTable.id, userIds)) : Promise.resolve([]),
+  ]);
+  res.json(await Promise.all(invoices.map((invoice) => enrichInvoice(invoice, { clients, matters, users }))));
 });
 
 router.post("/invoices", async (req, res): Promise<void> => {
@@ -118,7 +133,7 @@ router.post("/invoices/generate", async (req, res): Promise<void> => {
     const subtotal = entries.reduce((s, e) => s + parseFloat(e.total as string), 0);
     const tax = Math.round(subtotal * 15) / 100; // 15% VAT
     const [invoice] = await tx.insert(invoicesTable).values({
-      invoiceNumber: await nextInvoiceNumber(),
+      invoiceNumber: await nextInvoiceNumber(tx),
       clientId: matter.clientId,
       matterId,
       status: "draft",
@@ -145,12 +160,16 @@ router.post("/invoices/generate", async (req, res): Promise<void> => {
 });
 
 router.get("/invoices/:id", async (req, res): Promise<void> => {
-  if (!(await requireUser(req, res))) return;
+  const current = await requireUser(req, res);
+  if (!current) return;
   const params = GetInvoiceParams.safeParse(req.params);
   if (!params.success) { res.status(400).json({ error: "Invalid id" }); return; }
 
   const [invoice] = await db.select().from(invoicesTable).where(eq(invoicesTable.id, params.data.id));
   if (!invoice) { res.status(404).json({ error: "Invoice not found" }); return; }
+  if (["candidate_attorney", "paralegal", "secretary"].includes(current.role) && invoice.createdById !== current.id) {
+    res.status(404).json({ error: "Invoice not found" }); return;
+  }
   res.json(await enrichInvoice(invoice));
 });
 

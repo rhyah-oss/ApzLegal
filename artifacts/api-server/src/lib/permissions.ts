@@ -46,3 +46,7 @@ export async function requireRole(
   }
   return user;
 }
+/** Existing matter assignment policy, shared by document and research access. */
+export function hasMatterAccess(user: CurrentUser | null, matter: { assignedToId: number | null }): boolean {
+  return !!user && (!["candidate_attorney", "paralegal", "legal_secretary", "secretary"].includes(user.role) || matter.assignedToId === user.id);
+}

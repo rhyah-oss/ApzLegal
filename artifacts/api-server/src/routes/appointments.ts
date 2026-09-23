@@ -47,21 +47,23 @@ router.get("/appointments", async (req, res): Promise<void> => {
 
 // GET /api/appointments/today
 router.get("/appointments/today", async (req, res): Promise<void> => {
+  const user = await getCurrentUser(req);
   const today = new Date().toISOString().split("T")[0];
   const rows = await db.select().from(appointmentsTable)
     .where(eq(appointmentsTable.date, today))
     .orderBy(appointmentsTable.startTime);
-  const enriched = await Promise.all(rows.map(enrichAppointment));
+  const enriched = await Promise.all(rows.filter(row => !user || !["candidate_attorney", "paralegal", "secretary"].includes(user.role) || row.assignedToId === user.id || row.createdById === user.id).map(enrichAppointment));
   res.json(enriched);
 });
 
 // GET /api/appointments/upcoming
 router.get("/appointments/upcoming", async (req, res): Promise<void> => {
+  const user = await getCurrentUser(req);
   const today = new Date().toISOString().split("T")[0];
   const rows = await db.select().from(appointmentsTable)
     .where(sql`date >= ${today}`)
     .orderBy(appointmentsTable.date, appointmentsTable.startTime);
-  res.json(await Promise.all(rows.map(enrichAppointment)));
+  res.json(await Promise.all(rows.filter(row => !user || !["candidate_attorney", "paralegal", "secretary"].includes(user.role) || row.assignedToId === user.id || row.createdById === user.id).map(enrichAppointment)));
 });
 
 // GET /api/appointments/:id
@@ -70,6 +72,10 @@ router.get("/appointments/:id", async (req, res): Promise<void> => {
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
   const [row] = await db.select().from(appointmentsTable).where(eq(appointmentsTable.id, id));
   if (!row) { res.status(404).json({ error: "Not found" }); return; }
+  const user = await getCurrentUser(req);
+  if (user && ["candidate_attorney", "paralegal", "secretary"].includes(user.role) && row.assignedToId !== user.id && row.createdById !== user.id) {
+    res.status(404).json({ error: "Not found" }); return;
+  }
   res.json(await enrichAppointment(row));
 });
 

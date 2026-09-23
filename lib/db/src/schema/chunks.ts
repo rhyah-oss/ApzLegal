@@ -34,7 +34,7 @@ export const documentChunksTable = pgTable("document_chunks", {
 }, (table) => ({
   documentIdIdx: index("idx_document_chunks_document_id").on(table.documentId),
   matterIdIdx: index("idx_document_chunks_matter_id").on(table.matterId),
-  embeddingIdx: index("idx_document_chunks_embedding").on(table.embedding),
+  embeddingIdx: index("idx_document_chunks_embedding_cosine").using("ivfflat", table.embedding.op("vector_cosine_ops")).with({ lists: 100 }),
   statusIdx: index("idx_document_chunks_indexing_status").on(table.indexingStatus),
   sourceTypeIdx: index("idx_document_chunks_source_type").on(table.metadata),
 }));
@@ -70,7 +70,7 @@ export const knowledgeChunksTable = pgTable("knowledge_chunks", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 }, (table) => ({
   knowledgeItemIdIdx: index("idx_knowledge_chunks_knowledge_item_id").on(table.knowledgeItemId),
-  embeddingIdx: index("idx_knowledge_chunks_embedding").on(table.embedding),
+  embeddingIdx: index("idx_knowledge_chunks_embedding_cosine").using("ivfflat", table.embedding.op("vector_cosine_ops")).with({ lists: 100 }),
   statusIdx: index("idx_knowledge_chunks_indexing_status").on(table.indexingStatus),
   sourceTypeIdx: index("idx_knowledge_chunks_source_type").on(table.metadata),
 }));

@@ -117,7 +117,7 @@ function ComplianceBanner({ status, blockReason }: { status: string; blockReason
           COMPLIANCE STATUS: {meta.label.toUpperCase()}
         </p>
         {blockReason && <p style={{ fontSize: 11, color: meta.color, opacity: 0.8, margin: "2px 0 0" }}>Reason: {blockReason}</p>}
-        {status === "blocked" && (
+        {status !== "compliant" && (
           <p style={{ fontSize: 11, color: meta.color, opacity: 0.7, margin: "2px 0 0" }}>
             Matter creation is blocked until compliance is resolved.
           </p>
@@ -291,7 +291,7 @@ export default function ClientDetailPage() {
   const compMeta         = COMPLIANCE_META[complianceStatus as keyof typeof COMPLIANCE_META] ?? COMPLIANCE_META.review_required
   const riskMeta         = RISK_META[riskLevel as keyof typeof RISK_META] ?? RISK_META.low
   const CompIcon         = compMeta.icon
-  const canCreateMatter  = complianceStatus !== "blocked"
+  const canCreateMatter  = complianceStatus === "compliant"
 
   const TABS = [
     { key: "overview",   label: "Overview"         },

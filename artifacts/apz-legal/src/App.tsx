@@ -32,6 +32,9 @@ import FicaPage          from '@/pages/fica/index';
 import ActionsPage         from '@/pages/actions/index';
 import { Layout }        from '@/components/layout/Layout';
 
+import { installPagedFetch } from "@/lib/paged-fetch";
+import { installSessionExpiryHandler } from "@/lib/session-expiry";
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -46,6 +49,9 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+installPagedFetch();
+installSessionExpiryHandler(() => queryClient.clear());
 
 function LoadingScreen() {
   return (

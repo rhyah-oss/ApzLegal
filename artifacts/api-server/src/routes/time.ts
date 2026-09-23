@@ -1,3 +1,4 @@
+import { pagination } from "../lib/pagination";
 import { Router, type IRouter } from "express";
 import { db, timeEntriesTable, mattersTable, usersTable } from "@workspace/db";
 import { eq, and, or, type SQL, sql } from "drizzle-orm";
@@ -30,6 +31,8 @@ async function enrichEntry(e: typeof timeEntriesTable.$inferSelect) {
 }
 
 router.get("/time-entries", async (req, res): Promise<void> => {
+  const page = pagination(req, res);
+  if (!page) return;
   const user = await getCurrentUser(req);
   const params = ListTimeEntriesQueryParams.safeParse(req.query);
   if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
@@ -54,7 +57,7 @@ router.get("/time-entries", async (req, res): Promise<void> => {
   }
   if (user && ["candidate_attorney", "paralegal", "legal_secretary", "secretary"].includes(user.role)) conditions.push(eq(timeEntriesTable.userId, user.id));
 
-  const entries = await db.select().from(timeEntriesTable).where(conditions.length ? and(...conditions) : undefined).orderBy(timeEntriesTable.createdAt);
+  const entries = await db.select().from(timeEntriesTable).where(conditions.length ? and(...conditions) : undefined).orderBy(timeEntriesTable.createdAt, timeEntriesTable.id).limit(page.limit).offset(page.offset);
   const enriched = await Promise.all(entries.map(enrichEntry));
   res.json(enriched);
 });

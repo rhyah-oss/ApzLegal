@@ -328,14 +328,15 @@ export class MicrosoftGraphClient {
     return { id: crypto.randomUUID() };
   }
 
-  async createSubscription(resource: string, notificationUrl: string, expirationDateTime: string): Promise<{ id: string; expirationDateTime: string }> {
+  async createSubscription(resource: string, notificationUrl: string, expirationDateTime: string, clientState: string): Promise<{ id: string; expirationDateTime: string }> {
     return this.request("/subscriptions", {
       method: "POST",
       body: JSON.stringify({
         resource,
+        changeType: "created,updated,deleted",
         notificationUrl,
         expirationDateTime,
-        clientState: crypto.randomBytes(32).toString("hex"),
+        clientState,
       }),
     });
   }

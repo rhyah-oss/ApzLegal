@@ -1,3 +1,4 @@
+import { runAsyncAction } from "@/lib/async-action"
 import { useEffect, useState } from "react"
 import { Mail, Plus, RefreshCw, RotateCcw, Search, Send, PlugZap, Unplug } from "lucide-react"
 import { T, cardStyle, pillStyle } from "@/lib/theme"
@@ -225,9 +226,9 @@ export default function EmailPage() {
           <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
             <div style={{ position: "relative", flex: 1 }}>
               <Search size={14} style={{ position: "absolute", left: 10, top: 10, color: T.textFaint }} />
-              <Input value={search} onChange={(event) => setSearch(event.target.value)} onKeyDown={(event) => event.key === "Enter" && void searchCorrespondence()} placeholder="Search all authorised correspondence…" style={{ height: 34, paddingLeft: 32, fontSize: 11 }} />
+              <Input value={search} onChange={(event) => setSearch(event.target.value)} onKeyDown={(event) => event.key === "Enter" && void runAsyncAction(() => searchCorrespondence())} placeholder="Search all authorised correspondence…" style={{ height: 34, paddingLeft: 32, fontSize: 11 }} />
             </div>
-            <Button variant="outline" size="sm" onClick={() => void searchCorrespondence()} style={{ height: 34, fontSize: 11 }}>Search</Button>
+            <Button variant="outline" size="sm" onClick={() => void runAsyncAction(() => searchCorrespondence())} style={{ height: 34, fontSize: 11 }}>Search</Button>
           </div>
           {readiness?.status !== "connected" && <p style={{ color: T.warn, fontSize: 10, margin: "10px 0 0" }}>{readiness?.message || "No provider is connected; this workspace is ready for provider configuration but will not claim live sync."}</p>}
           {correspondence.length > 0 && <div style={{ marginTop: 12, borderTop: `1px solid ${T.borderSub}` }}>{correspondence.map((email) => <div key={email.id} style={{ padding: "11px 0", borderBottom: `1px solid ${T.borderSub}` }}><div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}><strong style={{ color: T.text, fontSize: 11 }}>{email.subject || "(No subject)"}</strong><span style={{ color: T.textFaint, fontSize: 10 }}>{new Date(email.receivedAt).toLocaleString()}</span></div><div style={{ color: T.textDim, fontSize: 10, marginTop: 4 }}>From {email.senderEmail} · Matter #{email.matterId ?? "unlinked"}</div><div style={{ color: T.textFaint, fontSize: 10, marginTop: 5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{email.bodyText || "No message preview"}</div></div>)}</div>}
@@ -252,8 +253,8 @@ export default function EmailPage() {
                     <option value="">Select Matter</option>
                     {matters?.map((matter) => <option key={matter.id} value={matter.id}>{matter.reference} — {matter.title}</option>)}
                   </select>
-                  <Button size="sm" disabled={!target} onClick={() => void triageEmail(email.id, "link")} style={{ height: 30, fontSize: 10 }}>Link to Matter</Button>
-                  <Button variant="outline" size="sm" onClick={() => void triageEmail(email.id, "leave_unlinked")} style={{ height: 30, fontSize: 10 }}>Leave unlinked</Button>
+                  <Button size="sm" disabled={!target} onClick={() => void runAsyncAction(() => triageEmail(email.id, "link"))} style={{ height: 30, fontSize: 10 }}>Link to Matter</Button>
+                  <Button variant="outline" size="sm" onClick={() => void runAsyncAction(() => triageEmail(email.id, "leave_unlinked"))} style={{ height: 30, fontSize: 10 }}>Leave unlinked</Button>
                 </div>
               </div>
             })}

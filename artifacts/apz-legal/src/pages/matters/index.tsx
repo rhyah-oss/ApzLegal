@@ -15,6 +15,8 @@ import { useToast } from "@/hooks/use-toast"
 import { formatCurrency } from "@/lib/format"
 import { T } from "@/lib/theme"
 
+import { matterCreationError } from "@/lib/matter-errors"
+
 const STATUS_META: Record<string, { color: string; label: string }> = {
   lead:           { color: "#5A7FA8", label: "Lead"          },
   conflict_check: { color: "#B3833A", label: "Conflict Check" },
@@ -37,7 +39,7 @@ const TABS = [
 
 const matterSchema = z.object({
   title:        z.string().min(3),
-  clientId:     z.coerce.number().positive(),
+  clientId:     z.coerce.number().positive("Client is required"),
   description:  z.string().optional(),
   practiceArea: z.string().optional(),
   value:        z.coerce.number().optional(),
@@ -151,7 +153,7 @@ export default function MattersPage() {
         toast({ title: "Matter created" })
         setLocation(`/matters/${m.id}`)
       },
-      onError: () => toast({ title: "Error", description: "Failed to create matter.", variant: "destructive" }),
+      onError: error => toast({ title: "Error", description: matterCreationError(error), variant: "destructive" }),
     })
   }
 
@@ -186,7 +188,7 @@ export default function MattersPage() {
                 Create New Matter
               </SheetTitle>
               <p className="text-[11px] mt-1" style={{ color: T.textFaint }}>
-                Client must be FICA-compliant before a matter can proceed to Active status.
+                Client must be FICA-compliant before a matter can be created.
               </p>
             </SheetHeader>
             <Form {...form}>
@@ -196,7 +198,7 @@ export default function MattersPage() {
                     <FormLabel className="text-[11px]" style={{ color: T.textDim }}>Client *</FormLabel>
                     <Select onValueChange={v => field.onChange(Number(v))} value={field.value ? String(field.value) : undefined}>
                       <FormControl>
-                        <SelectTrigger className="h-8 text-[12px] rounded-md"
+                        <SelectTrigger ref={field.ref} onBlur={field.onBlur} className="h-8 text-[12px] rounded-md"
                           style={{ background: T.surfaceEl, border: `1px solid ${T.border}`, color: T.text }}>
                           <SelectValue placeholder="Select client…" />
                         </SelectTrigger>

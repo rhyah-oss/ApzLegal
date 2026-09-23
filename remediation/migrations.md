@@ -1,0 +1,12 @@
+# L/M — staged database remediation
+
+No migration has been run against any database. Back up and restore-test using the existing Section C process, then run these scripts in a disposable staging clone:
+
+1. `001-remediation-diagnostics.sql`: inspect orphan IDs, FICA duplicates and actual vector definitions. Capture counts securely. Production index definitions have not been verified in this task.
+2. `002-invoice-number-sequence.sql`: pause invoice writers while initializing above existing formatted invoice suffixes. Deploy the new writer only after this succeeds. PostgreSQL nextval is concurrency-safe; gaps on rollback are intentional. Do not reset the sequence during rollback. Roll back application code only while writes are paused; old count-based code remains unsafe.
+3. Review orphan/duplicate ownership with the data owner, then apply `003-relationship-integrity.sql` once. It adds non-cascading, NOT VALID FKs (new writes checked; old rows retained), indexes and FICA uniqueness. Existing duplicates cause failure, never automatic deduplication. Validate FKs separately only after approved orphan resolution. Expect table locks; schedule a maintenance window and set an appropriate lock_timeout. Rollback removes only the named constraints/indexes, never data. Drizzle schema includes FICA uniqueness; relationship migration remains explicitly managed and must not be replaced by blind schema push.
+4. `004-vector-indexes.sql`: concurrent cosine IVFFlat indexes, matching the report's intended method and the service's cosine search. Compare live names/definitions first; tune lists using actual corpus size and query plans. New names preserve existing indexes during rollout. If a concurrent build fails, inspect invalid index state before retrying. A DBA may later remove redundant old indexes after verification, separately approved.
+
+FICA code already specifies one document per client/type; uniqueness enforces that invariant under concurrent registration. Existing upload/storage metadata and paths are unchanged. Exercise concurrent uploads in staging and confirm the caller receives actionable conflict handling.
+
+Concurrency verification: create invoices simultaneously via both normal creation and time-entry generation, verify all invoice numbers are unique and follow INV-year-five-digit-minimum format. Never run the existing mutating regression suite against production. Sequence/migration runtime checks require a disposable database; none is configured by this task.

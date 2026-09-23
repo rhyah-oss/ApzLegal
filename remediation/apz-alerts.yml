@@ -1,0 +1,25 @@
+groups:
+  - name: apz-legal
+    rules:
+      - alert: ApzAppDown
+        expr: up{job="apz-legal"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: APZ metrics target is unavailable
+      - alert: ApzServerErrors
+        expr: sum(rate(apz_http_request_duration_seconds_count{status=~"5.."}[5m])) / clamp_min(sum(rate(apz_http_request_duration_seconds_count[5m])), 0.01) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+      - alert: ApzStorageFailures
+        expr: sum(increase(apz_http_request_duration_seconds_count{category="storage",status=~"5.."}[5m])) > 2
+        for: 2m
+        labels:
+          severity: critical
+      - alert: ApzAuthFailures
+        expr: sum(increase(apz_http_request_duration_seconds_count{category="auth",status=~"401|429"}[5m])) > 20
+        for: 5m
+        labels:
+          severity: warning

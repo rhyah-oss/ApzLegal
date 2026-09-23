@@ -1,3 +1,4 @@
+import { runAsyncAction } from "@/lib/async-action"
 import { useState } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react"
@@ -115,7 +116,7 @@ export default function CalendarPage() {
             </button>
           </div>
           <button
-            onClick={() => void addEvent()}
+            onClick={() => void runAsyncAction(() => addEvent())}
             className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold text-white transition-opacity hover:opacity-90"
             style={{ background: "linear-gradient(135deg, #4169E1, #00CFFF)", borderRadius: 7 }}
           >
@@ -234,8 +235,8 @@ export default function CalendarPage() {
                   {ev.time   && <p className="text-[11px]" style={{ color: T.textDim }}>{ev.time}</p>}
                   {ev.matter && <p className="mt-0.5 font-mono text-[10px]" style={{ color: T.textFaint }}>{ev.matter}</p>}
                   <div className="mt-2 flex gap-2">
-                    <button onClick={() => void editEvent(ev)} className="text-[10px]" style={{ color: T.blue }}>Edit</button>
-                    <button onClick={() => void deleteEvent(ev)} className="text-[10px]" style={{ color: T.risk }}>Delete</button>
+                    <button onClick={() => void runAsyncAction(() => editEvent(ev))} className="text-[10px]" style={{ color: T.blue }}>Edit</button>
+                    <button onClick={() => void runAsyncAction(() => deleteEvent(ev))} className="text-[10px]" style={{ color: T.risk }}>Delete</button>
                   </div>
                 </div>
               )

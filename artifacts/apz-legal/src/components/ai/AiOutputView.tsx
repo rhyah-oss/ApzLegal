@@ -1,3 +1,4 @@
+import { visiblePrompt, uniqueSources } from "@/lib/ai-presentation"
 import { useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { 
@@ -143,7 +144,7 @@ export function AiOutputView({
               <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/40 rounded-full" />
               <div className="pl-5">
                 <h3 className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">Original Prompt</h3>
-                <p className="text-sm text-foreground/90 leading-relaxed">{output.query}</p>
+                <p className="text-sm text-foreground/90 leading-relaxed">{visiblePrompt(output)}</p>
               </div>
             </div>
 
@@ -220,20 +221,20 @@ export function AiOutputView({
                <h4 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-border pb-1.5">Evidence & Context</h4>
                
                {/* RAG Retrieval Info */}
-               {(output.retrievalMode || output.chunksRetrieved > 0) && (
+               {(output.retrievalMode || (output.chunksRetrieved ?? 0) > 0) && (
                  <div className="space-y-2">
                    <div className="flex items-center justify-between text-xs">
                      <span className="text-foreground font-medium">Retrieval</span>
                      <span className="text-[10px] text-muted-foreground font-mono">{output.retrievalMode || "none"}</span>
                    </div>
-                   {output.chunksRetrieved > 0 && (
+                   {(output.chunksRetrieved ?? 0) > 0 && (
                      <div className="text-[11px] text-muted-foreground">
                        {output.chunksRetrieved} chunk(s) retrieved from authorised sources
                      </div>
                    )}
                    {output.sourcesUsed && output.sourcesUsed.length > 0 && (
                      <div className="flex flex-wrap gap-1.5 pt-1">
-                       {output.sourcesUsed.map((s: any, i: number) => (
+                       {uniqueSources(output.sourcesUsed).map((s: any, i: number) => (
                          <Badge key={i} variant="outline" className="text-[9px] border-border text-muted-foreground">
                            {s.type} {s.title ? `(${s.title})` : `#${s.id}`} {s.chunkCount ? `×${s.chunkCount}` : ""}
                          </Badge>

@@ -2,8 +2,10 @@ import { Router, type IRouter } from "express";
 import { db, usersTable, sessionsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { LoginBody } from "@workspace/api-zod";
+import { z } from "zod";
 import crypto from "crypto";
 import { getCurrentUser, logAudit, sessionTokenHash } from "../lib/context";
+import { resolveDevAccount, decideDevLogin, type DevAccount } from "../lib/devAccounts";
 
 const router: IRouter = Router();
 
@@ -126,6 +128,84 @@ router.post("/auth/logout", async (req, res): Promise<void> => {
     res.clearCookie("auth_token");
   }
   res.json({ ok: true });
+});
+
+const DevLoginBody = z.object({
+  role: z.string().min(1),
+  email: z.string().email(),
+  name: z.string().min(1),
+});
+
+const DEV_PASSWORD = "password123";
+
+router.post("/auth/dev-login", async (req, res): Promise<void> => {
+  const parsed = DevLoginBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "A valid role, email, and name are required.", code: "DEV_LOGIN_BAD_REQUEST" });
+    return;
+  }
+
+  const resolution = resolveDevAccount(parsed.data);
+  if (!resolution.ok) {
+    res.status(401).json({ error: resolution.message, code: resolution.code });
+    return;
+  }
+  const account: DevAccount = resolution.account;
+
+  const [existing] = await db.select().from(usersTable).where(eq(usersTable.email, account.email));
+  const decision = decideDevLogin(account, existing ? { id: existing.id, name: existing.name, email: existing.email, role: existing.role } : null);
+
+  if (decision.action === "reject") {
+    res.status(403).json({ error: decision.message, code: decision.code });
+    return;
+  }
+
+  let user = existing;
+  if (decision.action === "create") {
+    [user] = await db
+      .insert(usersTable)
+      .values({
+        email: account.email,
+        name: account.name,
+        role: account.role,
+        passwordHash: legacyHashPassword(DEV_PASSWORD),
+        accountStatus: "active",
+      })
+      .returning();
+  }
+
+  const token = generateToken();
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+  await db.insert(sessionsTable).values({ userId: user!.id, token: sessionTokenHash(token), expiresAt });
+
+  res.cookie("auth_token", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    expires: expiresAt,
+  });
+
+  res.json({
+    user: {
+      id: user!.id,
+      name: user!.name,
+      email: user!.email,
+      role: user!.role,
+      avatarUrl: user!.avatarUrl,
+      createdAt: user!.createdAt,
+    },
+  });
+  await logAudit({
+    action: "dev_mode_sign_in",
+    entityType: "user",
+    entityId: user!.id,
+    entityTitle: user!.name,
+    userId: user!.id,
+    details: `Dev mode quick sign-in as ${account.role}.`,
+    ipAddress: req.ip,
+  });
 });
 
 router.get("/auth/me", async (req, res): Promise<void> => {

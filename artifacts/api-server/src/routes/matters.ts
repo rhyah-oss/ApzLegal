@@ -1,3 +1,4 @@
+import { pagination } from "../lib/pagination";
 import { Router, type IRouter } from "express";
 import {
   db, mattersTable, clientsTable, usersTable, conflictsTable,
@@ -159,6 +160,8 @@ async function runOnboardingConflictScreen(
 }
 
 router.get("/matters", async (req, res): Promise<void> => {
+  const page = pagination(req, res);
+  if (!page) return;
   const current = await getCurrentUser(req);
   const params = ListMattersQueryParams.safeParse(req.query);
   if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
@@ -171,8 +174,21 @@ router.get("/matters", async (req, res): Promise<void> => {
   if (assignedTo) conditions.push(eq(mattersTable.assignedToId, assignedTo));
   if (current && ["candidate_attorney", "paralegal", "secretary"].includes(current.role)) conditions.push(eq(mattersTable.assignedToId, current.id));
 
-  const matters = await db.select().from(mattersTable).where(conditions.length ? and(...conditions) : undefined).orderBy(mattersTable.createdAt);
-  const enriched = await Promise.all(matters.map(enrichMatter));
+  const matters = await db.select().from(mattersTable).where(conditions.length ? and(...conditions) : undefined).orderBy(mattersTable.createdAt, mattersTable.id).limit(page.limit).offset(page.offset);
+  const [clients, users, conflicts] = await Promise.all([
+    matters.length ? db.select().from(clientsTable).where(inArray(clientsTable.id, matters.map(m => m.clientId))) : Promise.resolve([] as (typeof clientsTable.$inferSelect)[]),
+    matters.length ? db.select().from(usersTable).where(inArray(usersTable.id, matters.map(m => m.assignedToId).filter((id): id is number => id != null))) : Promise.resolve([] as (typeof usersTable.$inferSelect)[]),
+    matters.length ? db.selectDistinctOn([conflictsTable.matterId]).from(conflictsTable)
+      .where(inArray(conflictsTable.matterId, matters.map(m => m.id)))
+      .orderBy(conflictsTable.matterId, desc(conflictsTable.checkedAt), desc(conflictsTable.id)) : Promise.resolve([] as (typeof conflictsTable.$inferSelect)[]),
+  ]);
+  const enriched = matters.map(m => {
+    const conflictStatus = conflicts.find(c => c.matterId === m.id)?.status ?? null;
+    return { ...m, value: m.value != null ? parseFloat(m.value as string) : null,
+      clientName: clients.find(c => c.id === m.clientId)?.name ?? "Unknown",
+      assignedToName: users.find(u => u.id === m.assignedToId)?.name ?? null,
+      conflictStatus, nextAction: computeNextAction(m.status, conflictStatus, m.riskLevel) };
+  });
   res.json(enriched);
 });
 

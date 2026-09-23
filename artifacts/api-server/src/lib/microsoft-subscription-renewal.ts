@@ -53,6 +53,7 @@ async function renewSubscription(connection: any, attempt = 1): Promise<Subscrip
         "me/messages",
         notificationUrl,
         expirationDateTime,
+      clientState,
       );
 
       await db.update(emailConnectionsTable).set({

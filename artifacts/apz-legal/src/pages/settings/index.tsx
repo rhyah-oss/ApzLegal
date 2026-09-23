@@ -1,3 +1,4 @@
+import { runAsyncAction } from "@/lib/async-action"
 import { useEffect, useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useForm } from "react-hook-form"
@@ -261,7 +262,7 @@ export default function SettingsPage() {
                 ["inAppEnabled", "In-app notifications"], ["emailEnabled", "Email notifications (provider required)"],
                 ["conflictAlerts", "Conflict review alerts"], ["approvalAlerts", "Document and knowledge approvals"],
               ].map(([key, label]) => <label key={key} className="flex items-center justify-between border-b py-3 text-[12px]" style={{ borderColor: T.borderSub, color: T.text }}>
-                <span>{label}</span><input type="checkbox" checked={preferences[key] ?? true} onChange={e => void updatePreference(key, e.target.checked)} />
+                <span>{label}</span><input type="checkbox" checked={preferences[key] ?? true} onChange={e => void runAsyncAction(() => updatePreference(key, e.target.checked))} />
               </label>)}
             </div>
           </div>

@@ -30,7 +30,9 @@ import type {
   AuditLog,
   AuthResponse,
   BillingSummary,
+  ChangePassword200,
   Client,
+  ClientComplianceInput,
   ClientInput,
   ClientUpdate,
   ConflictCheckInput,
@@ -39,6 +41,7 @@ import type {
   ConflictReviewInput,
   ConflictReviewResult,
   DashboardStats,
+  DevLoginInput,
   DisconnectMicrosoft200,
   Document,
   DocumentAiAssist,
@@ -103,13 +106,16 @@ import type {
   MatterUpdate,
   NormalizedEmailInput,
   Notification,
+  PasswordChangeInput,
   PersonalWork,
   PipelineStage,
   ProductivitySummary,
+  ProfileUpdateInput,
   PromoteEmailAttachmentToDocumentBody,
   ProviderEmailInput,
   ProviderOperation,
   ProviderStatusUpdateInput,
+  ReceiveMicrosoftNotificationParams,
   ResearchInput,
   ResearchRecord,
   ResearchSource,
@@ -377,6 +383,220 @@ export const useLogout = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getLogoutMutationOptions(options));
+    }
+
+export const getDevLoginUrl = () => {
+
+
+
+
+  return `/api/auth/dev-login`
+}
+
+/**
+ * Resolves only the repository's explicit demo identities and provisions the selected account when it is absent. This endpoint is for local/demo environments and does not accept arbitrary identities.
+ * @summary Development-only quick sign-in for an allowlisted demo account
+ */
+export const devLogin = async (devLoginInput: DevLoginInput, options?: RequestInit): Promise<AuthResponse> => {
+
+  return customFetch<AuthResponse>(getDevLoginUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(devLoginInput)
+  }
+);}
+
+
+
+
+
+export const getDevLoginMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof devLogin>>, TError,{data: BodyType<DevLoginInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof devLogin>>, TError,{data: BodyType<DevLoginInput>}, TContext> => {
+
+const mutationKey = ['devLogin'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof devLogin>>, {data: BodyType<DevLoginInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  devLogin(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DevLoginMutationResult = NonNullable<Awaited<ReturnType<typeof devLogin>>>
+    export type DevLoginMutationBody = BodyType<DevLoginInput>
+    export type DevLoginMutationError = ErrorType<void>
+
+    /**
+ * @summary Development-only quick sign-in for an allowlisted demo account
+ */
+export const useDevLogin = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof devLogin>>, TError,{data: BodyType<DevLoginInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof devLogin>>,
+        TError,
+        {data: BodyType<DevLoginInput>},
+        TContext
+      > => {
+      return useMutation(getDevLoginMutationOptions(options));
+    }
+
+export const getUpdateProfileUrl = () => {
+
+
+
+
+  return `/api/auth/profile`
+}
+
+/**
+ * @summary Update the current user's profile
+ */
+export const updateProfile = async (profileUpdateInput: ProfileUpdateInput, options?: RequestInit): Promise<User> => {
+
+  return customFetch<User>(getUpdateProfileUrl(),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(profileUpdateInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateProfileMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProfile>>, TError,{data: BodyType<ProfileUpdateInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateProfile>>, TError,{data: BodyType<ProfileUpdateInput>}, TContext> => {
+
+const mutationKey = ['updateProfile'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateProfile>>, {data: BodyType<ProfileUpdateInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateProfile(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateProfileMutationResult = NonNullable<Awaited<ReturnType<typeof updateProfile>>>
+    export type UpdateProfileMutationBody = BodyType<ProfileUpdateInput>
+    export type UpdateProfileMutationError = ErrorType<void>
+
+    /**
+ * @summary Update the current user's profile
+ */
+export const useUpdateProfile = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProfile>>, TError,{data: BodyType<ProfileUpdateInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateProfile>>,
+        TError,
+        {data: BodyType<ProfileUpdateInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateProfileMutationOptions(options));
+    }
+
+export const getChangePasswordUrl = () => {
+
+
+
+
+  return `/api/auth/password`
+}
+
+/**
+ * @summary Change the current user's password
+ */
+export const changePassword = async (passwordChangeInput: PasswordChangeInput, options?: RequestInit): Promise<ChangePassword200> => {
+
+  return customFetch<ChangePassword200>(getChangePasswordUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(passwordChangeInput)
+  }
+);}
+
+
+
+
+
+export const getChangePasswordMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof changePassword>>, TError,{data: BodyType<PasswordChangeInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof changePassword>>, TError,{data: BodyType<PasswordChangeInput>}, TContext> => {
+
+const mutationKey = ['changePassword'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof changePassword>>, {data: BodyType<PasswordChangeInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  changePassword(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ChangePasswordMutationResult = NonNullable<Awaited<ReturnType<typeof changePassword>>>
+    export type ChangePasswordMutationBody = BodyType<PasswordChangeInput>
+    export type ChangePasswordMutationError = ErrorType<void>
+
+    /**
+ * @summary Change the current user's password
+ */
+export const useChangePassword = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof changePassword>>, TError,{data: BodyType<PasswordChangeInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof changePassword>>,
+        TError,
+        {data: BodyType<PasswordChangeInput>},
+        TContext
+      > => {
+      return useMutation(getChangePasswordMutationOptions(options));
     }
 
 export const getGetCurrentUserUrl = () => {
@@ -6396,7 +6616,8 @@ export const getUpdateProviderOperationStatusUrl = (id: number,) => {
 }
 
 /**
- * @summary Apply an authenticated provider status callback
+ * Records a verified failure reported by an authorized legal staff session. The provider_confirmed state is reserved for a trusted provider adapter and is rejected by this session-authenticated route.
+ * @summary Record a provider operation failure
  */
 export const updateProviderOperationStatus = async (id: number,
     providerStatusUpdateInput: ProviderStatusUpdateInput, options?: RequestInit): Promise<ProviderOperation> => {
@@ -6414,7 +6635,7 @@ export const updateProviderOperationStatus = async (id: number,
 
 
 
-export const getUpdateProviderOperationStatusMutationOptions = <TError = ErrorType<unknown>,
+export const getUpdateProviderOperationStatusMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProviderOperationStatus>>, TError,{id: number;data: BodyType<ProviderStatusUpdateInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateProviderOperationStatus>>, TError,{id: number;data: BodyType<ProviderStatusUpdateInput>}, TContext> => {
 
@@ -6443,12 +6664,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type UpdateProviderOperationStatusMutationResult = NonNullable<Awaited<ReturnType<typeof updateProviderOperationStatus>>>
     export type UpdateProviderOperationStatusMutationBody = BodyType<ProviderStatusUpdateInput>
-    export type UpdateProviderOperationStatusMutationError = ErrorType<unknown>
+    export type UpdateProviderOperationStatusMutationError = ErrorType<void>
 
     /**
- * @summary Apply an authenticated provider status callback
+ * @summary Record a provider operation failure
  */
-export const useUpdateProviderOperationStatus = <TError = ErrorType<unknown>,
+export const useUpdateProviderOperationStatus = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProviderOperationStatus>>, TError,{id: number;data: BodyType<ProviderStatusUpdateInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof updateProviderOperationStatus>>,
@@ -9181,4 +9402,154 @@ export function useGetPersonalWork<TData = Awaited<ReturnType<typeof getPersonal
 
 
 
+
+export const getReceiveMicrosoftNotificationUrl = (params?: ReceiveMicrosoftNotificationParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/microsoft/webhook?${stringifiedParams}` : `/api/microsoft/webhook`
+}
+
+/**
+ * @summary Validate Graph subscription notifications using subscriptionId and clientState
+ */
+export const receiveMicrosoftNotification = async (params?: ReceiveMicrosoftNotificationParams, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getReceiveMicrosoftNotificationUrl(params),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getReceiveMicrosoftNotificationMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof receiveMicrosoftNotification>>, TError,{params?: ReceiveMicrosoftNotificationParams}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof receiveMicrosoftNotification>>, TError,{params?: ReceiveMicrosoftNotificationParams}, TContext> => {
+
+const mutationKey = ['receiveMicrosoftNotification'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof receiveMicrosoftNotification>>, {params?: ReceiveMicrosoftNotificationParams}> = (props) => {
+          const {params} = props ?? {};
+
+          return  receiveMicrosoftNotification(params,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReceiveMicrosoftNotificationMutationResult = NonNullable<Awaited<ReturnType<typeof receiveMicrosoftNotification>>>
+
+    export type ReceiveMicrosoftNotificationMutationError = ErrorType<void>
+
+    /**
+ * @summary Validate Graph subscription notifications using subscriptionId and clientState
+ */
+export const useReceiveMicrosoftNotification = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof receiveMicrosoftNotification>>, TError,{params?: ReceiveMicrosoftNotificationParams}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof receiveMicrosoftNotification>>,
+        TError,
+        {params?: ReceiveMicrosoftNotificationParams},
+        TContext
+      > => {
+      return useMutation(getReceiveMicrosoftNotificationMutationOptions(options));
+    }
+
+export const getUpdateClientComplianceUrl = (id: number,) => {
+
+
+
+
+  return `/api/clients/${id}/compliance`
+}
+
+/**
+ * @summary Update compliance fields (compliance roles only, audited)
+ */
+export const updateClientCompliance = async (id: number,
+    clientComplianceInput: ClientComplianceInput, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getUpdateClientComplianceUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(clientComplianceInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateClientComplianceMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateClientCompliance>>, TError,{id: number;data: BodyType<ClientComplianceInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateClientCompliance>>, TError,{id: number;data: BodyType<ClientComplianceInput>}, TContext> => {
+
+const mutationKey = ['updateClientCompliance'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateClientCompliance>>, {id: number;data: BodyType<ClientComplianceInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateClientCompliance(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateClientComplianceMutationResult = NonNullable<Awaited<ReturnType<typeof updateClientCompliance>>>
+    export type UpdateClientComplianceMutationBody = BodyType<ClientComplianceInput>
+    export type UpdateClientComplianceMutationError = ErrorType<void>
+
+    /**
+ * @summary Update compliance fields (compliance roles only, audited)
+ */
+export const useUpdateClientCompliance = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateClientCompliance>>, TError,{id: number;data: BodyType<ClientComplianceInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateClientCompliance>>,
+        TError,
+        {id: number;data: BodyType<ClientComplianceInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateClientComplianceMutationOptions(options));
+    }
 

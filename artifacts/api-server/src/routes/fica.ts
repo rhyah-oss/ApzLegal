@@ -3,6 +3,9 @@ import { db, ficaDocumentsTable, complianceEventsTable, clientsTable, usersTable
 import { eq, and, desc } from "drizzle-orm";
 import { COMPLIANCE_ROLES, LEGAL_AUTHOR_ROLES, requireRole } from "../lib/permissions";
 
+import { canReadClient } from "./clients";
+import { getCurrentUser } from "../lib/context";
+
 const router: IRouter = Router();
 
 // ── FICA requirements per client type ─────────────────────────────────────────
@@ -85,6 +88,10 @@ async function logEvent(
 
 // ── GET /clients/:id/fica/requirements ────────────────────────────────────────
 router.get("/clients/:id/fica/requirements", async (req, res): Promise<void> => {
+  const current = await getCurrentUser(req);
+  if (!(await canReadClient(Number(req.params.id), current))) {
+    res.status(403).json({ error: "You do not have access to this client.", code: "ASSIGNMENT_REQUIRED" }); return;
+  }
   const clientId = parseInt(req.params.id, 10);
   if (isNaN(clientId)) { res.status(400).json({ error: "Invalid id" }); return; }
 
@@ -162,6 +169,9 @@ router.post("/clients/:id/fica/documents", async (req, res): Promise<void> => {
       clientId, type, status: "uploaded",
       uploadedAt: new Date(), expiryDate, documentRef: fileObjectPath ?? documentRef, notes,
       fileObjectPath, originalFilename, mimeType, fileSize, fileChecksum,
+    }).onConflictDoUpdate({
+      target: [ficaDocumentsTable.clientId, ficaDocumentsTable.type],
+      set: { status: "uploaded", uploadedAt: new Date(), expiryDate, documentRef: fileObjectPath ?? documentRef, notes, fileObjectPath, originalFilename, mimeType, fileSize, fileChecksum },
     }).returning();
   }
 
@@ -244,6 +254,10 @@ router.delete("/clients/:id/fica/documents/:docId", async (req, res): Promise<vo
 
 // ── GET /clients/:id/fica/timeline ────────────────────────────────────────────
 router.get("/clients/:id/fica/timeline", async (req, res): Promise<void> => {
+  const current = await getCurrentUser(req);
+  if (!(await canReadClient(Number(req.params.id), current))) {
+    res.status(403).json({ error: "You do not have access to this client.", code: "ASSIGNMENT_REQUIRED" }); return;
+  }
   const clientId = parseInt(req.params.id, 10);
   if (isNaN(clientId)) { res.status(400).json({ error: "Invalid id" }); return; }
 
@@ -304,7 +318,10 @@ router.get("/fica/dashboard", async (req, res): Promise<void> => {
     .where(eq(clientsTable.status, "active"))
     .orderBy(clientsTable.name);
 
-  const results = await Promise.all(clients.map(async c => {
+  const current = await getCurrentUser(req);
+  const visibleClients = [];
+  for (const client of clients) if (await canReadClient(client.id, current)) visibleClients.push(client);
+  const results = await Promise.all(visibleClients.map(async c => {
     const reqs   = REQUIREMENTS[c.type] ?? REQUIREMENTS.individual;
     const docs   = await db.select().from(ficaDocumentsTable).where(eq(ficaDocumentsTable.clientId, c.id));
     const docMap = new Map(docs.map(d => [d.type, d]));

@@ -1,3 +1,4 @@
+import { pagination } from "../lib/pagination";
 import { Router, type IRouter } from "express";
 import { db, knowledgeItemsTable, knowledgeChunksTable, knowledgeItemVersionsTable, usersTable } from "@workspace/db";
 import { eq, ilike, and, desc, inArray, ne, or, asc, sql, type SQL } from "drizzle-orm";
@@ -26,9 +27,9 @@ async function requireUser(req: any, res: any) {
   return user;
 }
 
-async function enrichItem(item: typeof knowledgeItemsTable.$inferSelect) {
+async function enrichItem(item: typeof knowledgeItemsTable.$inferSelect, cachedUsers?: (typeof usersTable.$inferSelect)[]) {
   const ids = [item.authorId, item.reviewedById, item.approvedById].filter((v): v is number => v != null);
-  const users = ids.length ? await db.select().from(usersTable).where(inArray(usersTable.id, ids)) : [];
+  const users = cachedUsers ?? (ids.length ? await db.select().from(usersTable).where(inArray(usersTable.id, ids)) : []);
   const nameOf = (id: number | null) => (id == null ? null : users.find((u) => u.id === id)?.name ?? null);
   const availableToAi = item.status === "approved" && item.aiIndexStatus === "indexed";
   return {
@@ -42,6 +43,8 @@ async function enrichItem(item: typeof knowledgeItemsTable.$inferSelect) {
 }
 
 router.get("/knowledge", async (req, res): Promise<void> => {
+  const page = pagination(req, res);
+  if (!page) return;
   const current = await requireUser(req, res);
   if (!current) return;
   const params = ListKnowledgeItemsQueryParams.safeParse(req.query);
@@ -63,8 +66,10 @@ router.get("/knowledge", async (req, res): Promise<void> => {
   if (params.data.type) conditions.push(eq(knowledgeItemsTable.type, params.data.type));
   if (params.data.status) conditions.push(eq(knowledgeItemsTable.status, params.data.status));
 
-  const items = await db.select().from(knowledgeItemsTable).where(conditions.length ? and(...conditions) : undefined).orderBy(desc(knowledgeItemsTable.createdAt));
-  const enriched = await Promise.all(items.map(enrichItem));
+  const items = await db.select().from(knowledgeItemsTable).where(conditions.length ? and(...conditions) : undefined).orderBy(desc(knowledgeItemsTable.createdAt), knowledgeItemsTable.id).limit(page.limit).offset(page.offset);
+  const userIds = items.flatMap((item) => [item.authorId, item.reviewedById, item.approvedById]).filter((id): id is number => id != null);
+  const users = userIds.length ? await db.select().from(usersTable).where(inArray(usersTable.id, userIds)) : [];
+  const enriched = await Promise.all(items.map((item) => enrichItem(item, users)));
   res.json(enriched);
 });
 
@@ -114,7 +119,9 @@ router.get("/templates", async (req, res): Promise<void> => {
     db.select().from(knowledgeItemsTable).where(and(...conditions)).orderBy(orderBy),
     db.select().from(knowledgeItemsTable).where(eq(knowledgeItemsTable.type, "template")),
   ]);
-  const enriched = await Promise.all(items.map(enrichItem));
+  const templateUserIds = items.flatMap((item) => [item.authorId, item.reviewedById, item.approvedById]).filter((id): id is number => id != null);
+  const templateUsers = templateUserIds.length ? await db.select().from(usersTable).where(inArray(usersTable.id, templateUserIds)) : [];
+  const enriched = await Promise.all(items.map((item) => enrichItem(item, templateUsers)));
   const counts = allTemplates.reduce((result, item) => {
     result.total += 1;
     result[item.status] = (result[item.status] ?? 0) + 1;

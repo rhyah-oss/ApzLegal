@@ -43,6 +43,70 @@ export const LogoutResponse = zod.unknown()
 
 
 /**
+ * Resolves only the repository's explicit demo identities and provisions the selected account when it is absent. This endpoint is for local/demo environments and does not accept arbitrary identities.
+ * @summary Development-only quick sign-in for an allowlisted demo account
+ */
+
+
+
+
+export const DevLoginBody = zod.object({
+  "role": zod.string().min(1),
+  "email": zod.string().email(),
+  "name": zod.string().min(1)
+})
+
+export const DevLoginResponse = zod.object({
+  "user": zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "email": zod.string(),
+  "role": zod.enum(['super_admin', 'managing_partner', 'partner', 'associate_attorney', 'candidate_attorney', 'paralegal', 'secretary', 'billing_officer', 'compliance_officer', 'client_portal_user']),
+  "avatarUrl": zod.string().nullish(),
+  "createdAt": zod.coerce.date().optional()
+})
+})
+
+
+/**
+ * @summary Update the current user's profile
+ */
+
+
+
+export const UpdateProfileBody = zod.object({
+  "name": zod.string().min(1),
+  "email": zod.string().email()
+})
+
+export const UpdateProfileResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "email": zod.string(),
+  "role": zod.enum(['super_admin', 'managing_partner', 'partner', 'associate_attorney', 'candidate_attorney', 'paralegal', 'secretary', 'billing_officer', 'compliance_officer', 'client_portal_user']),
+  "avatarUrl": zod.string().nullish(),
+  "createdAt": zod.coerce.date().optional()
+})
+
+
+/**
+ * @summary Change the current user's password
+ */
+export const changePasswordBodyNewPasswordMin = 10;
+
+
+
+export const ChangePasswordBody = zod.object({
+  "currentPassword": zod.string(),
+  "newPassword": zod.string().min(changePasswordBodyNewPasswordMin)
+})
+
+export const ChangePasswordResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
  * @summary Get current authenticated user
  */
 export const GetCurrentUserResponse = zod.object({
@@ -3044,6 +3108,10 @@ export const GenerateAiOutputBody = zod.object({
   "params": zod.record(zod.string(), zod.unknown()).optional().describe('Workflow inputs, e.g. contractType, jurisdiction, clauses[], recipient, clauseText')
 })
 
+export const generateAiOutputResponseChunksRetrievedMin = 0;
+
+
+
 export const GenerateAiOutputResponse = zod.object({
   "id": zod.number(),
   "matterId": zod.number().nullable(),
@@ -3053,6 +3121,14 @@ export const GenerateAiOutputResponse = zod.object({
   "params": zod.record(zod.string(), zod.unknown()).nullish(),
   "query": zod.string(),
   "response": zod.string(),
+  "retrievalMode": zod.string().nullish(),
+  "chunksRetrieved": zod.number().min(generateAiOutputResponseChunksRetrievedMin).optional(),
+  "sourcesUsed": zod.array(zod.object({
+  "type": zod.string(),
+  "id": zod.number(),
+  "title": zod.string().optional(),
+  "chunkCount": zod.number()
+})).nullish(),
   "model": zod.string().nullish(),
   "explanation": zod.string().nullish(),
   "riskLevel": zod.enum(['low', 'medium', 'high']),
@@ -3086,6 +3162,10 @@ export const ListAiConversationsQueryParams = zod.object({
   "matterId": zod.coerce.number().optional()
 })
 
+export const listAiConversationsResponseChunksRetrievedMin = 0;
+
+
+
 export const ListAiConversationsResponseItem = zod.object({
   "id": zod.number(),
   "matterId": zod.number().nullable(),
@@ -3095,6 +3175,14 @@ export const ListAiConversationsResponseItem = zod.object({
   "params": zod.record(zod.string(), zod.unknown()).nullish(),
   "query": zod.string(),
   "response": zod.string(),
+  "retrievalMode": zod.string().nullish(),
+  "chunksRetrieved": zod.number().min(listAiConversationsResponseChunksRetrievedMin).optional(),
+  "sourcesUsed": zod.array(zod.object({
+  "type": zod.string(),
+  "id": zod.number(),
+  "title": zod.string().optional(),
+  "chunkCount": zod.number()
+})).nullish(),
   "model": zod.string().nullish(),
   "explanation": zod.string().nullish(),
   "riskLevel": zod.enum(['low', 'medium', 'high']),
@@ -3121,6 +3209,10 @@ export const GetAiOutputParams = zod.object({
   "id": zod.coerce.number()
 })
 
+export const getAiOutputResponseChunksRetrievedMin = 0;
+
+
+
 export const GetAiOutputResponse = zod.object({
   "id": zod.number(),
   "matterId": zod.number().nullable(),
@@ -3130,6 +3222,14 @@ export const GetAiOutputResponse = zod.object({
   "params": zod.record(zod.string(), zod.unknown()).nullish(),
   "query": zod.string(),
   "response": zod.string(),
+  "retrievalMode": zod.string().nullish(),
+  "chunksRetrieved": zod.number().min(getAiOutputResponseChunksRetrievedMin).optional(),
+  "sourcesUsed": zod.array(zod.object({
+  "type": zod.string(),
+  "id": zod.number(),
+  "title": zod.string().optional(),
+  "chunkCount": zod.number()
+})).nullish(),
   "model": zod.string().nullish(),
   "explanation": zod.string().nullish(),
   "riskLevel": zod.enum(['low', 'medium', 'high']),
@@ -3160,6 +3260,10 @@ export const ReviewAiOutputBody = zod.object({
   "note": zod.string().optional().describe('Required when decision is overridden')
 })
 
+export const reviewAiOutputResponseChunksRetrievedMin = 0;
+
+
+
 export const ReviewAiOutputResponse = zod.object({
   "id": zod.number(),
   "matterId": zod.number().nullable(),
@@ -3169,6 +3273,14 @@ export const ReviewAiOutputResponse = zod.object({
   "params": zod.record(zod.string(), zod.unknown()).nullish(),
   "query": zod.string(),
   "response": zod.string(),
+  "retrievalMode": zod.string().nullish(),
+  "chunksRetrieved": zod.number().min(reviewAiOutputResponseChunksRetrievedMin).optional(),
+  "sourcesUsed": zod.array(zod.object({
+  "type": zod.string(),
+  "id": zod.number(),
+  "title": zod.string().optional(),
+  "chunkCount": zod.number()
+})).nullish(),
   "model": zod.string().nullish(),
   "explanation": zod.string().nullish(),
   "riskLevel": zod.enum(['low', 'medium', 'high']),
@@ -3194,6 +3306,10 @@ export const VerifyAiCitationsParams = zod.object({
   "id": zod.coerce.number()
 })
 
+export const verifyAiCitationsResponseChunksRetrievedMin = 0;
+
+
+
 export const VerifyAiCitationsResponse = zod.object({
   "id": zod.number(),
   "matterId": zod.number().nullable(),
@@ -3203,6 +3319,14 @@ export const VerifyAiCitationsResponse = zod.object({
   "params": zod.record(zod.string(), zod.unknown()).nullish(),
   "query": zod.string(),
   "response": zod.string(),
+  "retrievalMode": zod.string().nullish(),
+  "chunksRetrieved": zod.number().min(verifyAiCitationsResponseChunksRetrievedMin).optional(),
+  "sourcesUsed": zod.array(zod.object({
+  "type": zod.string(),
+  "id": zod.number(),
+  "title": zod.string().optional(),
+  "chunkCount": zod.number()
+})).nullish(),
   "model": zod.string().nullish(),
   "explanation": zod.string().nullish(),
   "riskLevel": zod.enum(['low', 'medium', 'high']),
@@ -3232,6 +3356,10 @@ export const SaveAiOutputToMatterBody = zod.object({
   "content": zod.string().optional().describe('Attorney-edited content; when provided and different, the document is marked ai_assisted')
 })
 
+export const saveAiOutputToMatterResponseOutputChunksRetrievedMin = 0;
+
+
+
 export const SaveAiOutputToMatterResponse = zod.object({
   "documentId": zod.number(),
   "output": zod.object({
@@ -3243,6 +3371,14 @@ export const SaveAiOutputToMatterResponse = zod.object({
   "params": zod.record(zod.string(), zod.unknown()).nullish(),
   "query": zod.string(),
   "response": zod.string(),
+  "retrievalMode": zod.string().nullish(),
+  "chunksRetrieved": zod.number().min(saveAiOutputToMatterResponseOutputChunksRetrievedMin).optional(),
+  "sourcesUsed": zod.array(zod.object({
+  "type": zod.string(),
+  "id": zod.number(),
+  "title": zod.string().optional(),
+  "chunkCount": zod.number()
+})).nullish(),
   "model": zod.string().nullish(),
   "explanation": zod.string().nullish(),
   "riskLevel": zod.enum(['low', 'medium', 'high']),
@@ -3331,14 +3467,15 @@ export const QueueProviderEmailResponse = zod.object({
 
 
 /**
- * @summary Apply an authenticated provider status callback
+ * Records a verified failure reported by an authorized legal staff session. The provider_confirmed state is reserved for a trusted provider adapter and is rejected by this session-authenticated route.
+ * @summary Record a provider operation failure
  */
 export const UpdateProviderOperationStatusParams = zod.object({
   "id": zod.coerce.number()
 })
 
 export const UpdateProviderOperationStatusBody = zod.object({
-  "status": zod.enum(['provider_confirmed', 'failed']),
+  "status": zod.enum(['failed']),
   "providerName": zod.string(),
   "providerRequestId": zod.string().optional(),
   "providerEventId": zod.string(),
@@ -4288,4 +4425,37 @@ export const GetPersonalWorkResponse = zod.object({
   "actionsLink": zod.string()
 })
 
+
+/**
+ * @summary Validate Graph subscription notifications using subscriptionId and clientState
+ */
+export const ReceiveMicrosoftNotificationQueryParams = zod.object({
+  "validationToken": zod.coerce.string().optional()
+})
+
+export const ReceiveMicrosoftNotificationResponse = zod.unknown()
+
+
+/**
+ * @summary Update compliance fields (compliance roles only, audited)
+ */
+export const UpdateClientComplianceParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const updateClientComplianceBodyComplianceBlockReasonMax = 2000;
+
+export const updateClientComplianceBodyRiskScoreMin = 0;
+export const updateClientComplianceBodyRiskScoreMax = 100;
+
+
+
+export const UpdateClientComplianceBody = zod.object({
+  "complianceStatus": zod.enum(['compliant', 'review_required', 'blocked']).optional(),
+  "complianceBlockReason": zod.string().max(updateClientComplianceBodyComplianceBlockReasonMax).nullish(),
+  "riskLevel": zod.enum(['low', 'medium', 'high']).optional(),
+  "riskScore": zod.number().min(updateClientComplianceBodyRiskScoreMin).max(updateClientComplianceBodyRiskScoreMax).optional()
+})
+
+export const UpdateClientComplianceResponse = zod.unknown()
 

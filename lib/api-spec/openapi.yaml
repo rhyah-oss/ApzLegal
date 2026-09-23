@@ -4,6 +4,9 @@ info:
   title: Api
   version: 0.1.0
   description: APZ Legal Practice Management System API
+security:
+  - sessionCookie: []
+  - bearerSession: []
 servers:
   - url: /api
     description: Base API path
@@ -46,6 +49,7 @@ tags:
 paths:
   /healthz:
     get:
+      security: []
       operationId: healthCheck
       tags: [health]
       summary: Health check
@@ -60,6 +64,7 @@ paths:
   # ─── AUTH ───────────────────────────────────────────────────────────────────
   /auth/login:
     post:
+      security: []
       operationId: login
       tags: [auth]
       summary: Login with email and password
@@ -87,6 +92,85 @@ paths:
       responses:
         "200":
           description: Logged out
+
+  /auth/dev-login:
+    post:
+      security: []
+      operationId: devLogin
+      tags: [auth]
+      summary: Development-only quick sign-in for an allowlisted demo account
+      description: Resolves only the repository's explicit demo identities and provisions the selected account when it is absent. This endpoint is for local/demo environments and does not accept arbitrary identities.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DevLoginInput"
+      responses:
+        "200":
+          description: Authenticated demo session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Invalid demo account selection
+        "401":
+          description: Demo identity is not allowlisted
+        "403":
+          description: Existing account does not match the selected demo identity
+
+  /auth/profile:
+    patch:
+      operationId: updateProfile
+      tags: [auth]
+      summary: Update the current user's profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfileUpdateInput"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: Invalid name or email
+        "401":
+          description: Authentication required
+
+  /auth/password:
+    post:
+      operationId: changePassword
+      tags: [auth]
+      summary: Change the current user's password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordChangeInput"
+      responses:
+        "200":
+          description: Password changed
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok]
+                properties:
+                  ok:
+                    type: boolean
+        "400":
+          description: Invalid password input
+        "401":
+          description: Authentication required
+        "403":
+          description: Current password is incorrect
 
   /auth/me:
     get:
@@ -1986,7 +2070,8 @@ paths:
     post:
       operationId: updateProviderOperationStatus
       tags: [provider-operations]
-      summary: Apply an authenticated provider status callback
+      summary: Record a provider operation failure
+      description: Records a verified failure reported by an authorized legal staff session. The provider_confirmed state is reserved for a trusted provider adapter and is rejected by this session-authenticated route.
       parameters:
         - name: id
           in: path
@@ -2006,6 +2091,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ProviderOperation"
+        "400":
+          description: Invalid provider status update
+        "403":
+          description: Provider confirmation requires a trusted provider adapter
+        "404":
+          description: Provider operation not found
+        "409":
+          description: Provider event or operation conflicts with existing state
 
   /provider-operations/{id}/retry:
     post:
@@ -2797,8 +2890,77 @@ paths:
               schema:
                 $ref: "#/components/schemas/PersonalWork"
 
+  /microsoft/webhook:
+    post:
+      operationId: receiveMicrosoftNotification
+      tags: [email]
+      security: []
+      summary: Validate Graph subscription notifications using subscriptionId and clientState
+      parameters:
+        - in: query
+          name: validationToken
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Plain-text subscription validation token.
+        "202":
+          description: Batch received; only matching trusted notifications are processed.
+        "400":
+          description: Malformed notification batch.
+  /clients/{id}/compliance:
+    patch:
+      operationId: updateClientCompliance
+      tags: [clients]
+      summary: Update compliance fields (compliance roles only, audited)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClientComplianceInput"
+      responses:
+        "200":
+          description: Updated client.
+        "400":
+          description: Invalid fields.
+        "403":
+          description: Compliance role required.
+
 components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: auth_token
+    bearerSession:
+      type: http
+      scheme: bearer
+      description: Opaque staff session token, not a JWT.
   schemas:
+    ClientComplianceInput:
+      type: object
+      additionalProperties: false
+      properties:
+        complianceStatus:
+          type: string
+          enum: [compliant, review_required, blocked]
+        complianceBlockReason:
+          type: ["string", "null"]
+          maxLength: 2000
+        riskLevel:
+          type: string
+          enum: [low, medium, high]
+        riskScore:
+          type: integer
+          minimum: 0
+          maximum: 100
     HealthStatus:
       type: object
       properties:
@@ -2815,6 +2977,45 @@ components:
           type: string
         password:
           type: string
+
+    DevLoginInput:
+      type: object
+      required: [role, email, name]
+      properties:
+        role:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+          minLength: 1
+
+    ProfileUpdateInput:
+      type: object
+      required: [name, email]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+
+    PasswordChangeInput:
+      type: object
+      required: [currentPassword, newPassword]
+      properties:
+        currentPassword:
+          type: string
+          format: password
+          writeOnly: true
+        newPassword:
+          type: string
+          format: password
+          minLength: 10
+          writeOnly: true
 
     AuthResponse:
       type: object
@@ -4778,6 +4979,25 @@ components:
           type: string
         response:
           type: string
+        retrievalMode:
+          type: ["string", "null"]
+        chunksRetrieved:
+          type: integer
+          minimum: 0
+        sourcesUsed:
+          type: ["array", "null"]
+          items:
+            type: object
+            required: [type, id, chunkCount]
+            properties:
+              type:
+                type: string
+              id:
+                type: integer
+              title:
+                type: string
+              chunkCount:
+                type: integer
         model:
           type: ["string", "null"]
         explanation:
@@ -5320,7 +5540,7 @@ components:
       properties:
         status:
           type: string
-          enum: [provider_confirmed, failed]
+          enum: [failed]
         providerName:
           type: string
         providerRequestId:

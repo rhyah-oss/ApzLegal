@@ -1,3 +1,5 @@
+import { pagination } from "../lib/pagination";
+import { z } from "zod";
 import { Router, type IRouter } from "express";
 import { db, clientsTable, ficaDocumentsTable, mattersTable, relatedPartiesTable, documentsTable, invoicesTable, auditLogsTable } from "@workspace/db";
 import { inArray } from "drizzle-orm";
@@ -25,7 +27,7 @@ async function withMatterCount(client: typeof clientsTable.$inferSelect) {
   return { ...client, matterCount: row?.count ?? 0 };
 }
 
-async function canReadClient(clientId: number, user: Awaited<ReturnType<typeof getCurrentUser>>) {
+export async function canReadClient(clientId: number, user: Awaited<ReturnType<typeof getCurrentUser>>) {
   if (!user || !["candidate_attorney", "paralegal", "secretary"].includes(user.role)) return true;
   const [matter] = await db.select({ id: mattersTable.id }).from(mattersTable)
     .where(and(eq(mattersTable.clientId, clientId), eq(mattersTable.assignedToId, user.id))).limit(1);
@@ -34,6 +36,8 @@ async function canReadClient(clientId: number, user: Awaited<ReturnType<typeof g
 
 // ─── LIST ─────────────────────────────────────────────────────────────────────
 router.get("/clients", async (req, res): Promise<void> => {
+  const page = pagination(req, res);
+  if (!page) return;
   const current = await getCurrentUser(req);
   const params = ListClientsQueryParams.safeParse(req.query);
   if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
@@ -51,7 +55,7 @@ router.get("/clients", async (req, res): Promise<void> => {
   if (assignedClientIds) conditions.push(assignedClientIds.length ? inArray(clientsTable.id, assignedClientIds) : eq(clientsTable.id, -1));
   const clients = await db.select().from(clientsTable)
     .where(conditions.length ? and(...conditions) : undefined)
-    .orderBy(clientsTable.createdAt);
+    .orderBy(clientsTable.createdAt, clientsTable.id).limit(page.limit).offset(page.offset);
 
   const matterCounts = await db
     .select({ clientId: mattersTable.clientId, count: sql<number>`count(*)::int` })
@@ -107,11 +111,19 @@ router.patch("/clients/:id/compliance", async (req, res): Promise<void> => {
   if (!user) return;
   const id = parseId(req.params.id);
   if (!id) { res.status(400).json({ error: "Invalid id" }); return; }
-  const { complianceStatus, complianceBlockReason, riskLevel, riskScore } = req.body;
+  const parsed = z.object({
+    complianceStatus: z.enum(["compliant", "review_required", "blocked"]).optional(),
+    complianceBlockReason: z.string().max(2000).nullable().optional(),
+    riskLevel: z.enum(["low", "medium", "high"]).optional(),
+    riskScore: z.number().int().min(0).max(100).optional(),
+  }).strict().refine(value => Object.keys(value).length > 0).safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: "Invalid compliance update" }); return; }
   const [client] = await db.update(clientsTable)
-    .set({ complianceStatus, complianceBlockReason, riskLevel, riskScore })
+    .set(parsed.data)
     .where(eq(clientsTable.id, id)).returning();
   if (!client) { res.status(404).json({ error: "Client not found" }); return; }
+  await logAudit({ action: "client_compliance_updated", entityType: "client", entityId: client.id,
+    userId: user.id, details: `Compliance fields updated: ${Object.keys(parsed.data).join(", ")}.`, ipAddress: req.ip });
   res.json(client);
 });
 

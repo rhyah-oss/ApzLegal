@@ -56,7 +56,7 @@ function parseDateRange(query: Record<string, unknown>): { startDate: string; en
   const defaults = getDefaultRange();
   const startDate = typeof query.startDate === "string" && query.startDate ? query.startDate : defaults.startDate;
   const endDate = typeof query.endDate === "string" && query.endDate ? query.endDate : defaults.endDate;
-  if (!isValidIsoDate(startDate) || !isValidIsoDate(endDate) || startDate > endDate) return null;
+  if (!isValidIsoDate(startDate) || !isValidIsoDate(endDate) || startDate > endDate || Date.parse(endDate) - Date.parse(startDate) > 365 * 86_400_000) return null;
   return { startDate, endDate };
 }
 
@@ -187,7 +187,7 @@ router.get("/productivity/summary", async (req, res): Promise<void> => {
 
   const range = parseDateRange(req.query as Record<string, unknown>);
   if (!range) {
-    res.status(400).json({ error: "startDate and endDate must be valid dates, with startDate on or before endDate." });
+    res.status(400).json({ error: "startDate and endDate must be valid dates, with startDate on or before endDate and no more than 366 days inclusive." });
     return;
   }
 

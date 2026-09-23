@@ -5,6 +5,39 @@
  * APZ Legal Practice Management System API
  * OpenAPI spec version: 0.1.0
  */
+export type ClientComplianceInputComplianceStatus = typeof ClientComplianceInputComplianceStatus[keyof typeof ClientComplianceInputComplianceStatus];
+
+
+export const ClientComplianceInputComplianceStatus = {
+  compliant: 'compliant',
+  review_required: 'review_required',
+  blocked: 'blocked',
+} as const;
+
+export type ClientComplianceInputRiskLevel = typeof ClientComplianceInputRiskLevel[keyof typeof ClientComplianceInputRiskLevel];
+
+
+export const ClientComplianceInputRiskLevel = {
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
+} as const;
+
+export interface ClientComplianceInput {
+  complianceStatus?: ClientComplianceInputComplianceStatus;
+  /**
+     * @maxLength 2000
+     * @nullable
+     */
+  complianceBlockReason?: string | null;
+  riskLevel?: ClientComplianceInputRiskLevel;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  riskScore?: number;
+}
+
 export interface HealthStatus {
   status: string;
 }
@@ -12,6 +45,26 @@ export interface HealthStatus {
 export interface LoginInput {
   email: string;
   password: string;
+}
+
+export interface DevLoginInput {
+  /** @minLength 1 */
+  role: string;
+  email: string;
+  /** @minLength 1 */
+  name: string;
+}
+
+export interface ProfileUpdateInput {
+  /** @minLength 1 */
+  name: string;
+  email: string;
+}
+
+export interface PasswordChangeInput {
+  currentPassword: string;
+  /** @minLength 10 */
+  newPassword: string;
 }
 
 export type UserRole = typeof UserRole[keyof typeof UserRole];
@@ -1759,6 +1812,13 @@ export interface AiReviewInput {
  */
 export type AiOutputParams = { [key: string]: unknown } | null;
 
+export type AiOutputSourcesUsedItem = {
+  type: string;
+  id: number;
+  title?: string;
+  chunkCount: number;
+};
+
 export type AiOutputRiskLevel = typeof AiOutputRiskLevel[keyof typeof AiOutputRiskLevel];
 
 
@@ -1798,6 +1858,12 @@ export interface AiOutput {
   params?: AiOutputParams;
   query: string;
   response: string;
+  /** @nullable */
+  retrievalMode?: string | null;
+  /** @minimum 0 */
+  chunksRetrieved?: number;
+  /** @nullable */
+  sourcesUsed?: AiOutputSourcesUsedItem[] | null;
   /** @nullable */
   model?: string | null;
   /** @nullable */
@@ -2261,7 +2327,6 @@ export type ProviderStatusUpdateInputStatus = typeof ProviderStatusUpdateInputSt
 
 
 export const ProviderStatusUpdateInputStatus = {
-  provider_confirmed: 'provider_confirmed',
   failed: 'failed',
 } as const;
 
@@ -2272,6 +2337,10 @@ export interface ProviderStatusUpdateInput {
   providerEventId: string;
   errorMessage?: string;
 }
+
+export type ChangePassword200 = {
+  ok: boolean;
+};
 
 export type ListClientsParams = {
 search?: string;
@@ -2679,5 +2748,9 @@ export type DownloadDocumentSignatureCertificate200 = {
 
 export type GetRecentActivityParams = {
 limit?: number;
+};
+
+export type ReceiveMicrosoftNotificationParams = {
+validationToken?: string;
 };
 

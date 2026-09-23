@@ -1,3 +1,4 @@
+import { visiblePrompt, uniqueSources } from "@/lib/ai-presentation"
 import { useEffect, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import {
@@ -92,7 +93,7 @@ type AiOutputWithSources = AiOutput & {
     type?: string
     title?: string
     chunkCount?: number
-  }>
+  }> | null
   chunksRetrieved?: number
   retrievalMode?: string | null
 }
@@ -108,8 +109,7 @@ type ChatMessage = {
 }
 
 function promptFromOutput(output: AiOutputWithSources) {
-  const paramsQuery = output.params?.query
-  return typeof paramsQuery === "string" && paramsQuery.trim() ? paramsQuery : output.query
+  return visiblePrompt(output)
 }
 
 function messageKey(message: ChatMessage) {
@@ -215,7 +215,7 @@ function AssistantMessageBubble({
             <div className="mt-5 pt-4" style={{ borderTop: `1px solid ${T.border}` }}>
               {output.sourcesUsed && output.sourcesUsed.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
-                  {output.sourcesUsed.map((source: any, index) => (
+                  {uniqueSources(output.sourcesUsed).map((source: any, index) => (
                     <span
                       key={index}
                       className="text-[9px] font-medium"
@@ -234,7 +234,7 @@ function AssistantMessageBubble({
               )}
               {output.citations && output.citations.length > 0 && (
                 <ul className="mt-3 text-[10px] leading-relaxed list-disc pl-4 space-y-1" style={{ color: T.textDim }}>
-                  {output.citations.map((citation, index) => <li key={index}>{citation}</li>)}
+                  {[...new Set(output.citations)].map((citation, index) => <li key={index}>{citation}</li>)}
                 </ul>
               )}
               {output.citationStatus === "unverified" && (
@@ -537,11 +537,11 @@ export default function AiAssistantPage() {
                       onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = "transparent" }}
                     >
                       <p className="text-[11px] font-medium line-clamp-2 leading-snug" style={{ color: T.text }}>
-                        {conversation.query}
+                        {promptFromOutput(conversation)}
                       </p>
                       <div className="flex items-center justify-between mt-1.5 gap-2">
                         <span className="text-[9px]" style={{ color: T.textFaint }}>
-                          {new Date(conversation.createdAt).toLocaleDateString()}
+                          {new Date(conversation.createdAt).toLocaleDateString()} · Risk:
                         </span>
                         <span style={pillStyle(riskColor)}>{conversation.riskLevel}</span>
                       </div>

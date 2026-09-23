@@ -1,3 +1,4 @@
+import { pagination } from "../lib/pagination";
 import { Router, type IRouter } from "express";
 import { db, auditLogsTable, usersTable, documentsTable, aiConversationsTable, researchRecordsTable } from "@workspace/db";
 import { eq, and, or, gte, lte, inArray, type SQL } from "drizzle-orm";
@@ -8,6 +9,8 @@ import { COMPLIANCE_ROLES, requireRole } from "../lib/permissions";
 const router: IRouter = Router();
 
 router.get("/audit-logs", async (req, res): Promise<void> => {
+  const page = pagination(req, res);
+  if (!page) return;
   const user = await requireRole(req, res, COMPLIANCE_ROLES, "Only compliance staff may view the audit record.");
   if (!user) return;
   const params = ListAuditLogsQueryParams.safeParse(req.query);
@@ -35,16 +38,11 @@ router.get("/audit-logs", async (req, res): Promise<void> => {
   if (params.data.from) conditions.push(gte(auditLogsTable.createdAt, new Date(params.data.from)));
   if (params.data.to) conditions.push(lte(auditLogsTable.createdAt, new Date(params.data.to)));
 
-  const logs = await db.select().from(auditLogsTable).where(conditions.length ? and(...conditions) : undefined).orderBy(auditLogsTable.createdAt);
+  const logs = await db.select().from(auditLogsTable).where(conditions.length ? and(...conditions) : undefined).orderBy(auditLogsTable.createdAt, auditLogsTable.id).limit(page.limit).offset(page.offset);
 
-  const enriched = await Promise.all(logs.map(async (l) => {
-    let userName: string | null = null;
-    if (l.userId) {
-      const [u] = await db.select().from(usersTable).where(eq(usersTable.id, l.userId));
-      userName = u?.name ?? null;
-    }
-    return { ...l, userName };
-  }));
+  const userIds = logs.map((log) => log.userId).filter((id): id is number => id != null);
+  const users = userIds.length ? await db.select().from(usersTable).where(inArray(usersTable.id, userIds)) : [];
+  const enriched = logs.map((l) => ({ ...l, userName: l.userId == null ? null : users.find((u) => u.id === l.userId)?.name ?? null }));
 
   res.json(enriched);
 });

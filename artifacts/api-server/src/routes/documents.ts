@@ -1,3 +1,4 @@
+import { pagination } from "../lib/pagination";
 import { Router, type IRouter } from "express";
 import crypto from "crypto";
 import { z } from "zod";
@@ -6,7 +7,7 @@ import {
 } from "@workspace/db";
 import { eq, and, desc, inArray, or, ilike } from "drizzle-orm";
 import { getCurrentUser, logAudit } from "../lib/context";
-import { LEGAL_AUTHOR_ROLES, PARTNER_ROLES, requireRole } from "../lib/permissions";
+import { LEGAL_AUTHOR_ROLES, PARTNER_ROLES, requireRole, hasMatterAccess } from "../lib/permissions";
 import { ObjectStorageService, ObjectNotFoundError } from "../lib/objectStorage";
 import { indexDocument } from "../lib/indexing-service";
 import {
@@ -22,6 +23,22 @@ import {
 import type { TemplateInstantiateInput } from "@workspace/api-zod";
 
 const router: IRouter = Router();
+// Guard every document-by-id action before loading content or changing state.
+router.use("/matters/:matterId/documents/:id", async (req, res, next) => {
+  const user = await getCurrentUser(req);
+  if (!user) { res.status(401).json({ error: "Not authenticated" }); return; }
+  const matterId = Number(req.params.matterId);
+  const id = Number(req.params.id);
+  if (!Number.isSafeInteger(matterId) || !Number.isSafeInteger(id)) {
+    res.status(400).json({ error: "Invalid document parameters" }); return;
+  }
+  const [matter] = await db.select().from(mattersTable).where(eq(mattersTable.id, matterId));
+  if (!matter || !hasMatterAccess(user, matter) || !(await findDoc(matterId, id))) {
+    res.status(404).json({ error: "Document not found" }); return;
+  }
+  next();
+});
+
 const objectStorageService = new ObjectStorageService();
 const MAX_DOCUMENT_SIZE = 25 * 1024 * 1024;
 const SUPPORTED_DOCUMENT_MIME_TYPES = [
@@ -59,11 +76,13 @@ const DOC_TRANSITIONS: Record<string, string[]> = {
   archived:         [],
 };
 
-async function enrichDoc(d: typeof documentsTable.$inferSelect) {
+async function enrichDoc(d: typeof documentsTable.$inferSelect, cached?: {
+  users: (typeof usersTable.$inferSelect)[]; operations: (typeof providerOperationsTable.$inferSelect)[];
+}) {
   const ids = [d.createdById, d.approvedById, d.submittedById].filter((x): x is number => x != null);
   const [users, providerOperations] = await Promise.all([
-    ids.length ? db.select().from(usersTable).where(inArray(usersTable.id, ids)) : Promise.resolve([] as (typeof usersTable.$inferSelect)[]),
-    db.select().from(providerOperationsTable)
+    cached ? Promise.resolve(cached.users) : ids.length ? db.select().from(usersTable).where(inArray(usersTable.id, ids)) : Promise.resolve([] as (typeof usersTable.$inferSelect)[]),
+    cached ? Promise.resolve(cached.operations.filter(operation => operation.documentId === d.id).slice(0, 1)) : db.select().from(providerOperationsTable)
       .where(and(eq(providerOperationsTable.kind, "signature"), eq(providerOperationsTable.documentId, d.id)))
       .orderBy(desc(providerOperationsTable.createdAt))
       .limit(1),
@@ -219,6 +238,8 @@ router.post("/templates/:templateId/instantiate", async (req, res): Promise<void
 });
 
 router.get("/documents", async (req: any, res: any): Promise<void> => {
+  const page = pagination(req, res);
+  if (!page) return;
   const current = await getCurrentUser(req);
   const q = req.query as Record<string, string | undefined>;
 
@@ -248,9 +269,16 @@ router.get("/documents", async (req: any, res: any): Promise<void> => {
   const docs = await db.select().from(documentsTable)
     .leftJoin(mattersTable, eq(documentsTable.matterId, mattersTable.id))
     .where(whereClause)
-    .orderBy(desc(documentsTable.updatedAt));
+    .orderBy(desc(documentsTable.updatedAt), documentsTable.id).limit(page.limit).offset(page.offset);
 
-  const enriched = await Promise.all(docs.map((row) => enrichDoc(row.documents)));
+  const ids = docs.flatMap(row => [row.documents.createdById, row.documents.approvedById, row.documents.submittedById]).filter((id): id is number => id != null);
+  const [users, operations] = await Promise.all([
+    ids.length ? db.select().from(usersTable).where(inArray(usersTable.id, ids)) : Promise.resolve([]),
+    docs.length ? db.selectDistinctOn([providerOperationsTable.documentId]).from(providerOperationsTable)
+      .where(and(eq(providerOperationsTable.kind, "signature"), inArray(providerOperationsTable.documentId, docs.map(row => row.documents.id))))
+      .orderBy(providerOperationsTable.documentId, desc(providerOperationsTable.createdAt)) : Promise.resolve([]),
+  ]);
+  const enriched = await Promise.all(docs.map(row => enrichDoc(row.documents, { users, operations })));
   res.json(enriched.map((d, i) => {
     const matter = docs[i].matters;
     return { ...d, matterTitle: matter?.title ?? null, matterReference: matter?.reference ?? null, clientId: matter?.clientId ?? null };
@@ -258,6 +286,8 @@ router.get("/documents", async (req: any, res: any): Promise<void> => {
 });
 
 router.get("/matters/:matterId/documents", async (req, res): Promise<void> => {
+  const page = pagination(req, res);
+  if (!page) return;
   const current = await getCurrentUser(req);
   const params = ListMatterDocumentsParams.safeParse(req.params);
   if (!params.success) { res.status(400).json({ error: "Invalid matterId" }); return; }
@@ -266,8 +296,15 @@ router.get("/matters/:matterId/documents", async (req, res): Promise<void> => {
     if (!matter || matter.assignedToId !== current.id) { res.status(403).json({ error: "You do not have access to this matter.", code: "ASSIGNMENT_REQUIRED" }); return; }
   }
 
-  const docs = await db.select().from(documentsTable).where(eq(documentsTable.matterId, params.data.matterId)).orderBy(desc(documentsTable.updatedAt));
-  res.json(await Promise.all(docs.map(enrichDoc)));
+  const docs = await db.select().from(documentsTable).where(eq(documentsTable.matterId, params.data.matterId))
+    .orderBy(desc(documentsTable.updatedAt), documentsTable.id).limit(page.limit).offset(page.offset);
+  const ids = docs.flatMap((doc) => [doc.createdById, doc.approvedById, doc.submittedById]).filter((id): id is number => id != null);
+  const [users, operations] = await Promise.all([
+    ids.length ? db.select().from(usersTable).where(inArray(usersTable.id, ids)) : Promise.resolve([]),
+    docs.length ? db.select().from(providerOperationsTable).where(and(eq(providerOperationsTable.kind, "signature"), inArray(providerOperationsTable.documentId, docs.map((doc) => doc.id))))
+      .orderBy(desc(providerOperationsTable.createdAt)) : Promise.resolve([]),
+  ]);
+  res.json(await Promise.all(docs.map((doc) => enrichDoc(doc, { users, operations }))));
 });
 
 router.post("/matters/:matterId/documents", async (req, res): Promise<void> => {

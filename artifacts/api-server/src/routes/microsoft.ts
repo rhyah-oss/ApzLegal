@@ -153,10 +153,11 @@ router.get("/microsoft/oauth/callback", async (req, res): Promise<void> => {
       "me/messages",
       notificationUrl,
       subscriptionExpiration,
+      clientState,
     );
 
     const [existing] = await db.select().from(emailConnectionsTable).where(
-      { provider: "microsoft", ownerUserId: user.id, accountIdentifier: "primary" } as any,
+      and(eq(emailConnectionsTable.provider, "microsoft"), eq(emailConnectionsTable.ownerUserId, user.id), eq(emailConnectionsTable.accountIdentifier, "primary")),
     );
 
     if (existing) {
@@ -208,7 +209,7 @@ router.get("/microsoft/connection", async (req, res): Promise<void> => {
   if (!user) { res.status(401).json({ error: "Not authenticated", code: "AUTH_REQUIRED" }); return; }
 
   const [connection] = await db.select().from(emailConnectionsTable).where(
-    { provider: "microsoft", ownerUserId: user.id, accountIdentifier: "primary" } as any,
+    and(eq(emailConnectionsTable.provider, "microsoft"), eq(emailConnectionsTable.ownerUserId, user.id), eq(emailConnectionsTable.accountIdentifier, "primary")),
   );
 
   if (!connection) {
@@ -236,7 +237,7 @@ router.post("/microsoft/disconnect", async (req, res): Promise<void> => {
   if (!(await requireRole(req, res, LEGAL_AUTHOR_ROLES, "Only legal staff may disconnect Microsoft 365."))) return;
 
   const [connection] = await db.select().from(emailConnectionsTable).where(
-    { provider: "microsoft", ownerUserId: user.id, accountIdentifier: "primary" } as any,
+    and(eq(emailConnectionsTable.provider, "microsoft"), eq(emailConnectionsTable.ownerUserId, user.id), eq(emailConnectionsTable.accountIdentifier, "primary")),
   );
 
   if (connection) {
@@ -279,7 +280,7 @@ router.post("/microsoft/sync", async (req, res): Promise<void> => {
   if (!(await requireRole(req, res, LEGAL_AUTHOR_ROLES, "Only legal staff may trigger email sync."))) return;
 
   const [connection] = await db.select().from(emailConnectionsTable).where(
-    { provider: "microsoft", ownerUserId: user.id, accountIdentifier: "primary", connectionStatus: "connected" } as any,
+    and(eq(emailConnectionsTable.provider, "microsoft"), eq(emailConnectionsTable.ownerUserId, user.id), eq(emailConnectionsTable.accountIdentifier, "primary"), eq(emailConnectionsTable.connectionStatus, "connected")),
   );
 
   if (!connection) {
@@ -309,48 +310,38 @@ router.post("/microsoft/webhook", async (req, res): Promise<void> => {
     return;
   }
 
-  const notifications = Array.isArray(req.body?.value) ? req.body.value : [];
-  const lifecycleEvents = notifications.filter((n: any) => n.lifecycleEvent);
-  const dataNotifications = notifications.filter((n: any) => !n.lifecycleEvent);
-
-  for (const lifecycle of lifecycleEvents) {
-    const clientState = typeof lifecycle.clientState === "string" ? lifecycle.clientState : null;
-    const [connection] = await db.select().from(emailConnectionsTable).where(
-      eq(emailConnectionsTable.subscriptionClientState, clientState ?? ""),
-    ).limit(1);
-
-    if (!connection) {
-      res.status(404).json({ error: "Unknown subscription" });
-      return;
-    }
-
-    if (lifecycle.lifecycleEvent === "subscriptionExpirationMissed") {
-      await db.update(emailConnectionsTable).set({
-        connectionStatus: "disconnected",
-        lastProviderError: "Subscription expired.",
-        updatedAt: new Date(),
-      }).where(eq(emailConnectionsTable.id, connection.id));
-    }
+  if (!Array.isArray(req.body?.value)) {
+    res.status(400).json({ error: "Invalid notification batch" }); return;
   }
-
-  for (const notification of dataNotifications) {
-    const notificationId = typeof notification.id === "string" ? notification.id : null;
-    if (!notificationId) continue;
-
-    const [existing] = await db.select().from(webhookNotificationsTable).where(
-      eq(webhookNotificationsTable.notificationId, notificationId),
-    ).limit(1);
-
-    if (existing) {
-      res.status(202).json({ accepted: true, duplicate: true });
-      return;
+  for (const notification of req.body.value) {
+    if (!notification || typeof notification !== "object" ||
+        typeof notification.subscriptionId !== "string" || !notification.subscriptionId ||
+        typeof notification.clientState !== "string" || !notification.clientState) continue;
+    const [connection] = await db.select().from(emailConnectionsTable).where(and(
+      eq(emailConnectionsTable.provider, "microsoft"),
+      eq(emailConnectionsTable.connectionStatus, "connected"),
+      eq(emailConnectionsTable.subscriptionId, notification.subscriptionId),
+      eq(emailConnectionsTable.subscriptionClientState, notification.clientState),
+    )).limit(1);
+    if (!connection) continue;
+    if (notification.lifecycleEvent) {
+      if (notification.lifecycleEvent === "subscriptionExpirationMissed") {
+        await db.update(emailConnectionsTable).set({
+          connectionStatus: "disconnected", lastProviderError: "Subscription expired.", updatedAt: new Date(),
+        }).where(eq(emailConnectionsTable.id, connection.id));
+      }
+      continue;
     }
-
+    if (typeof notification.resource !== "string" || !notification.resource ||
+        !["created", "updated", "deleted"].includes(notification.changeType)) continue;
+    // Graph change notifications do not guarantee an event ID.
+    const notificationId = typeof notification.id === "string" && notification.id
+      ? notification.id : crypto.randomUUID();
     await db.insert(webhookNotificationsTable).values({
       notificationId,
-      subscriptionId: typeof notification.subscriptionId === "string" ? notification.subscriptionId : null,
-      clientState: typeof notification.clientState === "string" ? notification.clientState : null,
-    });
+      subscriptionId: notification.subscriptionId,
+      clientState: notification.clientState,
+    }).onConflictDoNothing();
   }
 
   res.status(202).json({ accepted: true });

@@ -1,6 +1,9 @@
+import { pagination } from "../lib/pagination";
 import { Router, type IRouter } from "express";
 import { db, visitorsTable, usersTable, clientsTable, mattersTable, appointmentsTable } from "@workspace/db";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, and } from "drizzle-orm";
+
+import { VisitorBody } from "../lib/visitor-validation";
 
 const router: IRouter = Router();
 
@@ -29,19 +32,19 @@ async function enrichVisitor(v: typeof visitorsTable.$inferSelect) {
 
 // GET /api/visitors — all visitors, optionally filtered by date
 router.get("/visitors", async (req, res): Promise<void> => {
-  const { date, status } = req.query as { date?: string; status?: string };
-  let rows = await db.select().from(visitorsTable).orderBy(visitorsTable.expectedArrival);
-  if (date) {
-    const start = new Date(date + "T00:00:00Z");
-    const end   = new Date(date + "T23:59:59Z");
-    rows = rows.filter(r => {
-      if (!r.expectedArrival) return false;
-      const t = new Date(r.expectedArrival);
-      return t >= start && t <= end;
-    });
+  const page = pagination(req, res);
+  if (!page) return;
+  const conditions = [];
+  if (typeof req.query.date === "string") {
+    const date = req.query.date;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(Date.parse(date))) { res.status(400).json({ error: "Invalid date" }); return; }
+    conditions.push(sql`${visitorsTable.expectedArrival} >= ${date + "T00:00:00Z"} AND ${visitorsTable.expectedArrival} < ${new Date(Date.parse(date) + 86400000).toISOString()}`);
   }
-  if (status) rows = rows.filter(r => r.status === status);
+  if (typeof req.query.status === "string") conditions.push(eq(visitorsTable.status, req.query.status));
+  const rows = await db.select().from(visitorsTable).where(and(...conditions))
+    .orderBy(visitorsTable.expectedArrival, visitorsTable.id).limit(page.limit).offset(page.offset);
   res.json(await Promise.all(rows.map(enrichVisitor)));
+
 });
 
 // GET /api/visitors/today
@@ -66,19 +69,9 @@ router.get("/visitors/:id", async (req, res): Promise<void> => {
 
 // POST /api/visitors
 router.post("/visitors", async (req, res): Promise<void> => {
-  const { name, company, contactInfo, purpose, status,
-          hostId, assignedToId, clientId, matterId, appointmentId,
-          expectedArrival, expectedDeparture } = req.body;
-  if (!name) { res.status(400).json({ error: "name is required" }); return; }
-  const [row] = await db.insert(visitorsTable).values({
-    name, company, contactInfo, purpose,
-    status: status ?? "expected",
-    hostId: hostId ?? null, assignedToId: assignedToId ?? null,
-    clientId: clientId ?? null, matterId: matterId ?? null,
-    appointmentId: appointmentId ?? null,
-    expectedArrival: expectedArrival ? new Date(expectedArrival) : null,
-    expectedDeparture: expectedDeparture ? new Date(expectedDeparture) : null,
-  }).returning();
+  const parsed = VisitorBody.safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: "Invalid visitor payload" }); return; }
+  const [row] = await db.insert(visitorsTable).values(parsed.data).returning();
   res.status(201).json(await enrichVisitor(row));
 });
 
@@ -87,13 +80,11 @@ router.put("/visitors/:id", async (req, res): Promise<void> => {
   const id = parseInt(req.params.id, 10);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
 
-  const updates: Partial<typeof visitorsTable.$inferInsert & { checkedInAt?: Date; checkedOutAt?: Date }> = { ...req.body };
-
-  // Auto-stamp check-in / check-out times
-  if (req.body.status === "checked_in" && !req.body.checkedInAt)   updates.checkedInAt  = new Date();
-  if (req.body.status === "checked_out" && !req.body.checkedOutAt) updates.checkedOutAt = new Date();
-  if (req.body.expectedArrival)   updates.expectedArrival   = new Date(req.body.expectedArrival);
-  if (req.body.expectedDeparture) updates.expectedDeparture = new Date(req.body.expectedDeparture);
+  const parsed = VisitorBody.partial().refine(value => Object.keys(value).length > 0).safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: "Invalid visitor update" }); return; }
+  const updates: Partial<typeof visitorsTable.$inferInsert> = parsed.data;
+  if (updates.status === "checked_in") updates.checkedInAt = new Date();
+  if (updates.status === "checked_out") updates.checkedOutAt = new Date();
 
   const [row] = await db.update(visitorsTable).set(updates).where(eq(visitorsTable.id, id)).returning();
   if (!row) { res.status(404).json({ error: "Not found" }); return; }

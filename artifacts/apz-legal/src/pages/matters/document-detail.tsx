@@ -228,7 +228,7 @@ export default function DocumentDetailPage() {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <button onClick={() => setLocation(`/matters/${matterId}?tab=documents`)}
-              style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 28, height: 28, background: T.surfaceEl, border: `1px solid ${T.border}`, borderRadius: 6, cursor: "pointer", color: T.textDim }}>
+              style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 28, height: 28, background: T.nav, border: `1px solid ${T.navBorder}`, borderRadius: 6, cursor: "pointer", color: T.navText }}>
               <ChevronLeft size={14} />
             </button>
             <div>
