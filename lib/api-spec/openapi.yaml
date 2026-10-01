@@ -1587,7 +1587,7 @@ paths:
           in: query
           schema:
             type: string
-            enum: [none, indexing, indexed]
+            enum: [none, indexing, indexed, failed]
         - name: ownerId
           in: query
           schema: { type: integer }
@@ -1682,7 +1682,7 @@ paths:
           in: query
           schema:
             type: string
-            enum: [none, indexing, indexed]
+            enum: [none, indexing, indexed, failed]
         - name: ownerId
           in: query
           schema: { type: integer }
@@ -4739,7 +4739,7 @@ components:
           enum: [uploaded, pending_approval, approved, rejected, archived]
         aiIndexStatus:
           type: string
-          enum: [none, indexing, indexed]
+          enum: [none, indexing, indexed, failed]
         aiIndexedAt:
           type: ["string", "null"]
           format: date-time

@@ -5,7 +5,9 @@ import { cn } from "@/lib/utils";
 export function StatusBadge({ status, className }: { status?: KnowledgeItemStatus; className?: string }) {
   if (!status) return null;
 
-  const config: Record<KnowledgeItemStatus, { label: string; icon: any; className: string }> = {
+  // Keyed by string and guarded: a status the map doesn't know about degrades
+  // to "no badge" instead of throwing and taking the whole page down with it.
+  const config: Record<string, { label: string; icon: any; className: string }> = {
     uploaded: { label: "Uploaded", icon: UploadCloud, className: "text-neutral-400 bg-neutral-500/10 border-neutral-500/20" },
     pending_approval: { label: "Pending Approval", icon: Clock, className: "text-amber-400 bg-amber-500/10 border-amber-500/20" },
     approved: { label: "Approved", icon: CheckCircle2, className: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" },
@@ -14,6 +16,7 @@ export function StatusBadge({ status, className }: { status?: KnowledgeItemStatu
   };
 
   const c = config[status];
+  if (!c) return null;
   const Icon = c.icon;
 
   return (
@@ -24,16 +27,22 @@ export function StatusBadge({ status, className }: { status?: KnowledgeItemStatu
   );
 }
 
-export function AiIndexBadge({ status, available }: { status?: KnowledgeItemAiIndexStatus; available?: boolean }) {
+export function AiIndexBadge({ status, available }: { status?: KnowledgeItemAiIndexStatus | "failed"; available?: boolean }) {
   if (!status || status === "none") return null;
 
-  const config: Record<KnowledgeItemAiIndexStatus, { label: string; icon: any; className: string }> = {
+  // The DB can hold "failed" even though the generated enum only declares
+  // none/indexing/indexed (the indexer writes it on embedding failure). The
+  // map is keyed by string so an unexpected value degrades to "no badge"
+  // instead of throwing and taking the whole page down with it.
+  const config: Record<string, { label: string; icon: any; className: string }> = {
     none: { label: "Not Indexed", icon: Database, className: "text-neutral-500 bg-neutral-500/10 border-neutral-500/20" },
     indexing: { label: "Indexing...", icon: Cpu, className: "text-cyan-400 bg-cyan-500/10 border-cyan-500/20 animate-pulse" },
     indexed: { label: available ? "Available to AI" : "Indexed (Inactive)", icon: Search, className: available ? "text-[#00CFFF] bg-[#00CFFF]/10 border-[#00CFFF]/20" : "text-neutral-400 bg-neutral-500/10 border-neutral-500/20" },
+    failed: { label: "Index failed", icon: AlertTriangle, className: "text-rose-400 bg-rose-500/10 border-rose-500/20" },
   };
 
   const c = config[status];
+  if (!c) return null;
   const Icon = c.icon;
 
   return (
