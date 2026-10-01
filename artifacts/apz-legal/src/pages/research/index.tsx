@@ -70,8 +70,9 @@ export default function ResearchPage() {
               onClick={() => setActiveRecordId(null)}
               className="w-full flex items-center justify-center gap-2 py-2 text-[12px] font-semibold transition-opacity hover:opacity-90"
               style={{
-                background: GOLD,
-                color: "#1b1a17",
+                background: T.nav,
+                color: T.navText,
+                border: `1px solid ${T.navBorder}`,
                 borderRadius: 8,
               }}
             >

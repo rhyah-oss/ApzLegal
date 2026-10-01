@@ -1167,7 +1167,7 @@ export default function MatterDetailPage() {
               <div style={{ padding: 12, borderBottom: `1px solid ${T.border}` }}>
                 <Button
                   variant="outline"
-                  style={{ width: "100%", justifyContent: "center", gap: 6, background: GOLD, color: "#1b1a17", border: "1px solid transparent", fontSize: 12, fontWeight: 600 }}
+                  style={{ width: "100%", justifyContent: "center", gap: 6, background: T.nav, color: T.navText, border: `1px solid ${T.navBorder}`, fontSize: 12, fontWeight: 600 }}
                   onClick={() => setActiveResearchId(null)}
                 >
                   <Plus size={14} /> New Research Run

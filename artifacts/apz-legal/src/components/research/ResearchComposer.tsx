@@ -300,7 +300,7 @@ export function ResearchComposer({
             disabled={performMutation.isPending || hasNoSources}
             title={hasNoSources ? "Select at least one research source" : undefined}
             className="gap-2"
-            style={{ background: GOLD, color: "#1b1a17" }}
+            style={{ background: T.nav, color: T.navText, border: `1px solid ${T.navBorder}` }}
           >
             {performMutation.isPending ? (
               <><Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" /> Analysing corpus...</>
