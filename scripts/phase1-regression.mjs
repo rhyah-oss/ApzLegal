@@ -409,7 +409,7 @@ assert.equal(duplicateEmail.id, queuedEmail.id, "email idempotency prevents dupl
 status(await request(`/provider-operations/${queuedEmail.id}/status`, {
   method: "POST",
   body: JSON.stringify({ status: "provider_confirmed", providerName: "regression-provider", providerEventId: `missing-request-${unique}` }),
-}), 400, "provider confirmation requires a provider request ID");
+}), 403, "provider confirmation requires a verified provider callback");
 const failedEmail = ok(await request(`/provider-operations/${queuedEmail.id}/status`, {
   method: "POST",
   body: JSON.stringify({
@@ -439,7 +439,7 @@ status(await request(`/provider-operations/${queuedEmail.id}/status`, {
     providerRequestId: `wrong-terminal-${unique}`,
     providerEventId: `email-different-${unique}`,
   }),
-}), 409, "terminal provider operation cannot be overwritten");
+}), 403, "provider confirmation requires a verified provider callback");
 const retriedEmail = ok(await request(`/provider-operations/${queuedEmail.id}/retry`, {
   method: "POST",
   body: JSON.stringify({}),

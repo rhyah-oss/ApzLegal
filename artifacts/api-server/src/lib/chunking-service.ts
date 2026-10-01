@@ -31,10 +31,16 @@ export interface Chunk {
 
 const MAX_CHUNK_SIZE = 1200;
 const OVERLAP_SIZE = 200;
-const MIN_CHUNK_SIZE = 100;
+// Floor used only to decide whether a buffer is *worth splitting further*.
+// It must NOT be used to discard the final chunk: content shorter than this
+// (e.g. a 60-character template) must still be indexed as a single chunk,
+// otherwise approved short items fail to index and are never retrievable.
+const MIN_SPLIT_SIZE = 100;
 
 function splitByParagraphs(text: string): string[] {
-  return text.split(/\n\s*\n/).map(p => p.trim()).filter(p => p.length >= MIN_CHUNK_SIZE);
+  // Split on blank lines but keep every non-empty paragraph — a paragraph
+  // shorter than MIN_SPLIT_SIZE is still indexable content, not noise.
+  return text.split(/\n\s*\n/).map(p => p.trim()).filter(p => p.length > 0);
 }
 
 function splitBySentences(text: string, maxSize: number): string[] {
@@ -49,7 +55,8 @@ function splitBySentences(text: string, maxSize: number): string[] {
       current = (current + " " + sentence).trim();
     }
   }
-  if (current.trim().length >= MIN_CHUNK_SIZE) chunks.push(current.trim());
+  // Always emit a non-empty final buffer — never discard short content.
+  if (current.trim().length > 0) chunks.push(current.trim());
   return chunks;
 }
 
@@ -86,7 +93,7 @@ export function chunkText(
 
     for (const section of sections) {
       const paragraphs = splitByParagraphs(section.text);
-      let buffer = section.heading ? `${section.heading}\n\n${paragraphs[0]}` : paragraphs[0] || "";
+      let buffer = section.heading ? `${section.heading}\n\n${paragraphs[0]}` : "";
       let currentHeading = section.heading;
       let currentSection = section.heading;
 
@@ -94,7 +101,7 @@ export function chunkText(
         const para = paragraphs[i];
         if (i === 0 && section.heading) continue;
 
-        if (buffer.length + para.length + 1 > MAX_CHUNK_SIZE && buffer.length > MIN_CHUNK_SIZE) {
+        if (buffer.length + para.length + 1 > MAX_CHUNK_SIZE && buffer.length > MIN_SPLIT_SIZE) {
           chunks.push({
             text: buffer.trim(),
             metadata: { ...metadata, section: currentSection, chunkingStrategy: "legal_aware", tokenCount: Math.ceil(buffer.length / 4) },
@@ -105,7 +112,10 @@ export function chunkText(
           buffer = buffer + "\n\n" + para;
         }
       }
-      if (buffer.trim().length >= MIN_CHUNK_SIZE) {
+      // Always emit a non-empty final buffer. A MIN_CHUNK_SIZE floor here is
+      // the bug: short approved items (e.g. a 60-char template) produced zero
+      // chunks and failed to index, so they were never retrievable by the AI.
+      if (buffer.trim().length > 0) {
         chunks.push({
           text: buffer.trim(),
           metadata: { ...metadata, section: currentSection, chunkingStrategy: "legal_aware", tokenCount: Math.ceil(buffer.length / 4) },
@@ -116,7 +126,7 @@ export function chunkText(
     const paragraphs = splitByParagraphs(text);
     let buffer = paragraphs[0] || "";
     for (let i = 1; i < paragraphs.length; i++) {
-      if (buffer.length + paragraphs[i].length + 1 > MAX_CHUNK_SIZE && buffer.length > MIN_CHUNK_SIZE) {
+      if (buffer.length + paragraphs[i].length + 1 > MAX_CHUNK_SIZE && buffer.length > MIN_SPLIT_SIZE) {
         chunks.push({
           text: buffer.trim(),
           metadata: { ...metadata, chunkingStrategy: "paragraph", tokenCount: Math.ceil(buffer.length / 4) },
@@ -126,7 +136,7 @@ export function chunkText(
         buffer = buffer + "\n\n" + paragraphs[i];
       }
     }
-    if (buffer.trim().length >= MIN_CHUNK_SIZE) {
+    if (buffer.trim().length > 0) {
       chunks.push({
         text: buffer.trim(),
         metadata: { ...metadata, chunkingStrategy: "paragraph", tokenCount: Math.ceil(buffer.length / 4) },
@@ -136,7 +146,7 @@ export function chunkText(
     const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
     let buffer = sentences[0] || "";
     for (let i = 1; i < sentences.length; i++) {
-      if (buffer.length + sentences[i].length > MAX_CHUNK_SIZE && buffer.length > MIN_CHUNK_SIZE) {
+      if (buffer.length + sentences[i].length > MAX_CHUNK_SIZE && buffer.length > MIN_SPLIT_SIZE) {
         chunks.push({
           text: buffer.trim(),
           metadata: { ...metadata, chunkingStrategy: "fixed", tokenCount: Math.ceil(buffer.length / 4) },
@@ -146,7 +156,7 @@ export function chunkText(
         buffer = buffer + " " + sentences[i];
       }
     }
-    if (buffer.trim().length >= MIN_CHUNK_SIZE) {
+    if (buffer.trim().length > 0) {
       chunks.push({
         text: buffer.trim(),
         metadata: { ...metadata, chunkingStrategy: "fixed", tokenCount: Math.ceil(buffer.length / 4) },
@@ -154,7 +164,9 @@ export function chunkText(
     }
   }
 
-  return chunks.filter(c => c.text.trim().length >= MIN_CHUNK_SIZE);
+  // Keep every non-empty chunk. The previous >= MIN_CHUNK_SIZE floor silently
+  // dropped all short content — the root cause of the failed indexing.
+  return chunks.filter(c => c.text.trim().length > 0);
 }
 
-export { MAX_CHUNK_SIZE, OVERLAP_SIZE, MIN_CHUNK_SIZE };
+export { MAX_CHUNK_SIZE, OVERLAP_SIZE, MIN_SPLIT_SIZE };

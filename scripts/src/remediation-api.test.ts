@@ -58,11 +58,13 @@ function stubDb(role: string, assignedToId: number | null, present = true) {
     };
     return chain;
   });
-  const insert = mock.method(db, "insert", () => ({ values(value: unknown) { writes.push(value); return { onConflictDoNothing: async () => [] }; } }) as any);
-  return { writes, reads, restore() { select.mock.restore(); insert.mock.restore(); } };
+  const insert = mock.method(db, "insert", () => ({ values(value: unknown) { writes.push(value); return { onConflictDoNothing: () => ({ returning: async () => [{ id: writes.length }] }) }; } }) as any);
+  const updateChain: any = { set() { return updateChain; }, where() { return updateChain; }, returning() { return updateChain; }, then(resolve: any) { return Promise.resolve([]).then(resolve); } };
+  const update = mock.method(db, "update", () => updateChain as any);
+  return { writes, reads, restore() { select.mock.restore(); insert.mock.restore(); update.mock.restore(); } };
 }
 function request(body = {}) {
-  return { cookies: { auth_token: "synthetic-session-fixture" }, headers: {}, params: { matterId: "10", id: "20" }, body, query: {}, method: "POST" } as any;
+  return { cookies: { auth_token: "synthetic-session-fixture" }, headers: {}, params: { matterId: "10", id: "20" }, body, query: {}, method: "POST", log: { error: () => {}, warn: () => {}, info: () => {}, debug: () => {} } } as any;
 }
 
 describe("G document guard", () => {
