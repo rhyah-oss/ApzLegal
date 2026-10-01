@@ -331,7 +331,6 @@ export default function ClientsPage() {
             borderRadius: 7,
             color: T.text,
             fontSize: 12,
-            outline: "none",
           }}
         />
       </div>
