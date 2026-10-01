@@ -6,8 +6,11 @@ import { T, cardStyle, pillStyle } from "@/lib/theme"
 
 type EventType = "deadline" | "hearing" | "meeting" | "task"
 
+/** APZ gold accent (existing design token). */
+const GOLD = "var(--ref-gold)"
+
 interface CalEvent {
-  id: string; title: string; type: EventType; time?: string; matter?: string; day: number
+  id: string; title: string; type: EventType; time?: string; matter?: string; day: number; source: "apz" | "google"; description?: string | null; allDay?: boolean
 }
 
 const TYPE_COLOR: Record<EventType, string> = {
@@ -64,14 +67,22 @@ export default function CalendarPage() {
       return response.json()
     },
   })
+  const monthStart = new Date(Date.UTC(yearMonth.getFullYear(), yearMonth.getMonth(), 1)).toISOString()
+  const monthEnd = new Date(Date.UTC(yearMonth.getFullYear(), yearMonth.getMonth() + 1, 1)).toISOString()
+  const { data: googleEvents = [], isLoading: googleLoading } = useQuery<any[]>({
+    queryKey: ["/api/google/calendar/events", monthKey],
+    queryFn: async () => { const response = await fetch(`${BASE}/api/google/calendar/events?timeMin=${encodeURIComponent(monthStart)}&timeMax=${encodeURIComponent(monthEnd)}`, { credentials: "include" }); if (response.status === 401) return []; if (!response.ok) throw new Error("Unable to load Google Calendar"); return response.json() },
+  })
   const events = appointments.filter(a => a.date?.startsWith(monthKey)).map(a => ({
     id: String(a.id), day: Number(a.date.slice(-2)), type: a.type === "hearing" ? "hearing" : a.type === "meeting" ? "meeting" : "task",
-    title: a.title, matter: a.matterReference, time: a.startTime,
+    title: a.title, matter: a.matterReference, time: a.startTime, source: "apz",
   } as CalEvent))
+  const googleCalEvents = googleEvents.map(event => { const start = new Date(event.start); return { id: `google-${event.externalEventId}`, day: start.getUTCDate(), type: "meeting", title: event.title || "Busy", time: event.allDay ? undefined : start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }), source: "google", description: event.description, allDay: event.allDay } as CalEvent }).filter(event => new Date(Date.UTC(yearMonth.getFullYear(), yearMonth.getMonth(), event.day)).getUTCMonth() === yearMonth.getMonth())
+  const allEvents = [...events, ...googleCalEvents]
   const MONTH = yearMonth.toLocaleDateString("en-ZA", { month: "long", year: "numeric" })
   const MONTH_DAYS = new Date(yearMonth.getFullYear(), yearMonth.getMonth() + 1, 0).getDate()
   const MONTH_OFFSET = new Date(yearMonth.getFullYear(), yearMonth.getMonth(), 1).getDay() === 0 ? 6 : new Date(yearMonth.getFullYear(), yearMonth.getMonth(), 1).getDay() - 1
-  const dayEvents = events.filter(e => e.day === selected)
+  const dayEvents = allEvents.filter(e => e.day === selected)
 
   const cells: (number | null)[] = [
     ...Array(MONTH_OFFSET).fill(null),
@@ -153,7 +164,7 @@ export default function CalendarPage() {
                 }}
               />
             )
-             const evts    = events.filter(e => e.day === day)
+             const evts    = allEvents.filter(e => e.day === day)
              const isToday = day === now.getDate() && yearMonth.getMonth() === now.getMonth() && yearMonth.getFullYear() === now.getFullYear()
             const isSel   = day === selected
             return (
@@ -172,7 +183,7 @@ export default function CalendarPage() {
                 <div
                   className="mb-1 inline-flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-medium"
                   style={isToday
-                    ? { background: "linear-gradient(135deg, #4169E1, #00CFFF)", color: "#fff" }
+                    ? { background: GOLD, color: "#1b1a17" }
                     : { color: T.textDim }}
                 >
                   {day}
@@ -181,7 +192,7 @@ export default function CalendarPage() {
                   {evts.slice(0, 2).map(ev => (
                     <div key={ev.id} className="flex items-center gap-1 truncate">
                       {/* Tiny event dot — rounded-full as status indicator */}
-                      <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${TYPE_DOT_BG[ev.type]}`} />
+                      <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${ev.source === "google" ? "bg-[#5A80A8]" : TYPE_DOT_BG[ev.type]}`} />
                       <span className="truncate text-[10px]" style={{ color: T.textDim }}>{ev.title}</span>
                     </div>
                   ))}
@@ -215,7 +226,7 @@ export default function CalendarPage() {
             <p className="py-8 text-center text-[12px]" style={{ color: T.textFaint }}>No events</p>
           ) : (
             dayEvents.map(ev => {
-              const typeColor = TYPE_COLOR[ev.type]
+              const typeColor = ev.source === "google" ? T.textDim : TYPE_COLOR[ev.type]
               return (
                 <div
                   key={ev.id}
@@ -230,14 +241,14 @@ export default function CalendarPage() {
                 >
                   <div className="flex items-start justify-between gap-2 mb-1">
                     <p className="text-[12px] font-medium leading-snug" style={{ color: T.text }}>{ev.title}</p>
-                    <span style={pillStyle(typeColor)}>{ev.type}</span>
+                    <span style={pillStyle(typeColor)}>{ev.source === "google" ? "Google Calendar" : ev.type}</span>
                   </div>
                   {ev.time   && <p className="text-[11px]" style={{ color: T.textDim }}>{ev.time}</p>}
                   {ev.matter && <p className="mt-0.5 font-mono text-[10px]" style={{ color: T.textFaint }}>{ev.matter}</p>}
-                  <div className="mt-2 flex gap-2">
+                  {ev.source === "apz" && <div className="mt-2 flex gap-2">
                     <button onClick={() => void runAsyncAction(() => editEvent(ev))} className="text-[10px]" style={{ color: T.blue }}>Edit</button>
                     <button onClick={() => void runAsyncAction(() => deleteEvent(ev))} className="text-[10px]" style={{ color: T.risk }}>Delete</button>
-                  </div>
+                  </div>}
                 </div>
               )
             })
