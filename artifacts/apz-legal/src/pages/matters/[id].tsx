@@ -101,6 +101,10 @@ import { MatterEmails } from "@/components/email/MatterEmails"
 
 const BASE = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? ""
 
+/** APZ gold accent (existing design token) — used by the Research tab to match
+ *  the redesigned /research page. */
+const GOLD = "var(--ref-gold)"
+
 async function sha256File(file: File): Promise<string> {
   const digest = await crypto.subtle.digest("SHA-256", await file.arrayBuffer())
   return Array.from(new Uint8Array(digest)).map((byte) => byte.toString(16).padStart(2, "0")).join("")
@@ -1163,7 +1167,7 @@ export default function MatterDetailPage() {
               <div style={{ padding: 12, borderBottom: `1px solid ${T.border}` }}>
                 <Button
                   variant="outline"
-                  style={{ width: "100%", justifyContent: "center", gap: 6, background: `color-mix(in srgb, ${T.blue} 10%, transparent)`, color: T.blue, border: `1px solid color-mix(in srgb, ${T.blue} 30%, transparent)`, fontSize: 12 }}
+                  style={{ width: "100%", justifyContent: "center", gap: 6, background: GOLD, color: "#1b1a17", border: "1px solid transparent", fontSize: 12, fontWeight: 600 }}
                   onClick={() => setActiveResearchId(null)}
                 >
                   <Plus size={14} /> New Research Run
@@ -1177,7 +1181,7 @@ export default function MatterDetailPage() {
               {activeResearchId ? (
                 researchLoading ? (
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
-                    <Loader2 size={22} style={{ color: T.cyan, animation: "spin 1s linear infinite" }} />
+                    <Loader2 size={22} style={{ color: GOLD, animation: "spin 1s linear infinite" }} />
                   </div>
                 ) : activeResearchRecord ? (
                   <ResearchRecordView record={activeResearchRecord} onClose={() => setActiveResearchId(null)} />
@@ -1186,14 +1190,36 @@ export default function MatterDetailPage() {
                 )
               ) : (
                 <div style={{ padding: 24, height: "100%", display: "flex", flexDirection: "column" }}>
-                  <div style={{ textAlign: "center", marginBottom: 28, marginTop: 12 }}>
-                    <div style={{ width: 56, height: 56, borderRadius: 14, background: `linear-gradient(135deg, ${T.blue}, ${T.cyan})`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 10px" }}>
-                      <Search size={26} style={{ color: "#fff" }} />
+                  {/* Compact Research header — the same treatment as the
+                      redesigned /research page (gold eyebrow, restrained gold
+                      icon tile, no decorative hero). */}
+                  <div style={{ maxWidth: 720, margin: "0 auto 20px", width: "100%", display: "flex", alignItems: "flex-start", gap: 12 }}>
+                    <div
+                      aria-hidden="true"
+                      style={{
+                        width: 40,
+                        height: 40,
+                        flexShrink: 0,
+                        borderRadius: 10,
+                        background: `color-mix(in srgb, ${GOLD} 12%, transparent)`,
+                        border: `1px solid color-mix(in srgb, ${GOLD} 30%, transparent)`,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Search size={20} style={{ color: GOLD }} />
                     </div>
-                    <h2 style={{ fontSize: 18, fontWeight: 700, color: T.text, marginBottom: 6 }}>Matter Research</h2>
-                    <p style={{ fontSize: 12, color: T.textDim, maxWidth: 460, margin: "0 auto" }}>
-                      Execute a traceable query against internal precedents and external databases, automatically saved to this matter.
-                    </p>
+                    <div style={{ minWidth: 0 }}>
+                      <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: GOLD, marginBottom: 2 }}>
+                        Legal research
+                      </p>
+                      <h2 style={{ fontSize: 17, fontWeight: 600, color: T.text, lineHeight: 1.3 }}>Matter Research</h2>
+                      <p style={{ fontSize: 12.5, color: T.textDim, marginTop: 4, lineHeight: 1.6 }}>
+                        Execute traceable searches across the firm's knowledge corpus and external databases.
+                        All research is bound to a matter.
+                      </p>
+                    </div>
                   </div>
                   <div style={{ maxWidth: 720, margin: "0 auto", width: "100%" }}>
                     <ResearchComposer preselectedMatterId={matterId} onCompleted={setActiveResearchId} />

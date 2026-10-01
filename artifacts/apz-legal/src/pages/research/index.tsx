@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { History, PanelLeftClose, PanelLeftOpen, Search, Plus } from "lucide-react"
+import { History, PanelLeftClose, PanelLeftOpen, Plus } from "lucide-react"
 import { ResearchComposer } from "@/components/research/ResearchComposer"
 import { ResearchRegister } from "@/components/research/ResearchRegister"
 import { ResearchRecordView } from "@/components/research/ResearchRecordView"
@@ -7,8 +7,16 @@ import { useGetResearch, getGetResearchQueryKey } from "@workspace/api-client-re
 import { PageLoader } from "@/components/ui/loader"
 import { T, cardStyle } from "@/lib/theme"
 
+/** APZ gold accent (existing design token). */
+const GOLD = "var(--ref-gold)"
+
 export default function ResearchPage() {
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  // Desktop/tablet keep the register docked beside the composer. On phones the
+  // register would consume nearly the whole viewport, so it starts collapsed and
+  // is opened on demand over the content (see below).
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(
+    () => typeof window === "undefined" || window.innerWidth >= 768,
+  )
   const [activeRecordId, setActiveRecordId] = useState<number | null>(null)
 
   const { data: activeRecord, isLoading } = useGetResearch(activeRecordId!, {
@@ -16,11 +24,21 @@ export default function ResearchPage() {
   })
 
   return (
-    <div className="governed-research flex h-full" style={{ borderTop: `1px solid ${T.border}`, background: T.bg }}>
+    <div className="governed-research relative flex h-full" style={{ borderTop: `1px solid ${T.border}`, background: T.bg }}>
+      {/* Mobile scrim: lets the open register be dismissed by tapping outside it. */}
+      {sidebarOpen && (
+        <div
+          className="absolute inset-0 z-20 md:hidden"
+          style={{ background: "rgba(0,0,0,0.35)" }}
+          onClick={() => setSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
       {/* ── Sidebar Register ───────────────────────────────────── */}
       {sidebarOpen && (
         <div
-          className="w-80 shrink-0 flex flex-col"
+          className="absolute inset-y-0 left-0 z-30 w-80 shrink-0 flex flex-col md:relative md:z-auto"
           style={{ borderRight: `1px solid ${T.border}`, background: T.surface }}
         >
           {/* Sidebar header */}
@@ -29,7 +47,7 @@ export default function ResearchPage() {
             style={{ borderBottom: `1px solid ${T.border}` }}
           >
             <div className="flex items-center gap-2">
-              <History className="h-3.5 w-3.5 shrink-0" style={{ color: T.blue }} />
+              <History className="h-3.5 w-3.5 shrink-0" style={{ color: GOLD }} />
               <h2 className="text-[11px] font-semibold uppercase tracking-[0.1em]" style={{ color: T.textFaint }}>
                 Research Register
               </h2>
@@ -50,15 +68,12 @@ export default function ResearchPage() {
           <div className="p-3" style={{ borderBottom: `1px solid ${T.border}` }}>
             <button
               onClick={() => setActiveRecordId(null)}
-              className="w-full flex items-center justify-center gap-2 py-2 text-[12px] font-medium transition-colors"
+              className="w-full flex items-center justify-center gap-2 py-2 text-[12px] font-semibold transition-opacity hover:opacity-90"
               style={{
-                background: `color-mix(in srgb, ${T.blue} 12%, transparent)`,
-                border: `1px solid color-mix(in srgb, ${T.blue} 30%, transparent)`,
+                background: GOLD,
+                color: "#1b1a17",
                 borderRadius: 8,
-                color: T.blue,
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = `color-mix(in srgb, ${T.blue} 20%, transparent)` }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = `color-mix(in srgb, ${T.blue} 12%, transparent)` }}
             >
               <Plus className="h-3.5 w-3.5" /> New Research Run
             </button>
@@ -70,8 +85,9 @@ export default function ResearchPage() {
 
       {/* ── Main Area ──────────────────────────────────────────── */}
       <div className="flex flex-1 flex-col overflow-hidden relative">
+        {/* Desktop: floating icon toggle (unchanged behaviour). */}
         {!sidebarOpen && (
-          <div className="absolute top-4 left-4 z-10">
+          <div className="absolute top-4 left-4 z-10 hidden md:block">
             <button
               onClick={() => setSidebarOpen(true)}
               className="flex h-8 w-8 items-center justify-center transition-colors"
@@ -89,8 +105,22 @@ export default function ResearchPage() {
           </div>
         )}
 
-        <div className="flex-1 overflow-auto p-4 md:p-8">
-          <div className="max-w-6xl mx-auto w-full h-full">
+        <div className="flex-1 overflow-auto px-4 py-6 md:px-8 md:py-8">
+          <div className="mx-auto w-full max-w-6xl">
+            {/* Mobile: an in-flow, labelled history control so it never overlaps
+                the page header. */}
+            {!sidebarOpen && (
+              <div className="mb-4 md:hidden">
+                <button
+                  onClick={() => setSidebarOpen(true)}
+                  className="inline-flex h-8 items-center gap-1.5 px-3 text-[12px] font-medium transition-colors"
+                  style={{ ...cardStyle, background: T.surfaceEl, color: T.textDim }}
+                >
+                  <PanelLeftOpen className="h-3.5 w-3.5" aria-hidden="true" />
+                  Research history
+                </button>
+              </div>
+            )}
             {activeRecordId ? (
               isLoading ? (
                 <PageLoader />
@@ -100,26 +130,26 @@ export default function ResearchPage() {
                   onClose={() => setActiveRecordId(null)}
                 />
               ) : (
-                <p className="text-center p-8" style={{ color: T.textDim }}>Record not found</p>
+                <p className="p-8 text-center" style={{ color: T.textDim }}>Record not found</p>
               )
             ) : (
-              <div className="space-y-6 max-w-4xl mx-auto mt-8">
-                {/* Page heading */}
-                <div className="text-center space-y-1 mb-8">
-                  <div
-                    className="inline-flex h-12 w-12 items-center justify-center mb-3"
-                    style={{ background: T.surfaceEl, border: `1px solid ${T.border}`, borderRadius: 12 }}
+              <div className="mx-auto max-w-3xl space-y-6">
+                {/* ── Compact page header ─────────────────────────────────── */}
+                <header>
+                  <p
+                    className="text-[10px] font-bold uppercase tracking-[0.14em]"
+                    style={{ color: GOLD }}
                   >
-                    <Search className="h-6 w-6" style={{ color: T.blue }} />
-                  </div>
-                  <h1 className="text-[20px] font-semibold" style={{ color: T.text }}>
+                    Legal research
+                  </p>
+                  <h1 className="mt-1.5 text-[22px] font-semibold leading-tight" style={{ color: T.text }}>
                     Governed Legal Research
                   </h1>
-                  <p className="text-[13px] max-w-lg mx-auto" style={{ color: T.textDim }}>
+                  <p className="mt-1.5 max-w-2xl text-[12.5px] leading-relaxed" style={{ color: T.textDim }}>
                     Execute traceable searches across the firm's knowledge corpus and external databases.
                     All research is bound to a matter.
                   </p>
-                </div>
+                </header>
 
                 <ResearchComposer onCompleted={(id) => setActiveRecordId(id)} />
               </div>

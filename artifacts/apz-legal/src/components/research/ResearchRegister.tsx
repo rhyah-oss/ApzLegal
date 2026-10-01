@@ -3,6 +3,9 @@ import { BookOpen, AlertTriangle, CheckCircle2, ChevronRight, Loader2, Bot, Data
 import { Badge } from "@/components/ui/badge"
 import { T } from "@/lib/theme"
 
+/** APZ gold accent (existing design token). */
+const GOLD = "var(--ref-gold)"
+
 export function ResearchRegister({
   matterId,
   activeId,
@@ -17,7 +20,7 @@ export function ResearchRegister({
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <Loader2 className="h-5 w-5 animate-spin text-[#4169E1]" />
+        <Loader2 className="h-5 w-5 animate-spin" style={{ color: GOLD }} aria-hidden="true" />
       </div>
     )
   }
@@ -25,9 +28,11 @@ export function ResearchRegister({
   if (!history || history.length === 0) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-        <BookOpen className="h-8 w-8 text-[#162440] mb-3" />
-        <p className="text-sm font-medium text-[#6B8FBB]">No research records</p>
-        <p className="text-xs text-[#4A6B9A] mt-1 max-w-[200px]">Run a query to begin building the matter's research repository.</p>
+        <BookOpen className="mb-3 h-7 w-7" style={{ color: T.textFaint }} aria-hidden="true" />
+        <p className="text-[13px] font-medium" style={{ color: T.textDim }}>No research records</p>
+        <p className="mt-1 max-w-[200px] text-[11px]" style={{ color: T.textFaint }}>
+          Run a query to begin building the matter's research repository.
+        </p>
       </div>
     )
   }
@@ -40,48 +45,61 @@ export function ResearchRegister({
           <button
             key={record.id}
             onClick={() => onSelect(record.id)}
-            className="w-full text-left p-4 transition-colors border-b border-[#162440] relative group hover:bg-[#0A1628]"
-            style={{ background: isActive ? T.surface : "transparent" }}
+            className="group relative w-full border-b p-4 text-left transition-colors"
+            style={{
+              borderColor: T.borderSub ?? T.border,
+              background: isActive ? T.surfaceEl : "transparent",
+            }}
           >
-            {isActive && <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-[#4169E1]" />}
-            
-            <div className="flex justify-between items-start mb-2">
-              <div className="flex items-center gap-2 flex-wrap">
+            {isActive && (
+              <span
+                className="absolute left-0 top-0 bottom-0 w-[2px]"
+                style={{ background: GOLD }}
+                aria-hidden="true"
+              />
+            )}
+
+            <div className="mb-2 flex items-start justify-between gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 {record.savedToMatter && (
-                  <Badge variant="outline" className="text-[9px] py-0 border-emerald-500/30 text-emerald-400 bg-emerald-500/10 gap-1 h-4">
-                    <CheckCircle2 className="h-2.5 w-2.5" /> Saved
+                  <Badge variant="outline" className="h-4 gap-1 py-0 text-[9px]" style={{ color: T.ok, borderColor: `color-mix(in srgb, ${T.ok} 30%, transparent)`, background: `color-mix(in srgb, ${T.ok} 10%, transparent)` }}>
+                    <CheckCircle2 className="h-2.5 w-2.5" aria-hidden="true" /> Saved
                   </Badge>
                 )}
                 {record.aiStatus === "failed" && (
-                  <Badge variant="outline" className="text-[9px] py-0 border-red-500/30 text-red-400 bg-red-500/10 gap-1 h-4">
-                    <AlertTriangle className="h-2.5 w-2.5" /> AI Failed
+                  <Badge variant="outline" className="h-4 gap-1 py-0 text-[9px]" style={{ color: T.risk, borderColor: `color-mix(in srgb, ${T.risk} 30%, transparent)`, background: `color-mix(in srgb, ${T.risk} 10%, transparent)` }}>
+                    <AlertTriangle className="h-2.5 w-2.5" aria-hidden="true" /> AI failed
                   </Badge>
                 )}
-                <span className="text-[10px] text-[#6B8FBB]">
+                <span className="text-[10px]" style={{ color: T.textFaint }}>
                   {new Date(record.createdAt).toLocaleDateString()}
                 </span>
               </div>
               {!matterId && record.matterId && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#162440] text-[#E8EFFF] font-mono">
+                <span className="rounded px-1.5 py-0.5 font-mono text-[10px]" style={{ background: T.surfaceEl, color: T.textDim }}>
                   M-{record.matterId}
                 </span>
               )}
             </div>
 
-            <p className="text-[13px] font-medium text-[#E8EFFF] line-clamp-2 leading-snug mb-2 group-hover:text-[#4169E1] transition-colors">
+            <p className="mb-2 line-clamp-2 text-[13px] font-medium leading-snug" style={{ color: T.text }}>
               {record.query}
             </p>
 
-            <div className="flex items-center justify-between mt-3 text-[10px] text-[#4A6B9A]">
+            <div className="mt-3 flex items-center justify-between text-[10px]" style={{ color: T.textFaint }}>
               <div className="flex items-center gap-3">
                 <span className="flex items-center gap-1">
-                  <Database className="h-3 w-3" /> {record.internalResults?.length || 0} hits
+                  <Database className="h-3 w-3" aria-hidden="true" /> {record.internalResults?.length || 0} hits
                 </span>
                 <span className="flex items-center gap-1">
-                  <Bot className="h-3 w-3" /> {record.citations?.length || 0} citations
+                  <Bot className="h-3 w-3" aria-hidden="true" /> {record.citations?.length || 0} citations
                 </span>
               </div>
-              <ChevronRight className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-[#4169E1]" />
+              <ChevronRight
+                className={`h-3.5 w-3.5 transition-opacity ${isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
+                style={{ color: GOLD }}
+                aria-hidden="true"
+              />
             </div>
           </button>
         )

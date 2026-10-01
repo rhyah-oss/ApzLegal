@@ -1,7 +1,9 @@
-import { BookOpen, AlertTriangle, ShieldCheck, CheckCircle2, Copy, FileText, ChevronRight, Scale, Search, ShieldAlert, BadgeInfo, Info } from "lucide-react"
+import { useState, type CSSProperties } from "react"
+import { BookOpen, AlertTriangle, ShieldCheck, CheckCircle2, FileText, ChevronRight, Scale, Search, ShieldAlert, BadgeInfo, Info } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast"
 import { Link } from "wouter"
 import { 
@@ -13,11 +15,30 @@ import {
   getListAuditLogsQueryKey,
 } from "@workspace/api-client-react"
 import { useQueryClient } from "@tanstack/react-query"
+import { T } from "@/lib/theme"
+
+/** APZ gold accent (existing design token). */
+const GOLD = "var(--ref-gold)"
+
+const sectionLabel: CSSProperties = {
+  fontSize: 10,
+  fontWeight: 700,
+  letterSpacing: "0.1em",
+  textTransform: "uppercase",
+  color: T.textFaint,
+}
+
+const card: CSSProperties = {
+  background: T.surface,
+  border: `1px solid ${T.border}`,
+  borderRadius: 10,
+}
 
 export function ResearchRecordView({ record, onClose }: { record: ResearchRecord; onClose?: () => void }) {
   const { toast } = useToast()
   const queryClient = useQueryClient()
   const saveMutation = useSaveResearchToMatter()
+  const [tab, setTab] = useState("answer")
 
   const handleSave = () => {
     saveMutation.mutate({ id: record.id }, {
@@ -43,246 +64,366 @@ export function ResearchRecordView({ record, onClose }: { record: ResearchRecord
   const internalHits = record.internalResults || []
   const precedents = internalHits.filter(h => h.source === "firm_precedents")
   const otherInternal = internalHits.filter(h => h.source !== "firm_precedents")
+  const citations = record.citations || []
 
   return (
-    <div className="flex flex-col h-full bg-[#050B1A] border border-[#162440] rounded-lg overflow-hidden relative text-[#E8EFFF]">
-      {/* Header */}
-      <div className="p-5 border-b border-[#162440] bg-[#0A1628] shrink-0 flex items-start justify-between">
-        <div>
-          <div className="flex items-center gap-2 mb-2">
-            <Badge variant="outline" className="font-mono text-[10px] bg-[#4169E1]/10 text-[#4169E1] border-[#4169E1]/30">
-              RESEARCH RECORD
-            </Badge>
-            {record.savedToMatter && (
-              <Badge variant="outline" className="font-mono text-[10px] bg-emerald-500/10 text-emerald-400 border-emerald-500/30 gap-1">
-                <CheckCircle2 className="h-3 w-3" /> Saved to Matter
+    <div className="flex flex-col h-full" style={{ background: T.bg }}>
+      {/* ── Header ─────────────────────────────────────────────────────────── */}
+      <div className="shrink-0 px-5 pt-4 pb-3" style={{ borderBottom: `1px solid ${T.border}`, background: T.surface }}>
+        {/* Breadcrumb */}
+        <div className="mb-2 flex items-center gap-1.5 text-[11px]" style={{ color: T.textFaint }}>
+          <button
+            type="button"
+            onClick={onClose}
+            className="transition-colors hover:underline"
+            style={{ color: T.textDim }}
+          >
+            Research
+          </button>
+          <ChevronRight className="h-3 w-3" aria-hidden="true" />
+          <span className="truncate" style={{ color: T.textDim }}>{record.query}</span>
+        </div>
+
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="mb-1.5 flex flex-wrap items-center gap-2">
+              <span style={{ ...sectionLabel, color: GOLD }}>Research Record</span>
+              {record.savedToMatter && (
+                <Badge variant="outline" className="gap-1 text-[10px]" style={{ color: T.ok, borderColor: `color-mix(in srgb, ${T.ok} 30%, transparent)`, background: `color-mix(in srgb, ${T.ok} 10%, transparent)` }}>
+                  <CheckCircle2 className="h-3 w-3" aria-hidden="true" /> Saved to matter
+                </Badge>
+              )}
+            </div>
+            <h2 className="text-[17px] font-semibold leading-snug" style={{ color: T.text }}>{record.query}</h2>
+            <p className="mt-1 text-[11px]" style={{ color: T.textDim }}>
+              Performed by {record.performedBy || "Unknown"} on {new Date(record.createdAt).toLocaleString()}
+            </p>
+          </div>
+
+          <div className="flex shrink-0 items-center gap-2">
+            {!record.savedToMatter ? (
+              <Button
+                type="button"
+                onClick={handleSave}
+                disabled={saveMutation.isPending}
+                className="gap-1.5"
+                style={{ background: GOLD, color: "#1b1a17" }}
+              >
+                <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" /> Save to matter
+              </Button>
+            ) : (
+              <Badge variant="outline" className="gap-1 text-[10px]" style={{ color: T.ok, borderColor: `color-mix(in srgb, ${T.ok} 30%, transparent)` }}>
+                <CheckCircle2 className="h-3 w-3" aria-hidden="true" /> Saved
               </Badge>
             )}
+            {onClose && (
+              <Button variant="outline" size="sm" onClick={onClose}>Close</Button>
+            )}
           </div>
-          <h2 className="text-lg font-semibold text-[#E8EFFF] mb-1">{record.query}</h2>
-          <p className="text-xs text-[#6B8FBB]">
-            Performed by {record.performedBy || "Unknown"} on {new Date(record.createdAt).toLocaleString()}
-          </p>
         </div>
-        {onClose && (
-          <Button variant="ghost" size="sm" onClick={onClose} className="text-[#6B8FBB] hover:text-[#E8EFFF] hover:bg-[#162440]">Close</Button>
-        )}
       </div>
 
-      <div className="flex-1 overflow-auto flex flex-col md:flex-row">
-        {/* Main Content */}
-        <div className="flex-1 p-6 space-y-8">
-          
-          {/* AI Analysis */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between border-b border-[#162440] pb-2">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-[#4169E1] flex items-center gap-2">
-                <Search className="h-4 w-4" /> AI Analysis
-              </h3>
-              <Badge variant="outline" className="text-[10px] border-amber-500/30 text-amber-500 bg-amber-500/10">
-                AI-assisted — no live case law/legislation access
-              </Badge>
-            </div>
-
-            {record.aiStatus === "ok" && record.aiSummary ? (
-              <div className="p-5 bg-[#0A1628] rounded-md border border-[#162440] text-sm leading-relaxed whitespace-pre-wrap text-[#E8EFFF]">
-                {record.aiSummary}
-              </div>
-            ) : (record.aiStatus === "failed" || record.aiStatus === "unavailable") ? (
-              <div className="p-5 bg-red-500/10 border border-red-500/30 rounded-md flex items-start gap-3">
-                <ShieldAlert className="h-5 w-5 text-red-400 shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="text-sm font-medium text-red-400">AI Analysis Unavailable</h4>
-                  <p className="text-sm text-red-400/80 mt-1">{record.aiError || "An unexpected error occurred during generation."}</p>
-                </div>
-              </div>
-            ) : (
-              <div className="p-5 text-sm text-[#6B8FBB] italic">AI summary unavailable for this record.</div>
-            )}
-
-            {/* Case References & Legislation */}
-            {record.aiStatus === "ok" && (record.caseReferences?.length > 0 || record.legislation?.length > 0) && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {record.caseReferences?.length > 0 && (
-                  <div className="p-4 bg-[#0A1628] border border-[#162440] rounded-md">
-                    <h4 className="text-[11px] font-semibold uppercase tracking-wider text-[#6B8FBB] mb-3 flex items-center gap-2">
-                      <Scale className="h-3.5 w-3.5" /> Identified Case Law
-                    </h4>
-                    <ul className="space-y-2">
-                      {record.caseReferences.map((c, i) => (
-                        <li key={i} className="text-[13px] text-[#E8EFFF] flex items-start gap-2">
-                          <span className="text-[#4169E1] mt-0.5">•</span>
-                          {c}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                {record.legislation?.length > 0 && (
-                  <div className="p-4 bg-[#0A1628] border border-[#162440] rounded-md">
-                    <h4 className="text-[11px] font-semibold uppercase tracking-wider text-[#6B8FBB] mb-3 flex items-center gap-2">
-                      <BookOpen className="h-3.5 w-3.5" /> Referenced Legislation
-                    </h4>
-                    <ul className="space-y-2">
-                      {record.legislation.map((l, i) => (
-                        <li key={i} className="text-[13px] text-[#E8EFFF] flex items-start gap-2">
-                          <span className="text-[#4169E1] mt-0.5">•</span>
-                          {l}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Internal Results - Precedents */}
-          {precedents.length > 0 && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between border-b border-[#162440] pb-2">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-[#00CFFF] flex items-center gap-2">
-                  <FileText className="h-4 w-4" /> Suggested Precedents
-                </h3>
-              </div>
-              <div className="grid grid-cols-1 gap-3">
-                {precedents.map(h => (
-                  <Link key={h.id} href={`/knowledge`}>
-                    <div className="p-4 border border-[#162440] bg-[#0A1628] hover:border-[#00CFFF] hover:bg-[#0F1E35] transition-colors rounded-md cursor-pointer group">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1.5">
-                            <Badge variant="outline" className="text-[9px] bg-[#00CFFF]/10 text-[#00CFFF] border-[#00CFFF]/30">Firm Precedent</Badge>
-                            <span className="text-[10px] text-[#6B8FBB]">{h.category}</span>
-                          </div>
-                          <h4 className="text-sm font-medium text-[#E8EFFF] group-hover:text-[#00CFFF] transition-colors">{h.title}</h4>
-                          {h.snippet && <p className="text-xs text-[#6B8FBB] mt-1.5 line-clamp-2">{h.snippet}</p>}
-                        </div>
-                        <ChevronRight className="h-4 w-4 text-[#4A6B9A] group-hover:text-[#00CFFF]" />
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Internal Results - Knowledge Base */}
-          {otherInternal.length > 0 && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between border-b border-[#162440] pb-2">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-[#6B8FBB] flex items-center gap-2">
-                  <BadgeInfo className="h-4 w-4" /> Firm Knowledge Base
-                </h3>
-              </div>
-              <div className="grid grid-cols-1 gap-3">
-                {otherInternal.map(h => (
-                  <Link key={h.id} href={`/knowledge`}>
-                    <div className="p-4 border border-[#162440] bg-[#0A1628] hover:border-[#4169E1] transition-colors rounded-md cursor-pointer group">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1.5">
-                            <Badge variant="outline" className="text-[9px] bg-[#4169E1]/10 text-[#4169E1] border-[#4169E1]/30">{h.type.replace('_', ' ')}</Badge>
-                            <span className="text-[10px] text-[#6B8FBB]">{h.category}</span>
-                          </div>
-                          <h4 className="text-sm font-medium text-[#E8EFFF] group-hover:text-[#4169E1] transition-colors">{h.title}</h4>
-                          {h.snippet && <p className="text-xs text-[#6B8FBB] mt-1.5 line-clamp-2">{h.snippet}</p>}
-                        </div>
-                        <ChevronRight className="h-4 w-4 text-[#4A6B9A] group-hover:text-[#4169E1]" />
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
-
+      {/* ── Tabs + body ────────────────────────────────────────────────────── */}
+      <Tabs value={tab} onValueChange={setTab} className="flex min-h-0 flex-1 flex-col">
+        <div className="shrink-0 px-5" style={{ borderBottom: `1px solid ${T.border}`, background: T.surface }}>
+          <TabsList className="h-9 gap-1 bg-transparent p-0">
+            <TabsTrigger
+              value="answer"
+              className="rounded-none border-b-2 border-transparent px-3 py-2 text-[12px] font-medium text-[var(--apz-text-dim)] data-[state=active]:border-[var(--ref-gold)] data-[state=active]:bg-transparent data-[state=active]:text-[var(--apz-text)] data-[state=active]:shadow-none"
+            >
+              Answer
+            </TabsTrigger>
+            <TabsTrigger
+              value="sources"
+              className="rounded-none border-b-2 border-transparent px-3 py-2 text-[12px] font-medium text-[var(--apz-text-dim)] data-[state=active]:border-[var(--ref-gold)] data-[state=active]:bg-transparent data-[state=active]:text-[var(--apz-text)] data-[state=active]:shadow-none"
+            >
+              Sources ({citations.length + internalHits.length})
+            </TabsTrigger>
+          </TabsList>
         </div>
 
-        {/* Metadata Sidebar */}
-        <div className="w-full md:w-80 border-l border-[#162440] bg-[#0A1628] p-5 shrink-0 flex flex-col gap-6">
-          <div className="space-y-1.5">
-            <h3 className="text-[10px] font-semibold uppercase tracking-wider text-[#6B8FBB]">Sources Requested</h3>
-            <div className="flex flex-wrap gap-1.5">
-              {record.sourcesRequested.map(s => (
-                <Badge key={s} variant="outline" className="text-[10px] border-[#4A6B9A] text-[#6B8FBB] bg-[#162440]/50">{s.replace(/_/g, ' ')}</Badge>
-              ))}
-            </div>
-          </div>
+        <div className="min-h-0 flex-1 overflow-auto">
+          <div className="flex flex-col gap-6 p-5 lg:flex-row">
+            {/* ── Main column ────────────────────────────────────────────── */}
+            <div className="min-w-0 flex-1 space-y-6">
+              <TabsContent value="answer" className="mt-0 space-y-6">
+                {/* AI Analysis */}
+                <section style={card} className="overflow-hidden">
+                  <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3" style={{ borderBottom: `1px solid ${T.border}`, background: T.surfaceB }}>
+                    <h3 className="flex items-center gap-2 text-[12px] font-semibold" style={{ color: T.text }}>
+                      <Search className="h-3.5 w-3.5" style={{ color: GOLD }} aria-hidden="true" /> AI Analysis
+                    </h3>
+                    <span
+                      className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold"
+                      style={{
+                        color: T.warn,
+                        background: `color-mix(in srgb, ${T.warn} 12%, transparent)`,
+                        border: `1px solid color-mix(in srgb, ${T.warn} 30%, transparent)`,
+                        borderRadius: 4,
+                      }}
+                    >
+                      <AlertTriangle className="h-3 w-3" aria-hidden="true" />
+                      AI-assisted — no live case law/legislation access
+                    </span>
+                  </div>
 
-          {record.aiStatus === "ok" && (
-            <>
-              <div className="space-y-1.5">
-                <h3 className="text-[10px] font-semibold uppercase tracking-wider text-[#6B8FBB]">Confidence</h3>
-                <div className="text-lg font-mono font-medium text-[#E8EFFF]">
-                  {record.confidenceScore !== null && record.confidenceScore !== undefined ? `${record.confidenceScore}%` : "Unavailable"}
-                </div>
-              </div>
+                  <div className="p-5">
+                    {record.aiStatus === "ok" && record.aiSummary ? (
+                      <div className="whitespace-pre-wrap text-[13.5px] leading-relaxed" style={{ color: T.text }}>
+                        {record.aiSummary}
+                      </div>
+                    ) : (record.aiStatus === "failed" || record.aiStatus === "unavailable") ? (
+                      <div
+                        className="flex items-start gap-3 p-4"
+                        style={{ background: `color-mix(in srgb, ${T.risk} 8%, transparent)`, border: `1px solid color-mix(in srgb, ${T.risk} 30%, transparent)`, borderRadius: 8 }}
+                      >
+                        <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" style={{ color: T.risk }} aria-hidden="true" />
+                        <div>
+                          <h4 className="text-[13px] font-semibold" style={{ color: T.risk }}>AI Analysis Unavailable</h4>
+                          <p className="mt-1 text-[12.5px]" style={{ color: T.textDim }}>{record.aiError || "An unexpected error occurred during generation."}</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-[13px] italic" style={{ color: T.textDim }}>AI summary unavailable for this record.</p>
+                    )}
+                  </div>
+                </section>
 
-              <div className="space-y-1.5">
-                <h3 className="text-[10px] font-semibold uppercase tracking-wider text-[#6B8FBB]">Citations</h3>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-medium text-[#E8EFFF]">{record.citations?.length || 0} sources</span>
-                  {record.citationStatus === "verified" ? (
-                    <Badge variant="outline" className="text-[10px] text-emerald-400 border-emerald-500/30 bg-emerald-500/10">Verified</Badge>
-                  ) : record.citationStatus === "unverified" ? (
-                    <Badge variant="outline" className="text-[10px] text-amber-500 border-amber-500/30 bg-amber-500/10">Unverified</Badge>
-                  ) : (
-                    <Badge variant="outline" className="text-[10px] border-[#162440] text-[#6B8FBB]">None</Badge>
-                  )}
-                </div>
-                {record.citations && record.citations.length > 0 && (
-                  <ul className="text-xs text-[#6B8FBB] list-disc pl-4 space-y-1">
-                    {record.citations.map((c, i) => <li key={i}>{c}</li>)}
-                  </ul>
+                {/* Case law / legislation */}
+                {record.aiStatus === "ok" && ((record.caseReferences?.length ?? 0) > 0 || (record.legislation?.length ?? 0) > 0) && (
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    {(record.caseReferences?.length ?? 0) > 0 && (
+                      <section style={card} className="p-4">
+                        <h4 className="mb-3 flex items-center gap-2" style={sectionLabel}>
+                          <Scale className="h-3.5 w-3.5" aria-hidden="true" /> Identified case law
+                        </h4>
+                        <ul className="space-y-2">
+                          {record.caseReferences.map((c, i) => (
+                            <li key={i} className="flex items-start gap-2 text-[12.5px]" style={{ color: T.text }}>
+                              <span className="mt-0.5" style={{ color: GOLD }} aria-hidden="true">•</span>
+                              {c}
+                            </li>
+                          ))}
+                        </ul>
+                      </section>
+                    )}
+                    {(record.legislation?.length ?? 0) > 0 && (
+                      <section style={card} className="p-4">
+                        <h4 className="mb-3 flex items-center gap-2" style={sectionLabel}>
+                          <BookOpen className="h-3.5 w-3.5" aria-hidden="true" /> Referenced legislation
+                        </h4>
+                        <ul className="space-y-2">
+                          {record.legislation.map((l, i) => (
+                            <li key={i} className="flex items-start gap-2 text-[12.5px]" style={{ color: T.text }}>
+                              <span className="mt-0.5" style={{ color: GOLD }} aria-hidden="true">•</span>
+                              {l}
+                            </li>
+                          ))}
+                        </ul>
+                      </section>
+                    )}
+                  </div>
                 )}
-              </div>
+              </TabsContent>
 
-              {record.explanation && (
-                <Collapsible className="border border-[#162440] rounded-md">
-                  <CollapsibleTrigger className="flex items-center justify-between w-full p-3 text-xs font-medium hover:bg-[#0F1E35] transition-colors text-[#E8EFFF]">
-                    <span className="flex items-center gap-2"><Info className="h-3.5 w-3.5" /> AI Explanation</span>
+              <TabsContent value="sources" className="mt-0 space-y-6">
+                {/* Citations */}
+                <section style={card} className="overflow-hidden">
+                  <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: `1px solid ${T.border}`, background: T.surfaceB }}>
+                    <h3 className="flex items-center gap-2" style={sectionLabel}>
+                      <BadgeInfo className="h-3.5 w-3.5" aria-hidden="true" /> Citations
+                    </h3>
+                    <CitationStatusBadge status={record.citationStatus} />
+                  </div>
+                  <div className="p-4">
+                    {citations.length === 0 ? (
+                      <p className="text-[12.5px]" style={{ color: T.textDim }}>No citations were recorded for this research.</p>
+                    ) : (
+                      <ul className="space-y-2">
+                        {citations.map((c, i) => (
+                          <li
+                            key={i}
+                            className="flex items-start gap-3 px-3 py-2.5"
+                            style={{ background: T.surfaceB, border: `1px solid ${T.borderSub ?? T.border}`, borderRadius: 8 }}
+                          >
+                            <span
+                              className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center text-[10px] font-semibold"
+                              style={{ background: `color-mix(in srgb, ${GOLD} 14%, transparent)`, color: GOLD, borderRadius: 4 }}
+                              aria-hidden="true"
+                            >
+                              {i + 1}
+                            </span>
+                            <span className="min-w-0 flex-1 font-mono text-[11.5px] leading-snug" style={{ color: T.text }}>{c}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </section>
+
+                {/* Suggested precedents */}
+                {precedents.length > 0 && (
+                  <section className="space-y-3">
+                    <h3 className="flex items-center gap-2" style={sectionLabel}>
+                      <FileText className="h-3.5 w-3.5" aria-hidden="true" /> Suggested precedents
+                    </h3>
+                    <div className="grid grid-cols-1 gap-3">
+                      {precedents.map(h => (
+                        <Link key={h.id} href={`/knowledge`}>
+                          <div className="group cursor-pointer p-4 transition-colors" style={{ ...card, borderRadius: 8 }}>
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <div className="mb-1.5 flex flex-wrap items-center gap-2">
+                                  <Badge variant="outline" className="text-[9px]" style={{ color: GOLD, borderColor: `color-mix(in srgb, ${GOLD} 35%, transparent)` }}>Firm precedent</Badge>
+                                  <span className="text-[10px]" style={{ color: T.textFaint }}>{h.category}</span>
+                                </div>
+                                <h4 className="text-[13px] font-medium transition-colors group-hover:opacity-80" style={{ color: T.text }}>{h.title}</h4>
+                                {h.snippet && <p className="mt-1.5 line-clamp-2 text-[11.5px]" style={{ color: T.textDim }}>{h.snippet}</p>}
+                              </div>
+                              <ChevronRight className="h-4 w-4 shrink-0" style={{ color: T.textFaint }} aria-hidden="true" />
+                            </div>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {/* Knowledge base hits */}
+                {otherInternal.length > 0 && (
+                  <section className="space-y-3">
+                    <h3 className="flex items-center gap-2" style={sectionLabel}>
+                      <BadgeInfo className="h-3.5 w-3.5" aria-hidden="true" /> Firm knowledge base
+                    </h3>
+                    <div className="grid grid-cols-1 gap-3">
+                      {otherInternal.map(h => (
+                        <Link key={h.id} href={`/knowledge`}>
+                          <div className="group cursor-pointer p-4 transition-colors" style={{ ...card, borderRadius: 8 }}>
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <div className="mb-1.5 flex flex-wrap items-center gap-2">
+                                  <Badge variant="outline" className="text-[9px]" style={{ color: T.textDim, borderColor: T.border }}>{h.type.replace('_', ' ')}</Badge>
+                                  <span className="text-[10px]" style={{ color: T.textFaint }}>{h.category}</span>
+                                </div>
+                                <h4 className="text-[13px] font-medium transition-colors group-hover:opacity-80" style={{ color: T.text }}>{h.title}</h4>
+                                {h.snippet && <p className="mt-1.5 line-clamp-2 text-[11.5px]" style={{ color: T.textDim }}>{h.snippet}</p>}
+                              </div>
+                              <ChevronRight className="h-4 w-4 shrink-0" style={{ color: T.textFaint }} aria-hidden="true" />
+                            </div>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {citations.length === 0 && precedents.length === 0 && otherInternal.length === 0 && (
+                  <p className="text-[12.5px]" style={{ color: T.textDim }}>No sources were recorded for this research.</p>
+                )}
+              </TabsContent>
+            </div>
+
+            {/* ── Summary rail ───────────────────────────────────────────── */}
+            <aside className="w-full shrink-0 space-y-4 lg:w-[300px]">
+              <section style={card} className="overflow-hidden">
+                <div className="px-4 py-3" style={{ borderBottom: `1px solid ${T.border}`, background: T.surfaceB }}>
+                  <h3 style={sectionLabel}>Research summary</h3>
+                </div>
+                <dl className="divide-y" style={{ borderColor: T.border }}>
+                  <div className="px-4 py-3">
+                    <dt style={sectionLabel}>Data sources</dt>
+                    <dd className="mt-1.5 flex flex-wrap gap-1.5">
+                      {record.sourcesRequested.map(s => (
+                        <span
+                          key={s}
+                          className="px-2 py-0.5 text-[10px] font-medium"
+                          style={{ color: T.textDim, background: T.surfaceEl, border: `1px solid ${T.border}`, borderRadius: 20 }}
+                        >
+                          {s.replace(/_/g, ' ')}
+                        </span>
+                      ))}
+                    </dd>
+                  </div>
+
+                  {record.aiStatus === "ok" && (
+                    <>
+                      <div className="flex items-center justify-between px-4 py-3">
+                        <dt style={sectionLabel}>Confidence</dt>
+                        <dd className="text-[15px] font-semibold tabular-nums" style={{ color: T.text }}>
+                          {record.confidenceScore !== null && record.confidenceScore !== undefined ? `${record.confidenceScore}%` : "Unavailable"}
+                        </dd>
+                      </div>
+
+                      <div className="flex items-center justify-between px-4 py-3">
+                        <dt style={sectionLabel}>Citations</dt>
+                        <dd className="flex items-center gap-2">
+                          <span className="text-[12.5px] font-medium" style={{ color: T.text }}>
+                            {citations.length} source{citations.length === 1 ? "" : "s"}
+                          </span>
+                          <CitationStatusBadge status={record.citationStatus} />
+                        </dd>
+                      </div>
+
+                      <div className="flex items-center justify-between px-4 py-3">
+                        <dt style={sectionLabel}>Model</dt>
+                        <dd className="font-mono text-[11px]" style={{ color: T.textDim }}>{record.model || "Unknown"}</dd>
+                      </div>
+                    </>
+                  )}
+                </dl>
+
+                {citations.length > 0 && (
+                  <div className="px-4 pb-4">
+                    <button
+                      type="button"
+                      onClick={() => setTab("sources")}
+                      className="text-[11px] font-semibold transition-colors hover:underline"
+                      style={{ color: GOLD }}
+                    >
+                      View all sources
+                    </button>
+                  </div>
+                )}
+              </section>
+
+              {record.aiStatus === "ok" && record.explanation && (
+                <Collapsible style={card} className="overflow-hidden">
+                  <CollapsibleTrigger className="flex w-full items-center justify-between px-4 py-3 text-[11px] font-semibold" style={{ color: T.text }}>
+                    <span className="flex items-center gap-2"><Info className="h-3.5 w-3.5" aria-hidden="true" /> AI explanation</span>
+                    <ChevronRight className="h-3.5 w-3.5" style={{ color: T.textFaint }} aria-hidden="true" />
                   </CollapsibleTrigger>
-                  <CollapsibleContent className="p-3 pt-0 text-xs text-[#6B8FBB] border-t border-[#162440] bg-[#050B1A]/50 whitespace-pre-wrap">
-                    {record.explanation}
+                  <CollapsibleContent className="whitespace-pre-wrap px-4 pb-4 text-[11.5px]" style={{ color: T.textDim, borderTop: `1px solid ${T.border}` }}>
+                    <div className="pt-3">{record.explanation}</div>
                   </CollapsibleContent>
                 </Collapsible>
               )}
 
-              <div className="space-y-1.5">
-                <h3 className="text-[10px] font-semibold uppercase tracking-wider text-[#6B8FBB]">Model Context</h3>
-                <div className="text-xs flex items-center gap-1.5 text-[#E8EFFF]">
-                  <span className="text-[#6B8FBB]">Model:</span>
-                  <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-[#162440]">{record.model || "Unknown"}</span>
+              {record.savedToMatter && (
+                <div
+                  className="px-4 py-3 text-center"
+                  style={{ background: `color-mix(in srgb, ${T.ok} 8%, transparent)`, border: `1px solid color-mix(in srgb, ${T.ok} 30%, transparent)`, borderRadius: 10 }}
+                >
+                  <CheckCircle2 className="mx-auto mb-1 h-4 w-4" style={{ color: T.ok }} aria-hidden="true" />
+                  <div className="text-[11px] font-semibold" style={{ color: T.ok }}>Saved to matter</div>
+                  <div className="mt-0.5 text-[10px]" style={{ color: T.textDim }}>
+                    by {record.savedBy} {record.savedAt && `on ${new Date(record.savedAt).toLocaleDateString()}`}
+                  </div>
                 </div>
-              </div>
-            </>
-          )}
-
-          <div className="flex-1" />
-
-          {/* Actions */}
-          <div className="space-y-3 pt-4 border-t border-[#162440]">
-            {!record.savedToMatter ? (
-              <Button 
-                className="w-full bg-[#4169E1] hover:bg-[#3558C8] text-white" 
-                onClick={handleSave}
-                disabled={saveMutation.isPending}
-              >
-                Save to Matter
-              </Button>
-            ) : (
-              <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded text-center">
-                <div className="flex justify-center mb-1"><CheckCircle2 className="h-5 w-5 text-emerald-400" /></div>
-                <div className="text-[11px] font-medium text-emerald-400">Saved to Matter</div>
-                <div className="text-[10px] text-emerald-400/80 mt-1">
-                  by {record.savedBy} {record.savedAt && `on ${new Date(record.savedAt).toLocaleDateString()}`}
-                </div>
-              </div>
-            )}
+              )}
+            </aside>
           </div>
         </div>
-      </div>
+      </Tabs>
     </div>
   )
+}
+
+function CitationStatusBadge({ status }: { status: ResearchRecord["citationStatus"] }) {
+  if (status === "verified") {
+    return <Badge variant="outline" className="text-[10px]" style={{ color: T.ok, borderColor: `color-mix(in srgb, ${T.ok} 30%, transparent)`, background: `color-mix(in srgb, ${T.ok} 10%, transparent)` }}>Verified</Badge>
+  }
+  if (status === "unverified") {
+    return <Badge variant="outline" className="text-[10px]" style={{ color: T.warn, borderColor: `color-mix(in srgb, ${T.warn} 30%, transparent)`, background: `color-mix(in srgb, ${T.warn} 10%, transparent)` }}>Unverified</Badge>
+  }
+  return <Badge variant="outline" className="text-[10px]" style={{ color: T.textFaint, borderColor: T.border }}>None</Badge>
 }
