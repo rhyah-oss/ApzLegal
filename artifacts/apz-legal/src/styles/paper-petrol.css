@@ -15,6 +15,9 @@
   --ref-gold: #b18b52;
   --ref-risk: #a24d50;
   --ref-success: #547b66;
+  /* Desktop sidebar width. Collapsed mode swaps this for the icon rail. */
+  --ref-sidebar-width: 180px;
+  --ref-sidebar-width-collapsed: 68px;
   min-height: 100vh;
   color: var(--ref-ink);
   background: var(--ref-paper);
@@ -48,17 +51,30 @@
 .ref-scroll::-webkit-scrollbar-thumb:hover { background: #3a3e3e; }
 
 .ref-shell { height: 100vh; display: flex; overflow: hidden; }
-.ref-sidebar { width: 180px; flex: 0 0 180px; display: flex; flex-direction: column; overflow: hidden; background: var(--ref-sidebar); color: var(--ref-sidebar-text); }
-.apz-brand-lockup { width: fit-content; min-width: 0; max-width: 100%; margin-inline: auto; }
-.apz-brand-primary { display: flex; align-items: center; gap: 14px; min-width: 0; }
-.apz-brand-mark { width: 38px; height: 38px; flex: 0 0 38px; object-fit: contain; border-radius: 7px; }
-.apz-brand-copy { display: flex; flex: 1 1 auto; min-width: 0; flex-direction: column; align-items: flex-start; justify-content: center; }
-.apz-brand-wordmark { display: block; color: #f3f1eb; font-family: var(--app-font-serif); font-size: 26px; font-weight: 500; line-height: .96; letter-spacing: -.035em; }
-.apz-brand-descriptor { display: block; margin-top: 7px; padding-left: .04em; color: #c9ad81; font-size: 8px; line-height: 1; font-weight: 700; letter-spacing: .28em; }
-.apz-brand-subline { display: block; margin-top: 14px; color: var(--ref-sidebar-muted); font-size: 8px; font-weight: 600; line-height: 1.2; letter-spacing: .12em; white-space: nowrap; }
-.ref-brand { position: relative; padding: 26px 20px 21px; border-bottom: 1px solid #343839; }
-.ref-brand-lockup .apz-brand-subline { padding-left: 1px; }
+/* Desktop sidebar: a flex child whose width is driven by the collapse state.
+   The main content (`.ref-content`) is `flex: 1`, so it automatically
+   reclaims the released space — no blank gap, no overflow, no jump. */
+.ref-sidebar { width: var(--ref-sidebar-width); flex: 0 0 var(--ref-sidebar-width); display: flex; flex-direction: column; overflow: hidden; background: var(--ref-sidebar); color: var(--ref-sidebar-text); position: relative; transition: width .18s ease, flex-basis .18s ease; }
+/* Collapsed desktop rail: narrow, icon-only, ~68px. */
+.ref-sidebar.is-collapsed { width: var(--ref-sidebar-width-collapsed); flex-basis: var(--ref-sidebar-width-collapsed); }
+/* Keep the visible mark and complete wordmark on one shared centre line. */
+.apz-brand-lockup { width: 112px; min-width: 0; max-width: 100%; margin-inline: auto; }
+.apz-brand-primary { display: flex; align-items: center; justify-content: center; gap: 8px; min-width: 0; }
+.apz-brand-mark { display: block; width: 38px; height: auto; aspect-ratio: 808 / 636; flex: 0 0 38px; overflow: hidden; }
+.apz-brand-copy { display: flex; min-width: 0; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+.apz-brand-wordmark { display: block; color: #f3f1eb; font-family: "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif; font-size: 23px; font-weight: 400; line-height: 1; letter-spacing: .04em; }
+/* Balance trailing letter spacing so LEGAL is optically centred beneath APZ. */
+.apz-brand-descriptor { display: block; padding-left: .32em; color: #c9ad81; font-size: 5px; line-height: 1; font-weight: 600; letter-spacing: .3em; }
+.apz-brand-subline { display: block; margin-top: 9px; padding-left: .08em; color: var(--ref-sidebar-muted); font-size: 6px; font-weight: 500; line-height: 1.4; letter-spacing: .08em; text-align: center; white-space: nowrap; }
+.ref-brand { position: relative; padding: 20px 14px 18px; border-bottom: 1px solid #343839; display: flex; justify-content: center; }
+/* In the collapsed rail the full lockup is replaced by a compact mark only. */
+.ref-sidebar.is-collapsed .ref-brand { padding: 16px 0 14px; }
+.apz-brand-mark--rail { width: 34px; height: 34px; flex: 0 0 34px; display: block; margin: 0 auto; border-radius: 8px; }
+/* Tooltip styling for the collapsed icon rail — matches the APZ muted palette. */
+[data-radix-popper-content] { font-family: "DM Sans", sans-serif; }
+.ref-sidebar.is-collapsed [data-radix-tooltip-content] { background: #232627 !important; color: #f4f2ed !important; border: 1px solid #494d4d; border-radius: 4px; padding: 5px 8px; font-size: 10px; font-weight: 600; letter-spacing: .02em; box-shadow: 0 6px 18px rgba(0,0,0,.32); }
 .ref-nav { flex: 1; overflow: auto; padding: 7px 10px 14px; }
+.ref-nav-section { display: flex; flex-direction: column; }
 .ref-nav-group { margin: 14px 10px 6px; color: var(--ref-sidebar-muted); font-size: 8px; font-weight: 700; letter-spacing: .11em; }
 .ref-nav > div + div { border-top: 1px solid #393d3e; margin-top: 13px; padding-top: 4px; }
 .ref-nav a { display: flex; align-items: center; gap: 9px; min-height: 28px; padding: 0 10px; color: #cdd0cc; border-radius: 3px; font-size: 10px; text-decoration: none; transition: background .15s ease, color .15s ease; }
@@ -66,7 +82,33 @@
 .ref-nav a.active { background: #3b3f3f; color: #fff; font-weight: 600; }
 .ref-nav a svg { width: 13px; opacity: .85; }
 .ref-nav em { margin-left: auto; min-width: 17px; padding: 2px 5px; border-radius: 8px; background: #3a3d3e; color: #fff; font-size: 8px; font-style: normal; text-align: center; }
-.ref-sidebar-footer { padding: 13px 12px; border-top: 1px solid #393d3e; }
+
+/* ── Collapsed icon-only rail ────────────────────────────────────────────── */
+/* Hide group labels, section separators and trailing badges; keep the icon
+   centred and vertically rhythmmed. */
+.ref-sidebar.is-collapsed .ref-nav-group { display: none; }
+.ref-sidebar.is-collapsed .ref-nav-section + .ref-nav-section { border-top: 0; margin-top: 4px; padding-top: 0; }
+.ref-sidebar.is-collapsed .ref-nav a { justify-content: center; gap: 0; padding: 0; min-height: 0; height: 34px; width: 34px; margin: 0 auto; position: relative; }
+.ref-sidebar.is-collapsed .ref-nav a svg { width: 18px; height: 18px; opacity: .92; }
+.ref-sidebar.is-collapsed .ref-nav a span { display: none; }
+.ref-sidebar.is-collapsed .ref-nav a em { display: flex; position: absolute; top: -3px; right: -3px; margin: 0; min-width: 14px; height: 14px; padding: 0 3px; border-radius: 999px; background: var(--ref-gold); color: #1b1a17; font-size: 7px; font-weight: 700; line-height: 1; }
+.ref-sidebar.is-collapsed .ref-nav a.active { background: color-mix(in srgb, var(--ref-gold) 22%, #3b3f3f); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ref-gold) 55%, transparent); }
+.ref-sidebar.is-collapsed .ref-nav a:hover { background: #343738; }
+.ref-sidebar-footer { padding: 13px 12px; border-top: 1px solid #393d3e; display: flex; flex-direction: column; gap: 8px; }
+.ref-sidebar.is-collapsed .ref-sidebar-footer { padding: 8px 0 10px; align-items: center; }
+.ref-footer-rail { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; }
+.ref-footer-rail a, .ref-footer-rail button { display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid #494d4d; border-radius: 4px; background: #343738; color: #f4f2ed; cursor: pointer; }
+.ref-footer-rail a:hover, .ref-footer-rail button:hover { border-color: var(--ref-gold); color: var(--ref-gold); }
+/* In the collapsed rail the profile area keeps only the avatar centred. */
+.ref-sidebar.is-collapsed .ref-profile { justify-content: center; gap: 0; padding: 6px 0; }
+.ref-sidebar.is-collapsed .ref-profile > div:nth-child(2),
+.ref-sidebar.is-collapsed .ref-profile svg { display: none; }
+.ref-sidebar.is-collapsed .ref-avatar { width: 30px; height: 30px; font-size: 9px; }
+/* Collapse/expand toggle — sits at the bottom edge of the rail. */
+.ref-sidebar-toggle { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid #494d4d; border-radius: 4px; background: #343738; color: #f4f2ed; cursor: pointer; transition: border-color .15s ease, color .15s ease, background .15s ease; z-index: 2; }
+.ref-sidebar-toggle:hover { border-color: var(--ref-gold); color: var(--ref-gold); }
+.ref-sidebar-toggle:focus-visible { outline: 2px solid var(--ref-gold); outline-offset: 2px; }
+.ref-sidebar.is-collapsed .ref-sidebar-toggle { left: 50%; transform: translateX(-50%); }
 .ref-profile { display: flex; align-items: center; gap: 9px; width: 100%; min-width: 0; padding: 7px 6px; border: 0; background: transparent; color: inherit; text-align: left; cursor: pointer; }
 .ref-profile:hover { background: var(--ref-sidebar-2); }
 .ref-avatar { display: grid; place-items: center; flex: 0 0 29px; width: 29px; height: 29px; color: #dbc293; border: 1px solid #837156; border-radius: 50%; font-size: 9px; font-weight: 700; }

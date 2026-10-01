@@ -3,8 +3,9 @@ import { Link, useLocation, useLocation as wouterUseLocation } from "wouter"
 import {
   AlertTriangle, Bell, BookOpen, BookTemplate, Bot, Briefcase, CalendarDays,
   CheckSquare, ChevronDown, Clock, FileText, FlaskConical,
-  GitBranch, GitMerge, LayoutDashboard, LogOut, Mail, Menu, Moon, ScrollText, X,
-  Search, Settings, ShieldAlert, ShieldCheck, Sun, UserCheck, Users, TrendingUp,
+  GitBranch, GitMerge, LayoutDashboard, LogOut, Mail, Menu, Moon, PanelLeft,
+  PanelRight, ScrollText, X, Search, Settings, ShieldAlert, ShieldCheck, Sun,
+  UserCheck, Users, TrendingUp,
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -12,6 +13,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { useQueryClient } from "@tanstack/react-query"
 import { formatDistanceToNow } from "date-fns"
 import {
@@ -24,6 +30,7 @@ import {
 } from "@workspace/api-client-react"
 import type { Notification, User } from "@workspace/api-client-react"
 import { getInitials } from "@/lib/format"
+import { useSidebarPreference } from "@/hooks/use-sidebar-preference"
 import { useTheme } from "next-themes"
 import { BrandLockup } from "@/components/brand/BrandLockup"
 import "@/styles/paper-petrol.css"
@@ -108,6 +115,10 @@ export function Layout({ children, user }: LayoutProps) {
   const [isMobileViewport, setIsMobileViewport] = React.useState(() =>
     typeof window !== "undefined" && window.matchMedia("(max-width: 720px)").matches
   )
+  const isDesktop = !isMobileViewport
+  // Desktop sidebar collapse preference. The mobile drawer is always
+  // expanded and is unaffected by this setting.
+  const { collapsed, toggle } = useSidebarPreference(isDesktop)
   const mobileMenuButtonRef = React.useRef<HTMLButtonElement>(null)
   const mobileDrawerRef = React.useRef<HTMLElement>(null)
   const mobileDrawerCloseRef = React.useRef<HTMLButtonElement>(null)
@@ -193,32 +204,50 @@ export function Layout({ children, user }: LayoutProps) {
       )}
       {(!isMobileViewport || isMobileDrawerOpen) && <aside
         ref={mobileDrawerRef}
-        className={`ref-sidebar ${isMobileDrawerOpen ? "is-open" : ""}`}
+        className={`ref-sidebar ${isMobileDrawerOpen ? "is-open" : ""} ${isDesktop && collapsed ? "is-collapsed" : ""}`}
         role={isMobileDrawerOpen ? "dialog" : undefined}
         aria-label={isMobileDrawerOpen ? undefined : "Workspace navigation"}
         aria-labelledby={isMobileDrawerOpen ? "workspace-navigation-title" : undefined}
         aria-modal={isMobileDrawerOpen || undefined}
       >
         <div className="ref-brand">
-          <button ref={mobileDrawerCloseRef} type="button" className="ref-mobile-close" aria-label="Close workspace navigation" onClick={closeMobileNavigation}>
-            <X size={15} />
-          </button>
-          <BrandLockup className="ref-brand-lockup" titleId="workspace-navigation-title" />
+          {isMobileDrawerOpen && (
+            <button ref={mobileDrawerCloseRef} type="button" className="ref-mobile-close" aria-label="Close workspace navigation" onClick={closeMobileNavigation}>
+              <X size={15} />
+            </button>
+          )}
+          {isDesktop && collapsed ? (
+            <div className="ref-brand-rail" aria-label="APZ Legal">
+              <svg className="apz-brand-mark apz-brand-mark--rail" viewBox="106 173 808 636" aria-hidden="true" focusable="false">
+                <image href="/apz-legal-mark-charcoal-gold.png" width="1024" height="1024" />
+              </svg>
+            </div>
+          ) : (
+            <BrandLockup className="ref-brand-lockup" titleId="workspace-navigation-title" />
+          )}
         </div>
 
         <nav className="ref-nav ref-scroll" aria-label="Primary navigation">
           {NAV.map(section => (
-            <div key={section.group}>
+            <div key={section.group} className="ref-nav-section">
               <div className="ref-nav-group">{section.group === "CORE" ? "WORKSPACE" : section.group === "COMPLIANCE" ? "COMPLIANCE" : section.group}</div>
               {section.items.map(item => {
                 const Icon = item.icon
                 const badge = item.href === "/actions" && actionsCount > 0 ? actionsCount : null
-                return (
-                  <Link key={item.href} href={item.href} className={isActive(item.href) ? "active" : ""}>
+                const link = (
+                  <Link href={item.href} className={isActive(item.href) ? "active" : ""} aria-label={item.name}>
                     <Icon size={14} />
                     <span>{item.name}</span>
                     {badge !== null && <em>{badge}</em>}
                   </Link>
+                )
+                return isDesktop && collapsed ? (
+                  <Tooltip key={item.href} delayDuration={0}>
+                    <TooltipTrigger asChild>{link}</TooltipTrigger>
+                    <TooltipContent side="right" align="center" className="ref-sidebar-tooltip">{item.name}</TooltipContent>
+                  </Tooltip>
+                ) : (
+                  <React.Fragment key={item.href}>{link}</React.Fragment>
                 )
               })}
             </div>
@@ -226,39 +255,73 @@ export function Layout({ children, user }: LayoutProps) {
         </nav>
 
         <div className="ref-sidebar-footer">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button type="button" className="ref-profile" aria-label="Open profile menu" aria-haspopup="menu">
-                <div className="ref-avatar">{getInitials(user.name)}</div>
-                <div>
-                  <b>{user.name}</b>
-                  <small>{roleLabel}</small>
+          {isDesktop && collapsed ? (
+            <div className="ref-footer-rail">
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                  <Link href="/settings" aria-label="Settings"><Settings size={14} /></Link>
+                </TooltipTrigger>
+                <TooltipContent side="right" align="center">Settings</TooltipContent>
+              </Tooltip>
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                  <button type="button" aria-label="Sign out" onClick={() => logout.mutate(undefined, { onSuccess: () => window.location.reload() })}>
+                    <LogOut size={14} />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right" align="center">Sign out</TooltipContent>
+              </Tooltip>
+            </div>
+          ) : (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button type="button" className="ref-profile" aria-label="Open profile menu" aria-haspopup="menu">
+                  <div className="ref-avatar">{getInitials(user.name)}</div>
+                  <div>
+                    <b>{user.name}</b>
+                    <small>{roleLabel}</small>
+                  </div>
+                  <ChevronDown size={13} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" side="top" className="ref-profile-menu">
+                <div className="ref-profile-menu-heading">
+                  <strong>{user.name}</strong>
+                  <span>{roleLabel}</span>
                 </div>
-                <ChevronDown size={13} />
+                <DropdownMenuItem onClick={() => setLocation("/settings")}>
+                  <Settings size={13} /> Account settings
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => logout.mutate(undefined, { onSuccess: () => window.location.reload() })}
+                >
+                  <LogOut size={13} /> Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+          {isDesktop && !collapsed && (
+            <div className="ref-footer-actions">
+              <Link href="/settings" aria-label="Settings"><Settings size={13} /> <span>Settings</span></Link>
+              <button type="button" onClick={() => logout.mutate(undefined, { onSuccess: () => window.location.reload() })} aria-label="Sign out">
+                <LogOut size={13} />
               </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" side="top" className="ref-profile-menu">
-              <div className="ref-profile-menu-heading">
-                <strong>{user.name}</strong>
-                <span>{roleLabel}</span>
-              </div>
-              <DropdownMenuItem onClick={() => setLocation("/settings")}>
-                <Settings size={13} /> Account settings
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => logout.mutate(undefined, { onSuccess: () => window.location.reload() })}
-              >
-                <LogOut size={13} /> Sign out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <div className="ref-footer-actions">
-            <Link href="/settings" aria-label="Settings"><Settings size={13} /> <span>Settings</span></Link>
-            <button type="button" onClick={() => logout.mutate(undefined, { onSuccess: () => window.location.reload() })} aria-label="Sign out">
-              <LogOut size={13} />
-            </button>
-          </div>
+            </div>
+          )}
         </div>
+
+        {isDesktop && (
+          <button
+            type="button"
+            className="ref-sidebar-toggle"
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-expanded={!collapsed}
+            onClick={toggle}
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {collapsed ? <PanelRight size={15} /> : <PanelLeft size={15} />}
+          </button>
+        )}
       </aside>
       }
 
